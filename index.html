@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.3</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.4</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -526,6 +526,43 @@ Cotswold Way | England"></textarea>
     </details>
 
     <details class="collapsible">
+      <summary>📍 Custom markers (your own points)</summary>
+      <div class="inner">
+        <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met". One per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; or paste coordinates like <b>Basecamp | 56.82, -4.32</b>.</div>
+        <div class="field">
+          <textarea id="customMarkersInput" rows="4" placeholder="Summit | Ben Nevis&#10;Camp 1 | 56.79, -5.00&#10;Where we met | Fort William"></textarea>
+        </div>
+        <button class="primary block" id="addMarkersBtn">Add / update markers</button>
+        <div id="markersStatus" class="status"></div>
+        <div class="toggle-row" style="margin-top:10px;"><span>Show custom markers</span><label class="toggle"><input type="checkbox" id="optCustomMarkers" checked><span class="slider"></span></label></div>
+        <div class="note">Markers save with the project. Coordinates plot instantly; place names need a one-time lookup (uses the same map service as trail search).</div>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>🔲 Map framing (zoom &amp; area)</summary>
+      <div class="inner">
+        <div class="note" style="margin-top:0; margin-bottom:10px;">Control how tightly the poster frames the route. Zoom in to crop to a section, or add margin to show more surrounding area.</div>
+        <div class="field">
+          <label>Route padding / zoom — <span id="framePadVal">Balanced</span></label>
+          <input type="range" id="optFramePad" min="4" max="30" step="1" value="10" />
+          <div class="note" style="margin-top:4px;">Lower = tighter crop (route fills the poster). Higher = more breathing room around the route.</div>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <div class="field">
+            <label>Shift view — X: <span id="framePanXVal">0</span></label>
+            <input type="range" id="optFramePanX" min="-40" max="40" step="2" value="0" />
+          </div>
+          <div class="field">
+            <label>Shift view — Y: <span id="framePanYVal">0</span></label>
+            <input type="range" id="optFramePanY" min="-40" max="40" step="2" value="0" />
+          </div>
+        </div>
+        <div class="note">Shift shows a different part of the surrounding area when zoomed in. Set padding back to Balanced and shifts to 0 to reset.</div>
+      </div>
+    </details>
+
+    <details class="collapsible">
       <summary>Custom colours (override style)</summary>
       <div class="inner">
         <div class="toggle-row"><span>Use custom colours</span><label class="toggle"><input type="checkbox" id="optCustomColors"><span class="slider"></span></label></div>
@@ -658,7 +695,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.3 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.4 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -715,6 +752,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
+      <li><b>📍 Custom markers (new in v7.4):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v7.4):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v7.4):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -990,11 +1030,16 @@ const STYLES = {
   ocean:    { label:'Ocean',     bg:'#EAF2F2', line:'#1E5F74', frame:'#1E5F74', text:'#173F4E', accent:'#5FA8B5', dot:'#1E5F74', land:'#DCE9E4', water:'#C2DBE0' },
   rose:     { label:'Rose',      bg:'#F7EFEA', line:'#9C5148', frame:'#9C5148', text:'#5C3A34', accent:'#C98A7D', dot:'#9C5148', land:'#EEDFD3', water:'#DCE7E2' },
   alpine:   { label:'Alpine',    bg:'#F4F6F5', line:'#3E5C4B', frame:'#3E5C4B', text:'#2C3E33', accent:'#88A896', dot:'#3E5C4B', land:'#E4EAE2', water:'#CFE0E2' },
+  noir:     { label:'Noir',      bg:'#0B0B0B', line:'#FFFFFF', frame:'#FFFFFF', text:'#FFFFFF', accent:'#FFFFFF', dot:'#FFFFFF', land:'#0B0B0B', water:'#1C1C1C' },
+  inkwhite: { label:'Ink on White', bg:'#FFFFFF', line:'#000000', frame:'#000000', text:'#000000', accent:'#000000', dot:'#000000', land:'#FFFFFF', water:'#EDEDED' },
 };
 
 // Terrain edition state
 let terrainPolys = [];   // [{pts:[{lat,lon}]}] water bodies
 let waypointPts = [];    // [{lat,lon,name,kind:'peak'|'place',ele?}]
+
+// Custom markers state — user's own named points
+let customMarkers = [];  // [{lat,lon,label}]
 
 const PRINT_SIZES = [
   { id:'2x3',   label:'2:3 · 24×36" family', w:24, h:36, unit:'in' },
@@ -1092,8 +1137,9 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
-const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal' };
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal' };
+const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', () => {
@@ -1101,6 +1147,7 @@ optionIds.forEach(id => {
     if (id === 'optSmooth') document.getElementById('smoothVal').textContent = el.value === '0' ? 'None' : el.value;
     if (nudgeLabelMap[id]) document.getElementById(nudgeLabelMap[id]).textContent = el.value;
     if (id === 'optMaxWaypoints') document.getElementById('maxWpVal').textContent = el.value;
+    if (id === 'optFramePad') document.getElementById('framePadVal').textContent = framePadLabel(el.value);
     drawPoster();
   });
 });
@@ -1171,7 +1218,7 @@ out geom;`;
     }
 
     currentPoints = dedupePoints(points);
-    terrainPolys = []; waypointPts = []; window._lastFacts = null;
+    terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
     document.getElementById('optTerrain').checked = false;
     document.getElementById('optWaypoints').checked = false;
     document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1264,7 +1311,7 @@ function handleGpxFile(file){
       }
       if (pts.length < 2) throw new Error('No GPS track points found in this file.');
       currentPoints = dedupePoints(pts);
-      terrainPolys = []; waypointPts = []; window._lastFacts = null;
+      terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1312,7 +1359,8 @@ function smoothPoints(points, level){
 function safeMin(arr){ let m = Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] < m) m = arr[i]; } return m; }
 function safeMax(arr){ let m = -Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] > m) m = arr[i]; } return m; }
 
-function projectPoints(points, width, height, padding){
+function projectPoints(points, width, height, padding, panX, panY){
+  panX = panX || 0; panY = panY || 0;
   const lats = points.map(p => p.lat);
   const lons = points.map(p => p.lon);
   const minLat = safeMin(lats), maxLat = safeMax(lats);
@@ -1326,8 +1374,9 @@ function projectPoints(points, width, height, padding){
   const usableH = height - padding * 2;
   const scale = Math.min(usableW / spanX, usableH / spanY);
 
-  const offsetX = padding + (usableW - spanX * scale) / 2;
-  const offsetY = padding + (usableH - spanY * scale) / 2;
+  // pan shifts the whole route within the frame (as a fraction of usable area)
+  const offsetX = padding + (usableW - spanX * scale) / 2 + panX * usableW;
+  const offsetY = padding + (usableH - spanY * scale) / 2 + panY * usableH;
 
   const toXY = (p) => ({
     x: offsetX + (p.lon - minLon) * cosLat * scale,
@@ -1579,7 +1628,10 @@ function buildSvg(W, H){
 function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAreaH, fs){
   const smoothLevel = parseInt(document.getElementById('optSmooth').value);
   const pointsToUse = smoothPoints(currentPoints, smoothLevel);
-  const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * 0.1);
+  const framePad = (parseFloat(document.getElementById('optFramePad').value) || 10) / 100; // 0.04–0.30
+  const panX = (parseFloat(document.getElementById('optFramePanX').value) || 0) / 100;
+  const panY = (parseFloat(document.getElementById('optFramePanY').value) || 0) / 100;
+  const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * framePad, panX, panY);
   const projected = proj.pts;
   const b = proj.bounds;
 
@@ -1673,6 +1725,18 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
     }
   }
 
+  // CUSTOM MARKERS: user's own named points (pin + label)
+  if (document.getElementById('optCustomMarkers').checked && customMarkers.length) {
+    for (const cm of customMarkers) {
+      const c = proj.toXY(cm);
+      const mx = c.x, my = c.y + mapOffsetY;
+      if (mx < 20*scaleFactor || mx > W - 20*scaleFactor || my < mapOffsetY || my > mapOffsetY + mapAreaH) continue;
+      // teardrop pin in accent colour with a small hole, matching city-pin styling
+      parts.push(`<path transform="translate(${mx},${my}) scale(${scaleFactor})" d="M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z" fill="${s.accent}"/><circle cx="${mx}" cy="${my - 9.5*scaleFactor}" r="${2.4*scaleFactor}" fill="${s.bg}"/>`);
+      parts.push(`<text x="${mx}" y="${my + 9*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(7)}" font-weight="600" fill="${s.text}" letter-spacing="${0.5*scaleFactor}">${escapeXml(cm.label.toUpperCase())}</text>`);
+    }
+  }
+
   if (document.getElementById('optMarkers').checked) {
     const p0 = projected[0], pN = projected[projected.length-1];
     parts.push(`<circle cx="${p0.x}" cy="${p0.y+mapOffsetY}" r="${4*scaleFactor}" fill="${s.dot}"/>`);
@@ -1749,6 +1813,50 @@ function resetPerTrailFields(){
 // ---------------------------------------------------------------
 // TERRAIN & WAYPOINTS — real water bodies + named peaks/villages for the route area
 // ---------------------------------------------------------------
+// ---------------------------------------------------------------
+// CUSTOM MARKERS: parse "Label | place-or-coords" lines, geocode names
+// ---------------------------------------------------------------
+document.getElementById('addMarkersBtn').onclick = async () => {
+  const raw = document.getElementById('customMarkersInput').value.trim();
+  if (!raw) { customMarkers = []; setStatus('markersStatus','ok','Markers cleared.'); drawPoster(); return; }
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = [];
+  let toGeocode = [];
+  for (const line of lines) {
+    const parts = line.split('|').map(p => p.trim());
+    const label = parts[0] || 'Marker';
+    const loc = parts[1] || parts[0];
+    // try to parse "lat, lon" directly
+    const m = loc.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+    if (m) {
+      result.push({ lat: parseFloat(m[1]), lon: parseFloat(m[2]), label });
+    } else {
+      toGeocode.push({ label, query: loc });
+    }
+  }
+  if (toGeocode.length) {
+    setStatus('markersStatus','loading',`Looking up ${toGeocode.length} place name${toGeocode.length>1?'s':''}…`);
+    for (const g of toGeocode) {
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.query)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
+        const data = await resp.json();
+        if (data.length) {
+          result.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label });
+        } else {
+          setStatus('markersStatus','error',`Couldn't find "${g.query}" — try adding a country, or use lat,lon.`);
+        }
+        await new Promise(r => setTimeout(r, 900)); // be polite to Nominatim (1 req/sec)
+      } catch (e) {
+        setStatus('markersStatus','error',`Lookup failed for "${g.query}". Check connection or use lat,lon.`);
+      }
+    }
+  }
+  customMarkers = result;
+  if (customMarkers.length) setStatus('markersStatus','ok',`${customMarkers.length} marker${customMarkers.length>1?'s':''} added.`);
+  document.getElementById('optCustomMarkers').checked = true;
+  drawPoster();
+};
+
 document.getElementById('fetchTerrainBtn').onclick = async () => {
   if (currentPoints.length < 2) return;
   const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
@@ -2040,7 +2148,7 @@ function blobToImage(blob){
 // ---------------------------------------------------------------
 // MY DEFAULTS (persisted settings preset) + RECENT TRAILS
 // ---------------------------------------------------------------
-const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY']);
+const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optFramePanX','optFramePanY']);
 
 function collectDefaults(){
   const d = { style: currentStyle, fields: {} };
@@ -2067,6 +2175,7 @@ function applyDefaults(d){
   if (d.optJpg !== undefined) document.getElementById('optJpg').checked = d.optJpg;
   document.getElementById('lineWidthVal').textContent = document.getElementById('optLineWidth').value;
   document.getElementById('smoothVal').textContent = document.getElementById('optSmooth').value === '0' ? 'None' : document.getElementById('optSmooth').value;
+  document.getElementById('framePadVal').textContent = framePadLabel(document.getElementById('optFramePad').value);
   renderSwatches();
 }
 
@@ -2130,7 +2239,7 @@ function renderRecentTrails(){
       const r = recents[parseInt(btn.dataset.ri)];
       if (!r.points) { setStatus('searchStatus','error', r.name + ' was too large to store — search or upload it again.'); return; }
       currentPoints = r.points;
-      terrainPolys = []; waypointPts = []; window._lastFacts = null;
+      terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -2324,7 +2433,7 @@ function svgToJpgBlob(svgString, pxW, pxH, bgColor){
 function collectProject(){
   const proj = { version: 3, mode: dataMode, style: currentStyle, points: currentPoints,
     cityWays, cityWaterways, cityCenter, cityRadiusKm,
-    terrainPolys, waypointPts, lastFacts: window._lastFacts || null, fields: {} };
+    terrainPolys, waypointPts, customMarkers, lastFacts: window._lastFacts || null, fields: {} };
   optionIds.forEach(id => {
     const el = document.getElementById(id);
     proj.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
@@ -2359,6 +2468,7 @@ document.getElementById('projectInput').onchange = (e) => {
       currentPoints = proj.points || [];
       terrainPolys = proj.terrainPolys || [];
       waypointPts = proj.waypointPts || [];
+      customMarkers = proj.customMarkers || [];
       window._lastFacts = proj.lastFacts || null;
       document.getElementById('fetchTerrainBtn').disabled = !(proj.points && proj.points.length > 1);
       cityWays = proj.cityWays || [];
@@ -2378,6 +2488,12 @@ document.getElementById('projectInput').onchange = (e) => {
       }
       if (proj.fields.optJpg !== undefined) document.getElementById('optJpg').checked = proj.fields.optJpg;
       document.getElementById('lineWidthVal').textContent = document.getElementById('optLineWidth').value;
+      document.getElementById('maxWpVal').textContent = document.getElementById('optMaxWaypoints').value;
+      document.getElementById('framePadVal').textContent = framePadLabel(document.getElementById('optFramePad').value);
+      document.getElementById('framePanXVal').textContent = document.getElementById('optFramePanX').value;
+      document.getElementById('framePanYVal').textContent = document.getElementById('optFramePanY').value;
+      // rebuild the custom-markers textarea from restored markers
+      document.getElementById('customMarkersInput').value = customMarkers.map(m => `${m.label} | ${m.lat.toFixed(4)}, ${m.lon.toFixed(4)}`).join('\n');
       renderSwatches();
       document.getElementById('factsBtn').disabled = false;
       drawPoster();
