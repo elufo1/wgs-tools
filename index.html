@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.4</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.5</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -528,14 +528,15 @@ Cotswold Way | England"></textarea>
     <details class="collapsible">
       <summary>📍 Custom markers (your own points)</summary>
       <div class="inner">
-        <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met". One per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; or paste coordinates like <b>Basecamp | 56.82, -4.32</b>.</div>
+        <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met". One per line as <b>Label | place or lat,lon</b>. Markers appear on the poster <b>as you type</b> — no button press needed.</div>
         <div class="field">
-          <textarea id="customMarkersInput" rows="4" placeholder="Summit | Ben Nevis&#10;Camp 1 | 56.79, -5.00&#10;Where we met | Fort William"></textarea>
+          <textarea id="customMarkersInput" rows="4" placeholder="Camp 1 | 56.79, -5.00&#10;Summit | Ben Nevis&#10;Where we met | 56.82, -4.32"></textarea>
         </div>
-        <button class="primary block" id="addMarkersBtn">Add / update markers</button>
+        <div class="note" style="margin-top:0; margin-bottom:8px;"><b>Coordinates always work offline.</b> Place names work instantly too if they're a peak or village already on the map (fetch terrain first). Only unrecognised names need the online lookup below.</div>
+        <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
         <div id="markersStatus" class="status"></div>
         <div class="toggle-row" style="margin-top:10px;"><span>Show custom markers</span><label class="toggle"><input type="checkbox" id="optCustomMarkers" checked><span class="slider"></span></label></div>
-        <div class="note">Markers save with the project. Coordinates plot instantly; place names need a one-time lookup (uses the same map service as trail search).</div>
+        <div class="note">Markers save with the project. Tip: right-click a spot in Google Maps to copy its lat,lon.</div>
       </div>
     </details>
 
@@ -695,7 +696,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.4 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.5 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -752,9 +753,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v7.4):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v7.4):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v7.4):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v7.5):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v7.5):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v7.5):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1816,44 +1817,108 @@ function resetPerTrailFields(){
 // ---------------------------------------------------------------
 // CUSTOM MARKERS: parse "Label | place-or-coords" lines, geocode names
 // ---------------------------------------------------------------
-document.getElementById('addMarkersBtn').onclick = async () => {
+// Parse the marker textarea into {label, loc} pairs.
+function parseMarkerLines(){
   const raw = document.getElementById('customMarkersInput').value.trim();
-  if (!raw) { customMarkers = []; setStatus('markersStatus','ok','Markers cleared.'); drawPoster(); return; }
-  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  const result = [];
-  let toGeocode = [];
-  for (const line of lines) {
+  if (!raw) return [];
+  return raw.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
     const parts = line.split('|').map(p => p.trim());
     const label = parts[0] || 'Marker';
-    const loc = parts[1] || parts[0];
-    // try to parse "lat, lon" directly
-    const m = loc.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
-    if (m) {
-      result.push({ lat: parseFloat(m[1]), lon: parseFloat(m[2]), label });
-    } else {
-      toGeocode.push({ label, query: loc });
+    const loc = (parts.length > 1 ? parts[1] : parts[0]) || '';
+    return { label, loc };
+  });
+}
+
+// Resolve a location string WITHOUT any network call:
+//   1. "lat, lon" coordinates  → used directly
+//   2. a name already present in the fetched waypoints (peaks/villages) → reuse those coords
+// Returns {lat,lon} or null if it needs an online lookup.
+function resolveMarkerOffline(loc){
+  const m = loc.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (m) {
+    const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+    if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return { lat, lon };
+  }
+  const needle = loc.toLowerCase();
+  if (needle) {
+    // exact name match first, then a forgiving partial match
+    const exact = waypointPts.find(w => (w.name || '').toLowerCase() === needle);
+    if (exact) return { lat: exact.lat, lon: exact.lon };
+    const partial = waypointPts.find(w => (w.name || '').toLowerCase().includes(needle));
+    if (partial) return { lat: partial.lat, lon: partial.lon };
+  }
+  return null;
+}
+
+// Live update: runs on every keystroke. Plots everything resolvable offline
+// immediately, so coordinates and known peaks/villages never need a button press.
+function refreshMarkersLive(){
+  const entries = parseMarkerLines();
+  const resolved = [];
+  let unresolved = 0;
+  for (const e of entries) {
+    const pos = resolveMarkerOffline(e.loc);
+    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label });
+    else if (e.loc) unresolved++;
+  }
+  customMarkers = resolved;
+  const el = document.getElementById('markersStatus');
+  if (!entries.length) { el.className = 'status'; el.textContent = ''; }
+  else if (unresolved) {
+    setStatus('markersStatus','loading',
+      `${resolved.length} plotted. ${unresolved} name${unresolved>1?'s':''} not recognised locally — press "Look up place names" to search online, or enter as lat,lon.`);
+  } else {
+    setStatus('markersStatus','ok',`${resolved.length} marker${resolved.length===1?'':'s'} plotted.`);
+  }
+  drawPoster();
+}
+
+document.getElementById('customMarkersInput').addEventListener('input', refreshMarkersLive);
+
+// Button now only does the ONLINE lookup for names that couldn't be resolved offline.
+document.getElementById('addMarkersBtn').onclick = async () => {
+  const entries = parseMarkerLines();
+  if (!entries.length) { customMarkers = []; setStatus('markersStatus','ok','Markers cleared.'); drawPoster(); return; }
+
+  const resolved = [];
+  const toGeocode = [];
+  for (const e of entries) {
+    const pos = resolveMarkerOffline(e.loc);
+    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label });
+    else if (e.loc) toGeocode.push(e);
+  }
+
+  if (!toGeocode.length) {
+    customMarkers = resolved;
+    document.getElementById('optCustomMarkers').checked = true;
+    setStatus('markersStatus','ok',`${resolved.length} marker${resolved.length===1?'':'s'} plotted — no lookup needed.`);
+    drawPoster();
+    return;
+  }
+
+  setStatus('markersStatus','loading',`Looking up ${toGeocode.length} place name${toGeocode.length>1?'s':''} online…`);
+  const failed = [];
+  for (const g of toGeocode) {
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (data.length) resolved.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label });
+      else failed.push(g.loc);
+      await new Promise(r => setTimeout(r, 900)); // Nominatim asks for max 1 request/sec
+    } catch (e) {
+      failed.push(g.loc);
     }
   }
-  if (toGeocode.length) {
-    setStatus('markersStatus','loading',`Looking up ${toGeocode.length} place name${toGeocode.length>1?'s':''}…`);
-    for (const g of toGeocode) {
-      try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.query)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
-        const data = await resp.json();
-        if (data.length) {
-          result.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label });
-        } else {
-          setStatus('markersStatus','error',`Couldn't find "${g.query}" — try adding a country, or use lat,lon.`);
-        }
-        await new Promise(r => setTimeout(r, 900)); // be polite to Nominatim (1 req/sec)
-      } catch (e) {
-        setStatus('markersStatus','error',`Lookup failed for "${g.query}". Check connection or use lat,lon.`);
-      }
-    }
-  }
-  customMarkers = result;
-  if (customMarkers.length) setStatus('markersStatus','ok',`${customMarkers.length} marker${customMarkers.length>1?'s':''} added.`);
+
+  customMarkers = resolved;
   document.getElementById('optCustomMarkers').checked = true;
+  if (failed.length) {
+    setStatus('markersStatus','error',
+      `${resolved.length} plotted. Couldn't look up: ${failed.join(', ')}. Online lookup may be blocked on this machine — enter these as lat,lon instead (e.g. Summit | 56.7969, -5.0036).`);
+  } else {
+    setStatus('markersStatus','ok',`${resolved.length} marker${resolved.length===1?'':'s'} plotted.`);
+  }
   drawPoster();
 };
 
