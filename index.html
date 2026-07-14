@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.1</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.2</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -649,8 +649,8 @@ Cotswold Way | England"></textarea>
   <div class="modal">
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
-    <div class="modal-sub">From real trail to Etsy-ready product · version 7.1</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <div class="modal-sub">From real trail to Etsy-ready product · version 7.2</div>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.2 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -1378,7 +1378,10 @@ function buildSvg(W, H){
   const s = getActiveStyle();
 
   const legendLayout = document.getElementById('optLegendLayout').value;
-  const titleAreaH = H * 0.16;
+  const isTerrain = document.getElementById('optTerrain').checked && terrainPolys.length;
+  // Terrain posters get extra breathing room under the title before the map/water area begins,
+  // so the title never feels like it's touching the terrain.
+  const titleAreaH = H * (isTerrain ? 0.20 : 0.16);
   const legendAreaH = legendLayout === 'grid' ? H * 0.20 : H * 0.14;
   const mapAreaH = H - titleAreaH - legendAreaH;
   const mapOffsetY = titleAreaH;
