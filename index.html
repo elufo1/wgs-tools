@@ -1585,15 +1585,18 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   const parts = [];
 
-  // TERRAIN: land panel + real water polygons, clipped to the map area
+  // TERRAIN: water polygons over a continuous page background (no separate land
+  // panel colour — that's what was creating the "pasted block" seam), clipped to the map area
   if (document.getElementById('optTerrain').checked && terrainPolys.length) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
     const tm = 30 * scaleFactor;
     const panelTop = mapOffsetY*0.98, panelBottom = panelTop + mapAreaH;
     parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}"/></clipPath>`);
-    let landWater = `<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}" fill="${s.land}"/>`;
+    // same fill as the page background (s.bg, not s.land) — the map area is now visually
+    // continuous with the title/footer areas instead of a separate coloured panel
+    let landWater = `<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}" fill="${s.bg}"/>`;
 
-    // continue the page's background grid seamlessly across the land panel, using the
+    // continue the page's background grid seamlessly across the map area, using the
     // exact same step/position as the outer grid so the lines line up across the seam
     if (document.getElementById('optGrid').checked) {
       const gridStep = Math.min(W,H) / 12;
@@ -1603,22 +1606,6 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       landWater += `<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`;
     }
 
-    // feather the top/bottom seams so the panel fades into the page background rather
-    // than cutting hard from title area to map area
-    const featherId = 'feather' + Math.random().toString(36).slice(2,7);
-    const featherH = Math.min(26 * scaleFactor, mapAreaH * 0.15);
-    landWater = `<defs>
-      <linearGradient id="${featherId}Top" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${s.bg}" stop-opacity="1"/>
-        <stop offset="100%" stop-color="${s.bg}" stop-opacity="0"/>
-      </linearGradient>
-      <linearGradient id="${featherId}Bot" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${s.bg}" stop-opacity="0"/>
-        <stop offset="100%" stop-color="${s.bg}" stop-opacity="1"/>
-      </linearGradient>
-    </defs>` + landWater;
-    landWater += `<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${featherH}" fill="url(#${featherId}Top)"/>`;
-    landWater += `<rect x="${tm}" y="${panelBottom-featherH}" width="${W-tm*2}" height="${featherH}" fill="url(#${featherId}Bot)"/>`;
 
     // Build each water shape, then drop tiny/degenerate slivers (stray river fragments etc.)
     // so only real, bold, readable lakes and lochs remain — matching a proper printed map look.
