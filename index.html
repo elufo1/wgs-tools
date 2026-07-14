@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.5</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.7</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -505,11 +505,12 @@ Cotswold Way | England"></textarea>
     <details class="collapsible">
       <summary>🌊 Terrain edition (premium style)</summary>
       <div class="inner">
-        <div class="note" style="margin-top:0; margin-bottom:10px;">The richer poster style: real lochs/lakes/rivers as filled shapes behind the route, named peaks and villages along the way, and a stats panel. All from real map data — fetch once per trail, saved with the project.</div>
+        <div class="note" style="margin-top:0; margin-bottom:10px;">The richer poster style: real lochs, woodland, moorland, glaciers, rivers and streams drawn from live map data behind the route, plus named peaks and villages and a stats panel. All from real map data — fetch once per trail, saved with the project.</div>
         <button class="primary block" id="fetchTerrainBtn" disabled>Fetch terrain &amp; waypoints for this route</button>
         <div id="terrainStatus" class="status"></div>
         <div class="toggle-row" style="margin-top:10px;"><span>Show terrain (water bodies)</span><label class="toggle"><input type="checkbox" id="optTerrain"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Show waypoint labels (peaks &amp; villages)</span><label class="toggle"><input type="checkbox" id="optWaypoints"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Show rivers &amp; streams</span><label class="toggle"><input type="checkbox" id="optRivers" checked><span class="slider"></span></label></div>
         <div class="field" style="margin-top:8px;">
           <label>Max waypoints — <span id="maxWpVal">14</span></label>
           <input type="range" id="optMaxWaypoints" min="4" max="24" step="2" value="14" />
@@ -536,6 +537,17 @@ Cotswold Way | England"></textarea>
         <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
         <div id="markersStatus" class="status"></div>
         <div class="toggle-row" style="margin-top:10px;"><span>Show custom markers</span><label class="toggle"><input type="checkbox" id="optCustomMarkers" checked><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:8px;">Labels auto-place to a free side and auto-hide any duplicate peak label underneath. If a pin still sits awkwardly, nudge it clear:</div>
+        <div class="row" style="margin-top:8px;">
+          <div class="field">
+            <label>Nudge markers — X: <span id="cmDXVal">0</span></label>
+            <input type="range" id="optCMDX" min="-60" max="60" step="2" value="0" />
+          </div>
+          <div class="field">
+            <label>Nudge markers — Y: <span id="cmDYVal">0</span></label>
+            <input type="range" id="optCMDY" min="-60" max="60" step="2" value="0" />
+          </div>
+        </div>
         <div class="note">Markers save with the project. Tip: right-click a spot in Google Maps to copy its lat,lon.</div>
       </div>
     </details>
@@ -696,7 +708,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.5 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.7 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -753,9 +765,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v7.5):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v7.5):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v7.5):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v7.7):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v7.7):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v7.7):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1038,6 +1050,7 @@ const STYLES = {
 // Terrain edition state
 let terrainPolys = [];   // [{pts:[{lat,lon}]}] water bodies
 let waypointPts = [];    // [{lat,lon,name,kind:'peak'|'place',ele?}]
+let terrainLines = [];   // [{pts:[{lat,lon}], kind:'river'|'stream'}] watercourses
 
 // Custom markers state — user's own named points
 let customMarkers = [];  // [{lat,lon,label}]
@@ -1138,8 +1151,8 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
-const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal' };
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optRivers','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
   const el = document.getElementById(id);
@@ -1219,7 +1232,7 @@ out geom;`;
     }
 
     currentPoints = dedupePoints(points);
-    terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+    terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
     document.getElementById('optTerrain').checked = false;
     document.getElementById('optWaypoints').checked = false;
     document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1312,7 +1325,7 @@ function handleGpxFile(file){
       }
       if (pts.length < 2) throw new Error('No GPS track points found in this file.');
       currentPoints = dedupePoints(pts);
-      terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+      terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1395,19 +1408,57 @@ function projectPoints(points, width, height, padding, panX, panY){
 }
 
 let styleOverride = null; // used during multi-style export
+
+// --- terrain colour derivation ------------------------------------------------
+// Rather than hand-tuning woodland/moor/river colours for all 15 palettes, we mix
+// them from the palette's own background + water. Keeps every style coherent
+// (Noir stays monochrome, Blueprint stays blue) with no per-style config.
+function hexToRgb(h){
+  h = (h || '#000000').replace('#','');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function rgbToHex(r,g,b){
+  const c = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2,'0');
+  return '#' + c(r) + c(g) + c(b);
+}
+function hexMix(a, b, t){
+  const A = hexToRgb(a), B = hexToRgb(b);
+  return rgbToHex(A[0]+(B[0]-A[0])*t, A[1]+(B[1]-A[1])*t, A[2]+(B[2]-A[2])*t);
+}
+// perceived lightness, so we can tell light palettes from dark ones
+function luma(h){ const [r,g,b] = hexToRgb(h); return (0.2126*r + 0.7152*g + 0.0722*b) / 255; }
+
+function augmentStyle(s){
+  const base = s.bg;
+  const dark = luma(base) < 0.5;
+  const isMono = luma(s.line) > 0.92 || luma(s.line) < 0.08 ? Math.abs(luma(s.bg) - luma(s.line)) > 0.7 : false;
+  const out = Object.assign({}, s);
+  if (!out.water) out.water = hexMix(base, dark ? '#0B1620' : '#BFD4DA', 0.55);
+  if (!out.land)  out.land  = base;
+  // Monochrome palettes (Noir / Ink on White) must stay strictly grey — no green.
+  const woodTint  = isMono ? (dark ? '#FFFFFF' : '#000000') : '#4F6B44';
+  const moorTint  = isMono ? (dark ? '#FFFFFF' : '#000000') : '#9A8352';
+  out.wood    = hexMix(base, woodTint, isMono ? 0.12 : (dark ? 0.30 : 0.26));
+  out.moor    = hexMix(base, moorTint, isMono ? 0.06 : (dark ? 0.18 : 0.15));
+  out.glacier = hexMix(base, dark ? '#8FA8B8' : '#FFFFFF', dark ? 0.35 : 0.75);
+  out.river   = hexMix(out.water, s.line, 0.30);
+  return out;
+}
+
 function getActiveStyle(){
-  if (styleOverride) return STYLES[styleOverride];
+  if (styleOverride) return augmentStyle(STYLES[styleOverride]);
   if (document.getElementById('optCustomColors').checked) {
-    return {
+    return augmentStyle({
       bg: document.getElementById('colBg').value,
       line: document.getElementById('colLine').value,
       frame: document.getElementById('colFrame').value,
       text: document.getElementById('colText').value,
       accent: document.getElementById('colAccent').value,
       dot: document.getElementById('colAccent').value,
-    };
+    });
   }
-  return STYLES[currentStyle];
+  return augmentStyle(STYLES[currentStyle]);
 }
 
 function getCanvasDims(aspect){
@@ -1436,7 +1487,7 @@ function buildSvg(W, H){
   const s = getActiveStyle();
 
   const legendLayout = document.getElementById('optLegendLayout').value;
-  const isTerrain = document.getElementById('optTerrain').checked && terrainPolys.length;
+  const isTerrain = document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length);
   // Terrain posters get extra breathing room under the title before the map/water area begins,
   // so the title never feels like it's touching the terrain.
   const titleAreaH = H * (isTerrain ? 0.20 : 0.16);
@@ -1640,7 +1691,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   // TERRAIN: water polygons over a continuous page background (no separate land
   // panel colour — that's what was creating the "pasted block" seam), clipped to the map area
-  if (document.getElementById('optTerrain').checked && terrainPolys.length) {
+  if (document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length)) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
     const tm = 30 * scaleFactor;
     const panelTop = mapOffsetY*0.98, panelBottom = panelTop + mapAreaH;
@@ -1660,30 +1711,67 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
     }
 
 
-    // Build each water shape, then drop tiny/degenerate slivers (stray river fragments etc.)
-    // so only real, bold, readable lakes and lochs remain — matching a proper printed map look.
-    const shapes = [];
+    // Build the terrain layers. Each polygon is projected, then tiny/degenerate
+    // slivers are dropped so only real, readable landforms remain.
+    // Different layers get different minimum sizes: lakes must be chunky to read,
+    // but woodland blocks can be smaller and still add useful texture.
+    const layers = { moor: [], wood: [], glacier: [], water: [] };
+    const minSizeFor = { water: 6, wood: 3.5, moor: 5, glacier: 4 };
+
     terrainPolys.forEach(poly => {
+      const kind = poly.kind || 'water'; // older saved projects have no kind -> water
+      if (!layers[kind]) return;
       const ptStep = Math.max(1, Math.floor(poly.pts.length / 500));
       const coords = [];
       for (let i = 0; i < poly.pts.length; i += ptStep) {
         const c = proj.toXY(poly.pts[i]);
         coords.push([c.x, c.y + mapOffsetY]);
       }
-      if (coords.length < 4) return; // too few points to be a real lake shape
+      if (coords.length < 4) return;
       let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
       coords.forEach(([x,y]) => { if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; });
-      const bboxArea = (maxX-minX) * (maxY-minY);
-      const minSize = 6 * scaleFactor; // ignore shapes smaller than ~6px in either dimension — river slivers, not lakes
+      const minSize = (minSizeFor[kind] || 5) * scaleFactor;
       if ((maxX-minX) < minSize && (maxY-minY) < minSize) return;
-      if (bboxArea < (minSize*minSize*0.3)) return;
-      const d = coords.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
-      shapes.push(d);
+      if ((maxX-minX) * (maxY-minY) < (minSize*minSize*0.3)) return;
+      layers[kind].push(coords.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z');
     });
 
-    shapes.forEach(d => {
+    // Painted in cartographic order: ground cover first, ice, then water on top.
+    layers.moor.forEach(d => {
+      landWater += `<path d="${d}" fill="${s.moor}" stroke="none"/>`;
+    });
+    layers.wood.forEach(d => {
+      landWater += `<path d="${d}" fill="${s.wood}" stroke="none"/>`;
+    });
+    layers.glacier.forEach(d => {
+      landWater += `<path d="${d}" fill="${s.glacier}" stroke="${s.line}" stroke-width="${0.3*scaleFactor}" stroke-opacity="0.25"/>`;
+    });
+
+    // Rivers and streams: thin lines under the water fills, so a river feeding a
+    // loch tucks neatly beneath it instead of drawing over the top.
+    if (document.getElementById('optRivers').checked && terrainLines.length) {
+      terrainLines.forEach(ln => {
+        const ptStep = Math.max(1, Math.floor(ln.pts.length / 300));
+        const coords = [];
+        for (let i = 0; i < ln.pts.length; i += ptStep) {
+          const c = proj.toXY(ln.pts[i]);
+          coords.push([c.x, c.y + mapOffsetY]);
+        }
+        if (coords.length < 2) return;
+        // skip hair-thin fragments that just add noise at poster scale
+        let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+        coords.forEach(([x,y]) => { if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; });
+        if ((maxX-minX) < 8*scaleFactor && (maxY-minY) < 8*scaleFactor) return;
+        const d = coords.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+        const isRiver = ln.kind === 'river';
+        landWater += `<path d="${d}" fill="none" stroke="${s.river}" stroke-width="${(isRiver ? 0.9 : 0.45)*scaleFactor}" stroke-opacity="${isRiver ? 0.85 : 0.55}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      });
+    }
+
+    layers.water.forEach(d => {
       landWater += `<path d="${d}" fill="${s.water}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
     });
+
     parts.push(`<g clip-path="url(#${clipId})">${landWater}</g>`);
   }
 
@@ -1695,11 +1783,74 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
 
-  // WAYPOINTS: named peaks and villages, capped and overlap-avoided
+  // --- LABEL COLLISION SYSTEM -------------------------------------------------
+  // Everything that prints text on the map registers a box here. Custom markers
+  // (the user's own points) claim their space FIRST and always win; auto-waypoints
+  // then yield around them, so the same peak never gets labelled twice and labels
+  // don't stack on top of each other.
+  const labelBoxes = [];
+  const overlaps = (a, b) => !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2);
+  const boxFor = (cx, cy, w, h) => ({ x1: cx - w/2, x2: cx + w/2, y1: cy - h/2, y2: cy + h/2 });
+  const fits = (box) => !labelBoxes.some(b => overlaps(box, b));
+  const inMap = (x, y) => x > 20*scaleFactor && x < W - 20*scaleFactor && y > mapOffsetY && y < mapOffsetY + mapAreaH;
+
+  const p0m = projected[0], pNm = projected[projected.length-1];
+  const startXY = { x: p0m.x, y: p0m.y + mapOffsetY };
+  const endXY   = { x: pNm.x, y: pNm.y + mapOffsetY };
+
+  // Reserve the START / FINISH label zones up front so nothing else lands on them.
+  if (document.getElementById('optMarkers').checked && document.getElementById('optMarkerLabels').checked) {
+    const sdx = parseFloat(document.getElementById('optStartDX').value) * scaleFactor;
+    const sdy = parseFloat(document.getElementById('optStartDY').value) * scaleFactor;
+    const edx = parseFloat(document.getElementById('optEndDX').value) * scaleFactor;
+    const edy = parseFloat(document.getElementById('optEndDY').value) * scaleFactor;
+    labelBoxes.push(boxFor(startXY.x + sdx, startXY.y - 8*scaleFactor + sdy, 52*scaleFactor, 14*scaleFactor));
+    labelBoxes.push(boxFor(endXY.x + edx,   endXY.y   - 8*scaleFactor + edy, 52*scaleFactor, 14*scaleFactor));
+  }
+  // the route end dots themselves
+  labelBoxes.push(boxFor(startXY.x, startXY.y, 14*scaleFactor, 14*scaleFactor));
+  labelBoxes.push(boxFor(endXY.x,   endXY.y,   14*scaleFactor, 14*scaleFactor));
+
+  // CUSTOM MARKERS: user's own named points — drawn first, highest priority
+  const customPinZones = [];
+  if (document.getElementById('optCustomMarkers').checked && customMarkers.length) {
+    const cmdx = (parseFloat(document.getElementById('optCMDX').value) || 0) * scaleFactor;
+    const cmdy = (parseFloat(document.getElementById('optCMDY').value) || 0) * scaleFactor;
+    for (const cm of customMarkers) {
+      const c = proj.toXY(cm);
+      const mx = c.x + cmdx, my = c.y + mapOffsetY + cmdy;
+      if (!inMap(mx, my)) continue;
+
+      const text = (cm.label || 'Marker').toUpperCase();
+      const fSize = 7 * scaleFactor;
+      const tW = Math.max(text.length * fSize * 0.62, 16*scaleFactor);
+      const tH = 10 * scaleFactor;
+
+      // Try label positions in order of preference: below the pin, above it, right, left.
+      // The pin's teardrop rises ~12px above the anchor point, so "above" clears that.
+      const candidates = [
+        { x: mx, y: my + 9*scaleFactor,  anchor: 'middle' },
+        { x: mx, y: my - 16*scaleFactor, anchor: 'middle' },
+        { x: mx + tW/2 + 8*scaleFactor, y: my + 2*scaleFactor, anchor: 'middle' },
+        { x: mx - tW/2 - 8*scaleFactor, y: my + 2*scaleFactor, anchor: 'middle' },
+      ];
+      let chosen = candidates.find(p => inMap(p.x, p.y) && fits(boxFor(p.x, p.y - tH*0.35, tW, tH)));
+      if (!chosen) chosen = candidates[0]; // nothing free — fall back to below, nudge sliders can fix
+
+      labelBoxes.push(boxFor(chosen.x, chosen.y - tH*0.35, tW, tH));
+      // reserve the pin body too, so waypoints don't tuck under the teardrop
+      labelBoxes.push(boxFor(mx, my - 6*scaleFactor, 16*scaleFactor, 20*scaleFactor));
+      customPinZones.push({ x: mx, y: my });
+
+      parts.push(`<path transform="translate(${mx},${my}) scale(${scaleFactor})" d="M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z" fill="${s.accent}"/><circle cx="${mx}" cy="${my - 9.5*scaleFactor}" r="${2.4*scaleFactor}" fill="${s.bg}"/>`);
+      parts.push(`<text x="${chosen.x}" y="${chosen.y}" text-anchor="${chosen.anchor}" font-family="${_F.mono}" font-size="${fs(7)}" font-weight="600" fill="${s.text}" letter-spacing="${0.5*scaleFactor}">${escapeXml(text)}</text>`);
+    }
+  }
+
+  // WAYPOINTS: named peaks and villages — yield to custom markers and to each other
   if (document.getElementById('optWaypoints').checked && waypointPts.length) {
     const maxWp = parseInt(document.getElementById('optMaxWaypoints').value);
-    const placed = [];
-    const minGap = 26 * scaleFactor;
+    const clearR = 34 * scaleFactor;
     let count = 0;
     for (const wp of waypointPts) {
       if (count >= maxWp) break;
@@ -1707,34 +1858,27 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       const wx = c.x, wy = c.y + mapOffsetY;
       // must be inside the map area (below the title zone)
       if (wx < 40*scaleFactor || wx > W - 40*scaleFactor || wy < mapOffsetY*1.02 || wy > mapOffsetY + mapAreaH) continue;
-      // keep clear of the start/finish markers so labels never collide with START/FINISH
-      const p0m = projected[0], pNm = projected[projected.length-1];
-      const clearR = 34 * scaleFactor;
-      if (Math.abs(wx - p0m.x) < clearR && Math.abs(wy - (p0m.y+mapOffsetY)) < clearR) continue;
-      if (Math.abs(wx - pNm.x) < clearR && Math.abs(wy - (pNm.y+mapOffsetY)) < clearR) continue;
-      // overlap avoidance
-      if (placed.some(p => Math.abs(p.x - wx) < minGap*2.2 && Math.abs(p.y - wy) < minGap*0.7)) continue;
-      placed.push({ x: wx, y: wy });
-      count++;
+      // keep clear of the start/finish markers
+      if (Math.abs(wx - startXY.x) < clearR && Math.abs(wy - startXY.y) < clearR) continue;
+      if (Math.abs(wx - endXY.x)   < clearR && Math.abs(wy - endXY.y)   < clearR) continue;
+      // DEDUPE: if the user already pinned this exact spot, don't label it twice
+      if (customPinZones.some(p => Math.abs(p.x - wx) < clearR && Math.abs(p.y - wy) < clearR)) continue;
+
       const label = wp.name + (wp.kind === 'peak' && wp.ele ? ' ' + Math.round(wp.ele * 3.28084) + 'ft' : '');
+      const fSize = 6.8 * scaleFactor;
+      const tW = label.length * fSize * 0.62;
+      const tH = 9 * scaleFactor;
+      const box = boxFor(wx + 5*scaleFactor + tW/2, wy, tW, tH);
+      if (!fits(box)) continue; // would collide with a custom marker or another label
+
+      labelBoxes.push(box);
+      count++;
       if (wp.kind === 'peak') {
         parts.push(`<path d="M ${wx},${wy - 3.2*scaleFactor} L ${wx - 3*scaleFactor},${wy + 2*scaleFactor} L ${wx + 3*scaleFactor},${wy + 2*scaleFactor} Z" fill="${s.text}" opacity="0.85"/>`);
       } else {
         parts.push(`<circle cx="${wx}" cy="${wy}" r="${1.8*scaleFactor}" fill="${s.text}" opacity="0.8"/>`);
       }
       parts.push(`<text x="${wx + 5*scaleFactor}" y="${wy + 2*scaleFactor}" font-family="${_F.mono}" font-size="${fs(6.8)}" font-weight="600" fill="${s.text}" opacity="0.92">${escapeXml(label)}</text>`);
-    }
-  }
-
-  // CUSTOM MARKERS: user's own named points (pin + label)
-  if (document.getElementById('optCustomMarkers').checked && customMarkers.length) {
-    for (const cm of customMarkers) {
-      const c = proj.toXY(cm);
-      const mx = c.x, my = c.y + mapOffsetY;
-      if (mx < 20*scaleFactor || mx > W - 20*scaleFactor || my < mapOffsetY || my > mapOffsetY + mapAreaH) continue;
-      // teardrop pin in accent colour with a small hole, matching city-pin styling
-      parts.push(`<path transform="translate(${mx},${my}) scale(${scaleFactor})" d="M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z" fill="${s.accent}"/><circle cx="${mx}" cy="${my - 9.5*scaleFactor}" r="${2.4*scaleFactor}" fill="${s.bg}"/>`);
-      parts.push(`<text x="${mx}" y="${my + 9*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(7)}" font-weight="600" fill="${s.text}" letter-spacing="${0.5*scaleFactor}">${escapeXml(cm.label.toUpperCase())}</text>`);
     }
   }
 
@@ -1938,33 +2082,61 @@ document.getElementById('fetchTerrainBtn').onclick = async () => {
   startTicker('terrainStatus','Fetching terrain & waypoints…');
 
   try {
-    const query = `[out:json][timeout:45];
+    const query = `[out:json][timeout:90];
 (
   way["natural"="water"](${bbox});
   relation["natural"="water"](${bbox});
   way["waterway"="riverbank"](${bbox});
+  way["natural"="wood"](${bbox});
+  relation["natural"="wood"](${bbox});
+  way["landuse"="forest"](${bbox});
+  relation["landuse"="forest"](${bbox});
+  way["natural"~"^(scrub|heath|moor|grassland|fell)$"](${bbox});
+  way["natural"="glacier"](${bbox});
+  way["waterway"~"^(river|stream)$"](${bbox});
   node["natural"="peak"]["name"](${bbox});
   node["place"~"^(town|village)$"]["name"](${bbox});
 );
 out geom;`;
     const data = await fetchOverpass(query);
 
+    // Classify an OSM element into one of our render layers
+    const kindOf = (tags) => {
+      if (!tags) return null;
+      if (tags.natural === 'water' || tags.waterway === 'riverbank') return 'water';
+      if (tags.natural === 'wood' || tags.landuse === 'forest') return 'wood';
+      if (tags.natural === 'glacier') return 'glacier';
+      if (['scrub','heath','moor','grassland','fell'].includes(tags.natural)) return 'moor';
+      return null;
+    };
+
     terrainPolys = [];
+    terrainLines = [];
     const peaks = [], places = [];
     (data.elements || []).forEach(el => {
-      if ((el.type === 'way') && el.geometry && el.geometry.length > 3) {
-        terrainPolys.push({ pts: el.geometry.map(g => ({ lat: g.lat, lon: g.lon })) });
-      } else if (el.type === 'relation' && el.members) {
+      const tags = el.tags || {};
+      // linear watercourses -> drawn as lines, not fills
+      if (el.type === 'way' && (tags.waterway === 'river' || tags.waterway === 'stream') && el.geometry && el.geometry.length > 1) {
+        terrainLines.push({
+          pts: el.geometry.map(g => ({ lat: g.lat, lon: g.lon })),
+          kind: tags.waterway
+        });
+        return;
+      }
+      const kind = kindOf(tags);
+      if (el.type === 'way' && kind && el.geometry && el.geometry.length > 3) {
+        terrainPolys.push({ pts: el.geometry.map(g => ({ lat: g.lat, lon: g.lon })), kind });
+      } else if (el.type === 'relation' && kind && el.members) {
         el.members.forEach(m => {
           if (m.geometry && m.geometry.length > 3 && m.role !== 'inner') {
-            terrainPolys.push({ pts: m.geometry.map(g => ({ lat: g.lat, lon: g.lon })) });
+            terrainPolys.push({ pts: m.geometry.map(g => ({ lat: g.lat, lon: g.lon })), kind });
           }
         });
-      } else if (el.type === 'node' && el.tags && el.tags.name) {
-        if (el.tags.natural === 'peak') {
-          peaks.push({ lat: el.lat, lon: el.lon, name: el.tags.name, kind: 'peak', ele: parseFloat(el.tags.ele) || undefined });
-        } else if (el.tags.place) {
-          places.push({ lat: el.lat, lon: el.lon, name: el.tags.name, kind: 'place' });
+      } else if (el.type === 'node' && tags.name) {
+        if (tags.natural === 'peak') {
+          peaks.push({ lat: el.lat, lon: el.lon, name: tags.name, kind: 'peak', ele: parseFloat(tags.ele) || undefined });
+        } else if (tags.place) {
+          places.push({ lat: el.lat, lon: el.lon, name: tags.name, kind: 'place' });
         }
       }
     });
@@ -1973,10 +2145,14 @@ out geom;`;
     peaks.sort((a,b) => (b.ele||0) - (a.ele||0));
     waypointPts = peaks.slice(0, 24).concat(places.slice(0, 24));
 
-    document.getElementById('optTerrain').checked = terrainPolys.length > 0;
+    const nWater = terrainPolys.filter(p => p.kind === 'water').length;
+    const nWood  = terrainPolys.filter(p => p.kind === 'wood').length;
+    const nMoor  = terrainPolys.filter(p => p.kind === 'moor' || p.kind === 'glacier').length;
+
+    document.getElementById('optTerrain').checked = terrainPolys.length > 0 || terrainLines.length > 0;
     document.getElementById('optWaypoints').checked = waypointPts.length > 0;
     stopTicker();
-    setStatus('terrainStatus','success', `✓ ${terrainPolys.length.toLocaleString()} water shapes + ${peaks.length} peaks + ${places.length} villages/towns fetched. Toggles switched on — saved with your project.`);
+    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${peaks.length} peaks · ${places.length} villages. Toggles on — saved with your project.`);
     drawPoster();
   } catch (err) {
     stopTicker();
@@ -2213,7 +2389,7 @@ function blobToImage(blob){
 // ---------------------------------------------------------------
 // MY DEFAULTS (persisted settings preset) + RECENT TRAILS
 // ---------------------------------------------------------------
-const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optFramePanX','optFramePanY']);
+const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optFramePanX','optFramePanY','optCMDX','optCMDY']);
 
 function collectDefaults(){
   const d = { style: currentStyle, fields: {} };
@@ -2304,7 +2480,7 @@ function renderRecentTrails(){
       const r = recents[parseInt(btn.dataset.ri)];
       if (!r.points) { setStatus('searchStatus','error', r.name + ' was too large to store — search or upload it again.'); return; }
       currentPoints = r.points;
-      terrainPolys = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+      terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -2498,7 +2674,7 @@ function svgToJpgBlob(svgString, pxW, pxH, bgColor){
 function collectProject(){
   const proj = { version: 3, mode: dataMode, style: currentStyle, points: currentPoints,
     cityWays, cityWaterways, cityCenter, cityRadiusKm,
-    terrainPolys, waypointPts, customMarkers, lastFacts: window._lastFacts || null, fields: {} };
+    terrainPolys, terrainLines, waypointPts, customMarkers, lastFacts: window._lastFacts || null, fields: {} };
   optionIds.forEach(id => {
     const el = document.getElementById(id);
     proj.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
@@ -2532,6 +2708,7 @@ document.getElementById('projectInput').onchange = (e) => {
       if (!hasTrail && !hasCity) throw new Error('No route or city data in this project file.');
       currentPoints = proj.points || [];
       terrainPolys = proj.terrainPolys || [];
+      terrainLines = proj.terrainLines || [];
       waypointPts = proj.waypointPts || [];
       customMarkers = proj.customMarkers || [];
       window._lastFacts = proj.lastFacts || null;
