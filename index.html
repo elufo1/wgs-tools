@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.0</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.1</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -601,7 +601,10 @@ Cotswold Way | England"></textarea>
           <select id="optLegendLayout">
             <option value="line">Single legend line (minimalist)</option>
             <option value="grid">Stats grid (Distance · Highest Point · Ascent · Duration)</option>
+            <option value="keepsake">Keepsake log (write-in Date / Companions / Weather / Notes)</option>
           </select>
+        </div>
+        <div class="note" id="keepsakeNote" style="display:none;">Turns the poster into a fill-in-after-your-hike keepsake — write-in lines for Date, Companions, Weather, and a Notes line. Off by default elsewhere; this is its own bottom-panel layout, so it replaces the stats/legend line rather than adding to it.
         </div>
         <div class="note">The sea is now reconstructed from real coastline data, so coastal routes render the ocean correctly instead of as dry land. Batch mode skips terrain fetching; run terrain trails individually.</div>
       </div>
@@ -834,7 +837,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -894,13 +897,14 @@ Cotswold Way | England"></textarea>
       <li><b>🌊 Terrain edition:</b> real water, woodland, moorland, glaciers, rivers and streams from live OSM data — plus <b>the sea</b>, reconstructed from coastline data so coastal routes no longer render the ocean as dry land. Water can be solid, hatched, or ruled lines.</li>
       <li><b>📍 Custom markers:</b> click <b>"Click on the map to place a marker"</b>, then click any spot on the poster. Click near a named peak or village and its name fills in automatically. Choose an icon first (pin, tent, peak, heart, star, dot). You can also type them: <b>Label | place or lat,lon | icon</b>. Labels auto-place to a free side and suppress any duplicate peak label beneath them. If a marker sits outside the picture, turn on <b>Fit all markers inside the frame</b>.</li>
       <li><b>🔲 Map framing:</b> padding slider crops tight or leaves a wide margin; the shift sliders move the view when you're zoomed in.</li>
+      <li><b>Keepsake log (bottom panel layout):</b> turns the poster into a fill-in-after-your-hike keepsake — write-in lines for Date, Weather, Companions, Notes and Memory. Flat vector rules, no boxes — matches the map's own typography. Off by default; select it from the Bottom panel layout dropdown in Terrain edition.</li>
       <li><b>📊 Stats grid — manual override:</b> type a Distance / Highest Point / Ascent / Duration and it beats the automatic value. Use it when a GPX has no elevation data. Whatever you type is printed exactly — check it against a real source.</li>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.0):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.0):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.0):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.1):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.1):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.1):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1312,6 +1316,7 @@ optionIds.forEach(id => {
     if (id === 'optMaxWaypoints') document.getElementById('maxWpVal').textContent = el.value;
     if (id === 'optFramePad') document.getElementById('framePadVal').textContent = framePadLabel(el.value);
     if (id === 'optOnRouteKm') document.getElementById('onRouteVal').textContent = parseFloat(el.value).toFixed(1);
+    if (id === 'optLegendLayout') document.getElementById('keepsakeNote').style.display = (el.value === 'keepsake') ? 'block' : 'none';
     if (scaleLabelMap[id]) document.getElementById(scaleLabelMap[id]).textContent = parseFloat(el.value).toFixed(2);
     drawPoster();
   });
@@ -1961,7 +1966,7 @@ function buildSvg(W, H){
   // Terrain posters get extra breathing room under the title before the map/water area begins,
   // so the title never feels like it's touching the terrain.
   const titleAreaH = H * (isTerrain ? 0.20 : 0.16);
-  const legendAreaH = legendLayout === 'grid' ? H * 0.20 : H * 0.14;
+  const legendAreaH = legendLayout === 'grid' ? H * 0.20 : legendLayout === 'keepsake' ? H * 0.17 : H * 0.14;
   const mapAreaH = H - titleAreaH - legendAreaH;
   const mapOffsetY = titleAreaH;
   const scaleFactor = Math.min(W, H) / 600;
@@ -2136,6 +2141,26 @@ function buildSvg(W, H){
     });
     // thin divider above the grid
     parts.push(`<line x1="${W*0.14}" y1="${gridTop - 16*scaleFactor}" x2="${W*0.86}" y2="${gridTop - 16*scaleFactor}" stroke="${s.frame}" stroke-width="${0.6*scaleFactor}" opacity="0.5"/>`);
+  } else if (legendLayout === 'keepsake' && !isCity) {
+    // Keepsake log: flat vector write-in lines. Deliberately plain — no boxes, no
+    // shading, just a label and a rule, so it reads as part of the map's own
+    // typography rather than a bolted-on form.
+    const top = H - legendAreaH + 16*scaleFactor;
+    const rowH = legendAreaH * 0.27;
+    const colL = W * 0.14, colR = W * 0.56, ruleW = W * 0.30;
+    const rows = [
+      ['DATE', colL, top], ['WEATHER', colR, top],
+      ['COMPANIONS', colL, top + rowH], ['NOTES', colR, top + rowH],
+    ];
+    rows.forEach(([label, x, y]) => {
+      parts.push(`<text x="${x}" y="${y}" font-family="${_F.mono}" font-size="${fs(7.5)}" font-weight="600" fill="${s.accent}" letter-spacing="${1.5*scaleFactor}">${label}</text>`);
+      parts.push(`<line x1="${x}" y1="${y + 9*scaleFactor}" x2="${x + ruleW}" y2="${y + 9*scaleFactor}" stroke="${s.text}" stroke-width="${0.7*scaleFactor}" opacity="0.5"/>`);
+    });
+    // a second, wider notes rule along the bottom for a free-write line
+    const noteY = top + rowH * 2;
+    parts.push(`<text x="${colL}" y="${noteY}" font-family="${_F.mono}" font-size="${fs(7.5)}" font-weight="600" fill="${s.accent}" letter-spacing="${1.5*scaleFactor}">MEMORY</text>`);
+    parts.push(`<line x1="${colL}" y1="${noteY + 9*scaleFactor}" x2="${W - colL}" y2="${noteY + 9*scaleFactor}" stroke="${s.text}" stroke-width="${0.7*scaleFactor}" opacity="0.5"/>`);
+    parts.push(`<line x1="${W*0.14}" y1="${top - 12*scaleFactor}" x2="${W*0.86}" y2="${top - 12*scaleFactor}" stroke="${s.frame}" stroke-width="${0.6*scaleFactor}" opacity="0.5"/>`);
   } else if (legend) {
     parts.push(`<text x="${W/2}" y="${H - 44*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(10)}" fill="${s.text}" opacity="0.75" letter-spacing="${scaleFactor}">${escapeXml(legend.toUpperCase())}</text>`);
   }
