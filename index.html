@@ -104,6 +104,10 @@
 
   .status{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:4px; display:none; line-height:1.5; white-space:pre-wrap; }
   .status.show{ display:block; }
+  .result-row{ width:100%; text-align:left; padding:9px 11px; margin-bottom:6px; border-radius:5px; cursor:pointer;
+    background: rgba(237,230,214,0.05); border:1px solid var(--line); color: var(--parchment-pale); font-size:12.5px; font-family:'Inter',sans-serif; }
+  .result-row:hover{ border-color: var(--brass); background: rgba(176,141,87,0.12); }
+  .result-row .rmeta{ display:block; margin-top:3px; font-size:11px; color: var(--brass-bright); font-family:'IBM Plex Mono',monospace; }
   .status.loading{ background: rgba(176,141,87,0.12); color: var(--brass-bright); }
   .status.error{ background: rgba(162,62,50,0.15); color: #E39A8E; }
   .status.success{ background: rgba(122,155,110,0.12); color: #A9C9A0; }
@@ -208,7 +212,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.1</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.2</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -350,6 +354,7 @@
     <button class="primary block" id="searchBtn">Find Real Route</button>
     <button class="block" id="diagBtn" style="margin-top:6px;">Test map-data connection</button>
     <div id="diagStatus" class="status"></div>
+    <div id="searchResults" style="display:none; margin-top:10px;"></div>
 
     <div class="divider-or">or</div>
 
@@ -771,7 +776,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.2 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -828,9 +833,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v8.1):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v8.1):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v8.1):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v8.2):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v8.2):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v8.2):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1324,85 +1329,141 @@ document.getElementById('diagBtn').onclick = async () => {
 // ---------------------------------------------------------------
 // OVERPASS SEARCH
 // ---------------------------------------------------------------
+// Load one specific OSM feature (chosen from the results list) and build the poster from it.
+async function loadOsmFeature(type, id, displayName){
+  setStatus('searchStatus','loading',`Downloading the route for "${displayName}"…`);
+  startTicker('searchStatus', `Downloading "${displayName}"…`);
+  document.getElementById('searchResults').style.display = 'none';
+  try {
+    const q = `[out:json][timeout:60];\n${type}(id:${id});\nout geom;`;
+    const data = await fetchOverpass(q);
+    const points = extractPointsFromOverpass(data);
+    if (points.length < 2) {
+      setStatus('searchStatus','error', `"${displayName}" has no usable route geometry in OpenStreetMap. Try another match, or upload a GPX.`);
+      return;
+    }
+    currentPoints = dedupePoints(points);
+    terrainPolys = []; terrainLines = []; coastWays = []; waypointPts = []; customMarkers = []; window._lastFacts = null;
+    { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+    document.getElementById('optTerrain').checked = false;
+    document.getElementById('optWaypoints').checked = false;
+    document.getElementById('fetchTerrainBtn').disabled = false;
+    setStatus('searchStatus','success', `✓ Route loaded — ${currentPoints.length.toLocaleString()} GPS points from OpenStreetMap.`);
+    document.getElementById('posterTitle').value = displayName;
+    resetPerTrailFields();
+    if (pendingSubtitle) { document.getElementById('posterSubtitle').value = pendingSubtitle; pendingSubtitle = ''; }
+    else { const known = matchKnownTrail(displayName); if (known && known.sub) document.getElementById('posterSubtitle').value = known.sub; }
+    document.getElementById('factsBtn').disabled = false;
+    drawPoster();
+    addRecentTrail(displayName);
+  } catch (err) {
+    setStatus('searchStatus','error','Could not load that route: ' + err.message);
+  } finally {
+    stopTicker();
+  }
+}
+
+function showSearchResults(list, term){
+  const holder = document.getElementById('searchResults');
+  holder.innerHTML = '';
+  const head = document.createElement('div');
+  head.className = 'note';
+  head.style.marginBottom = '8px';
+  head.innerHTML = `<b>${list.length} match${list.length===1?'':'es'}</b> for "${escapeXml(term)}" — pick the right one:`;
+  holder.appendChild(head);
+
+  list.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'result-row';
+    const kind = r.type === 'relation' ? 'route relation' : 'path/way';
+    const where = [r.tags.ref, r.tags.operator, r.tags.network].filter(Boolean).join(' · ');
+    btn.innerHTML = `<b>${escapeXml(r.tags.name)}</b><span class="rmeta">${kind}${where ? ' · ' + escapeXml(where) : ''} · osm ${r.type}/${r.id}</span>`;
+    btn.onclick = () => loadOsmFeature(r.type, r.id, r.tags.name);
+    holder.appendChild(btn);
+  });
+  holder.style.display = 'block';
+}
+
+// Two-stage search: find candidate features by name (cheap, tags only), let the user
+// pick the right one, then download just that route. A single rigid query used to fail
+// whenever the OSM name didn't match exactly what was typed.
 document.getElementById('searchBtn').onclick = async () => {
   const name = document.getElementById('trailName').value.trim();
   const region = document.getElementById('trailRegion').value.trim();
   if (!name) { setStatus('searchStatus','error','Type a trail name first, or pick one from the dropdown above.'); return; }
 
-  setStatus('searchStatus','loading','Fetching the real route from OpenStreetMap…');
-  startTicker('searchStatus','Fetching the real route from OpenStreetMap…');
+  document.getElementById('searchResults').style.display = 'none';
+  setStatus('searchStatus','loading','Searching OpenStreetMap…');
+  startTicker('searchStatus','Searching OpenStreetMap…');
   document.getElementById('searchBtn').disabled = true;
   document.getElementById('cancelBtn').style.display = 'block';
 
+  // Overpass regex: escape anything special so a stray character can't break the query
+  const rx = name.replace(/[\\"']/g, '').replace(/[.*+?^${}()|[\]]/g, '\\\\$&');
+
+  const attempts = [];
+  if (region) {
+    const safeRegion = region.replace(/["']/g, '');
+    // named routes + paths inside the region
+    attempts.push({
+      label: 'in ' + region,
+      q: `[out:json][timeout:60];\narea["name"~"^${safeRegion}$",i]->.a;\n(\n  relation["name"~"${rx}",i]["route"](area.a);\n  way["name"~"${rx}",i]["highway"](area.a);\n);\nout tags;`
+    });
+  }
+  // worldwide named routes
+  attempts.push({
+    label: 'worldwide routes',
+    q: `[out:json][timeout:60];\n(\n  relation["name"~"${rx}",i]["route"];\n);\nout tags;`
+  });
+  // worldwide named paths/trails (catches trails mapped as ways, not relations)
+  attempts.push({
+    label: 'worldwide paths',
+    q: `[out:json][timeout:90];\n(\n  way["name"~"${rx}",i]["highway"~"^(path|footway|track|cycleway|bridleway)$"];\n);\nout tags;`
+  });
+
   try {
-    const safeName = name.replace(/"/g, '\\"');
-    let query;
-    if (region) {
-      const safeRegion = region.replace(/"/g, '\\"');
-      query = `[out:json][timeout:30];
-area["name"="${safeRegion}"]->.searchArea;
-(
-  way["name"~"${safeName}",i](area.searchArea);
-  relation["name"~"${safeName}",i](area.searchArea);
-);
-out geom;`;
-    } else {
-      query = `[out:json][timeout:30];
-(
-  way["name"~"${safeName}",i]["highway"];
-  way["name"~"${safeName}",i]["route"];
-  relation["name"~"${safeName}",i]["route"];
-);
-out geom;`;
+    let found = [];
+    for (const a of attempts) {
+      setStatus('searchStatus','loading',`Searching OpenStreetMap (${a.label})…`);
+      let data;
+      try { data = await fetchOverpass(a.q); } catch (e) { continue; }
+      const els = (data.elements || []).filter(e => e.tags && e.tags.name);
+      if (els.length) {
+        // collapse duplicates: keep the biggest feature per unique name
+        const byName = new Map();
+        els.forEach(e => {
+          const k = e.tags.name.toLowerCase();
+          const prev = byName.get(k);
+          // prefer relations (whole routes) over individual ways (fragments)
+          if (!prev || (prev.type === 'way' && e.type === 'relation')) byName.set(k, e);
+        });
+        found = [...byName.values()].slice(0, 12);
+        break;
+      }
     }
 
-    const data = await fetchOverpass(query);
-
-    const points = extractPointsFromOverpass(data);
-    if (points.length < 2) {
-      setStatus('searchStatus','error', `Couldn't find "${name}" on OpenStreetMap. Try adding or changing the region, or download a free GPX from AllTrails/Wikiloc and upload it below — that always works.`);
+    if (!found.length) {
+      setStatus('searchStatus','error',
+        `No match for "${name}" on OpenStreetMap.\n\nThings to try:\n• Use the trail's official OSM name (e.g. "John Muir Trail", not "Half Dome hike").\n• Drop the region box and search worldwide.\n• Try a shorter fragment of the name.\n• Or upload a GPX below — that always works.`);
       return;
     }
 
-    currentPoints = dedupePoints(points);
-    terrainPolys = []; terrainLines = []; coastWays = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
-    document.getElementById('optTerrain').checked = false;
-    document.getElementById('optWaypoints').checked = false;
-    document.getElementById('fetchTerrainBtn').disabled = false;
-    setStatus('searchStatus','success', `✓ Real route found — ${currentPoints.length.toLocaleString()} GPS points from OpenStreetMap.`);
-    document.getElementById('posterTitle').value = name;
-    resetPerTrailFields();
-    if (pendingSubtitle) { document.getElementById('posterSubtitle').value = pendingSubtitle; pendingSubtitle = ''; }
-    else { const known = matchKnownTrail(name); if (known && known.sub) document.getElementById('posterSubtitle').value = known.sub; }
-    document.getElementById('factsBtn').disabled = false;
-    drawPoster();
-    addRecentTrail(name);
+    if (found.length === 1) {
+      await loadOsmFeature(found[0].type, found[0].id, found[0].tags.name);
+    } else {
+      stopTicker();
+      setStatus('searchStatus','success', `Found ${found.length} possible matches — choose the right one below.`);
+      showSearchResults(found, name);
+    }
   } catch (err) {
     setStatus('searchStatus','error', 'Search failed: ' + err.message + '. Try again in a moment, or use a GPX upload instead.');
   } finally {
     stopTicker();
     document.getElementById('searchBtn').disabled = false;
     document.getElementById('cancelBtn').style.display = 'none';
+    activeFetchController = null;
   }
 };
-
-document.getElementById('cancelBtn').onclick = () => {
-  if (activeFetchController) activeFetchController.abort('cancelled');
-};
-
-function extractPointsFromOverpass(data){
-  const pts = [];
-  (data.elements || []).forEach(el => {
-    if (el.type === 'way' && el.geometry) {
-      el.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
-    } else if (el.type === 'relation' && el.members) {
-      el.members.forEach(m => {
-        if (m.geometry) m.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
-      });
-    }
-  });
-  return pts;
-}
 
 // ---------------------------------------------------------------
 // GPX UPLOAD
