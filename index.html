@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WGS Trail Map Poster Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --ink: #16202B;
+    --ink-deep: #0E1620;
+    --parchment: #EDE6D6;
+    --parchment-pale: #F7F3EA;
+    --brass: #B08D57;
+    --brass-bright: #D2AC72;
+    --rust: #A23E32;
+    --line: rgba(237,230,214,0.14);
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0; min-height:100vh;
+    background: var(--ink-deep);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(176,141,87,0.07), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(162,62,50,0.06), transparent 45%);
+    color: var(--parchment-pale);
+    font-family: 'Inter', sans-serif;
+  }
+  .app{ display:grid; grid-template-columns: 350px 1fr 340px; min-height:100vh; }
+  @media (max-width: 1150px){ .app{ grid-template-columns: 1fr; } .panel{ border-right:none !important; border-left:none !important; border-bottom:1px solid var(--line); } }
+
+  .header{
+    grid-column: 1 / -1;
+    padding: 18px 30px;
+    border-bottom: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .header h1{ font-family:'Fraunces', serif; font-weight:600; font-size:23px; margin:0; }
+  .header .sub{ font-family:'IBM Plex Mono', monospace; font-size:10px; color: var(--brass-bright); letter-spacing: 0.08em; text-transform:uppercase; }
+  .header-right{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .panel{ padding: 20px; border-right: 1px solid var(--line); overflow-y:auto; max-height: calc(100vh - 70px); }
+  .panel.right{ border-right:none; border-left: 1px solid var(--line); }
+
+  .step-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:22px; height:22px; border-radius:50%; background: var(--brass); color: var(--ink-deep);
+    font-weight:700; font-size:12px; margin-right:8px; flex-shrink:0;
+  }
+  .panel h2, .stage h2{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.12em;
+    color: var(--brass-bright); margin: 0 0 6px 0; display:flex; align-items:center;
+  }
+  .step-hint{ font-size:11.5px; color: rgba(247,243,234,0.5); margin:0 0 12px 30px; line-height:1.5; }
+
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:11.5px; color: rgba(247,243,234,0.65); margin-bottom:5px; font-weight:500; }
+  .field input, .field textarea, .field select{
+    width:100%; padding:9px 11px; background: rgba(237,230,214,0.06); border:1px solid var(--line);
+    color: var(--parchment-pale); font-family:'Inter',sans-serif; font-size:13px; border-radius:4px;
+  }
+  .field select{ cursor:pointer; }
+  .field select option, .field select optgroup{ background: var(--ink); color: var(--parchment-pale); }
+  .field input:focus, .field textarea:focus, .field select:focus{ outline:none; border-color: var(--brass); }
+  .field input[type=range]{ padding:0; accent-color: var(--brass); }
+  .field input[type=color]{ padding:2px; height:36px; cursor:pointer; }
+  .row{ display:flex; gap:8px; }
+  .row .field{ flex:1; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--line); }
+  .toggle-row span{ font-size:12px; color:rgba(247,243,234,0.7); }
+  .toggle{ position:relative; width:36px; height:20px; flex-shrink:0; }
+  .toggle input{ opacity:0; width:0; height:0; }
+  .toggle .slider{ position:absolute; inset:0; background:rgba(237,230,214,0.15); border-radius:20px; cursor:pointer; transition:.15s; }
+  .toggle .slider:before{ content:''; position:absolute; width:14px; height:14px; left:3px; top:3px; background:var(--parchment-pale); border-radius:50%; transition:.15s; }
+  .toggle input:checked + .slider{ background:var(--brass); }
+  .toggle input:checked + .slider:before{ transform:translateX(16px); }
+
+  button{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; cursor:pointer;
+    border:1px solid var(--brass); background:transparent; color: var(--brass-bright);
+    padding:10px 14px; border-radius:4px; transition: all .15s ease;
+  }
+  button:hover{ background: rgba(176,141,87,0.12); }
+  button.primary{ background: var(--brass); color: var(--ink-deep); border-color:var(--brass); }
+  button.primary:hover{ background: var(--brass-bright); }
+  button:disabled{ opacity:0.4; cursor:not-allowed; }
+  button.block{ width:100%; margin-top:4px; }
+  button.small{ padding:6px 10px; font-size:11px; }
+  button.mode-tab{ opacity:0.55; }
+  button.mode-tab.active{ opacity:1; background: rgba(176,141,87,0.15); }
+
+  .divider-or{ text-align:center; font-size:11px; color:rgba(247,243,234,0.35); margin:12px 0; letter-spacing:0.1em; text-transform:uppercase; }
+
+  .upload-zone{
+    border:1px dashed var(--line); border-radius:5px; padding:14px; text-align:center;
+    font-size:12px; color: rgba(247,243,234,0.5); cursor:pointer; line-height:1.6;
+  }
+  .upload-zone:hover{ border-color: var(--brass); }
+  .upload-zone b{ color: var(--brass-bright); }
+
+  .status{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:4px; display:none; line-height:1.5; }
+  .status.show{ display:block; }
+  .status.loading{ background: rgba(176,141,87,0.12); color: var(--brass-bright); }
+  .status.error{ background: rgba(162,62,50,0.15); color: #E39A8E; }
+  .status.success{ background: rgba(122,155,110,0.12); color: #A9C9A0; }
+
+  .stage{ padding: 20px; display:flex; flex-direction:column; align-items:center; gap:12px; overflow-y:auto; max-height: calc(100vh - 70px); }
+  .canvas-wrap{
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px;
+    width: 100%; max-width: 560px;
+    display:flex; justify-content:center;
+    position:relative;
+  }
+  .canvas-wrap .coords-readout{
+    position:absolute; top:8px; left:12px; font-family:'IBM Plex Mono', monospace; font-size:9px;
+    color: rgba(210,172,114,0.55); letter-spacing:0.06em;
+  }
+  #posterSvgHolder{ width:100%; }
+  .empty-hint{ color: rgba(247,243,234,0.4); font-size:14px; text-align:center; padding: 70px 20px; font-family:'Fraunces',serif; font-style:italic; line-height:1.8; }
+
+  .style-swatches{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .swatch{
+    width:60px; padding:7px 5px 5px; border-radius:5px; border:1px solid var(--line); cursor:pointer; text-align:center;
+    background: rgba(237,230,214,0.04);
+  }
+  .swatch.active{ border-color: var(--brass); background: rgba(176,141,87,0.14); }
+  .swatch .dot{ width:22px; height:22px; border-radius:50%; margin:0 auto 5px; }
+  .swatch .label{ font-size:8.5px; color: rgba(247,243,234,0.65); text-transform:uppercase; letter-spacing:0.04em; }
+
+  .fact-row{ display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px dashed var(--line); gap:10px; }
+  .fact-row .k{ color: rgba(247,243,234,0.5); flex-shrink:0; }
+  .fact-row .v{ font-family:'IBM Plex Mono', monospace; color: var(--parchment-pale); text-align:right; }
+
+  .note{ font-size:11px; line-height:1.6; color: rgba(247,243,234,0.42); margin-top:10px; }
+  .note b{ color: rgba(210,172,114,0.85); }
+
+  /* ---- Hosting isolation ----
+     When embedded inside another site (e.g. a Squarespace code block), the host page's own
+     global CSS (fonts, link colours, box-sizing, list styles) can bleed into this tool since
+     both share the same document. These targeted overrides force OUR typography/spacing to
+     win regardless of what the host page declares — without touching the host site at all. */
+  #wgsApp, #wgsApp *{ box-sizing: border-box !important; text-decoration: none !important; list-style: none !important; }
+  #wgsApp h1{ font-family:'Fraunces', serif !important; font-weight:600 !important; margin:0 !important; }
+  #wgsApp h2{ font-family:'IBM Plex Mono', monospace !important; margin:0 0 6px 0 !important; }
+  #wgsApp h3{ font-family:'Fraunces', serif !important; }
+  #wgsApp h4{ font-family:'Inter', sans-serif !important; }
+  #wgsApp button{ font-family:'Inter', sans-serif !important; border-radius:4px !important; }
+  #wgsApp input, #wgsApp textarea, #wgsApp select{ font-family:'Inter', sans-serif !important; border-radius:4px !important; }
+  #wgsApp a{ color: inherit !important; }
+  #wgsApp p, #wgsApp label, #wgsApp span, #wgsApp div, #wgsApp li{ font-family:'Inter', sans-serif !important; }
+  #wgsApp ul, #wgsApp ol{ margin:0 !important; padding:0 !important; }
+
+  .research-output{
+    font-size:12px; line-height:1.65; color: rgba(247,243,234,0.8);
+    background: rgba(237,230,214,0.05); border:1px solid var(--line); border-radius:5px;
+    padding:12px; margin-top:10px; display:none; max-height:300px; overflow-y:auto;
+  }
+  .research-output.show{ display:block; }
+  .research-output h4{ font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--brass-bright); margin:10px 0 5px; }
+  .research-output h4:first-child{ margin-top:0; }
+  .research-output ul{ margin:4px 0; padding-left:18px; }
+
+  .size-grid{ display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:8px; }
+  .size-chip{ display:flex; align-items:center; gap:7px; font-size:11.5px; padding:6px 8px; background:rgba(237,230,214,0.05); border:1px solid var(--line); border-radius:4px; cursor:pointer; }
+  .size-chip input{ accent-color: var(--brass); margin:0; }
+  .size-chip:hover{ border-color:var(--brass); }
+
+  .progress-bar{ height:5px; background:rgba(237,230,214,0.1); border-radius:3px; overflow:hidden; margin-top:8px; display:none; }
+  .progress-bar.show{ display:block; }
+  .progress-bar .fill{ height:100%; background:var(--brass); width:0%; transition:width .2s; }
+
+  .collapsible{ border:1px solid var(--line); border-radius:5px; margin-bottom:10px; }
+  .collapsible summary{
+    padding:10px 12px; cursor:pointer; font-size:12px; font-weight:600; color:var(--brass-bright);
+    list-style:none; display:flex; justify-content:space-between; align-items:center;
+  }
+  .collapsible summary::after{ content:'+'; font-size:15px; }
+  .collapsible[open] summary::after{ content:'−'; }
+  .collapsible .inner{ padding: 4px 12px 12px; }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(14,22,32,0.85); z-index:100;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background: var(--ink); border:1px solid var(--brass); border-radius:8px;
+    max-width:660px; width:100%; max-height:85vh; overflow-y:auto; padding:30px;
+  }
+  .modal h3{ font-family:'Fraunces',serif; font-size:22px; margin:0 0 4px; }
+  .modal .modal-sub{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass-bright); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:18px; }
+  .modal h4{ font-size:14px; color:var(--brass-bright); margin:18px 0 6px; }
+  .modal p, .modal li{ font-size:13px; line-height:1.7; color:rgba(247,243,234,0.75); }
+  .modal ol, .modal ul{ padding-left:20px; }
+  .modal .close-x{ float:right; background:none; border:none; color:var(--brass-bright); font-size:20px; padding:0 6px; }
+</style>
+</head>
+<body>
+
+<div id="wgsApp"><div class="app">
+  <div class="header">
+    <div>
+      <h1>Trail Map Poster Builder</h1>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.0</span></div>
+    </div>
+    <div class="header-right">
+      <button class="small" id="researchBtn">🔎 Research What's Selling</button>
+      <button class="small" id="helpBtn">? Guide &amp; Quick Start</button>
+    </div>
+  </div>
+
+  <!-- LEFT -->
+  <div class="panel">
+    <h2><span class="step-badge">1</span> Choose what to map</h2>
+    <div style="display:flex; gap:6px; margin-bottom:14px;">
+      <button class="block mode-tab active" id="modeTrail" style="margin-top:0;">🥾 Trail Route</button>
+      <button class="block mode-tab" id="modeCity" style="margin-top:0;">🏙 City Map</button>
+    </div>
+
+    <details class="collapsible">
+      <summary>⭐ My defaults &amp; recent trails</summary>
+      <div class="inner">
+        <div class="row">
+          <button class="block small" id="saveDefaultsBtn">Save current settings as my defaults</button>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <button class="block small" id="clearDefaultsBtn">Clear saved defaults</button>
+        </div>
+        <div class="note">Defaults cover style, decorations, layout, fonts, and export sizes — applied automatically every time this tool opens. Trail-specific text is never included.</div>
+        <div id="recentTrails" style="margin-top:12px;"></div>
+      </div>
+    </details>
+
+    <!-- CITY MODE INPUTS -->
+    <div id="citySection" style="display:none;">
+      <p class="step-hint" style="margin-left:0;">Draws every real street around a location — the classic "city map print" / personalised location gift style. All roads come from OpenStreetMap.</p>
+      <div class="field">
+        <label>Place, address, or landmark</label>
+        <input id="cityQuery" type="text" placeholder="e.g. Valletta, Malta — or a street address" list="citySuggestions" />
+        <datalist id="citySuggestions">
+          <option value="Valletta, Malta"><option value="London, England"><option value="Edinburgh, Scotland"><option value="Paris, France"><option value="Rome, Italy"><option value="Barcelona, Spain"><option value="Amsterdam, Netherlands"><option value="Copenhagen, Denmark"><option value="Vienna, Austria"><option value="Prague, Czechia"><option value="Lisbon, Portugal"><option value="Dublin, Ireland"><option value="Reykjavik, Iceland"><option value="New York City"><option value="San Francisco"><option value="Chicago"><option value="Boston"><option value="Seattle"><option value="Denver"><option value="Austin, Texas"><option value="Vancouver, Canada"><option value="Toronto, Canada"><option value="Sydney, Australia"><option value="Melbourne, Australia"><option value="Tokyo, Japan"><option value="Kyoto, Japan"><option value="Queenstown, New Zealand"><option value="Cape Town, South Africa">
+        </datalist>
+      </div>
+      <div class="field">
+        <label>Map radius — <span id="radiusVal">2.0</span> km</label>
+        <input type="range" id="cityRadius" min="0.5" max="6" step="0.5" value="2" />
+        <div class="note" style="margin-top:4px;">Smaller = neighbourhood detail. Larger = whole city (slower to fetch and draw — dense cities may take 30–60 seconds).</div>
+      </div>
+      <div class="field">
+        <label>Location marker</label>
+        <select id="cityPin">
+          <option value="none">None</option>
+          <option value="heart" selected>❤ Heart (gift style)</option>
+          <option value="pin">📍 Map pin</option>
+          <option value="dot">● Dot</option>
+          <option value="star">★ Star</option>
+        </select>
+      </div>
+      <div class="toggle-row"><span>Include rivers &amp; canals</span><label class="toggle"><input type="checkbox" id="cityWater" checked><span class="slider"></span></label></div>
+      <button class="primary block" id="cityBtn" style="margin-top:10px;">Draw City Map</button>
+      <div class="note"><b>Gift-style personalisation:</b> use the poster Title for names ("JACOB &amp; OLIVIA"), Subtitle for the place, and the Legend for coordinates &amp; date — a coordinates chip is added automatically once the map loads.</div>
+    </div>
+
+    <!-- TRAIL MODE INPUTS -->
+    <div id="trailSection">
+    <p class="step-hint" style="margin-left:0;">Choose a popular trail, or type any name. The real route shape is pulled from OpenStreetMap — nothing invented.</p>
+
+    <div class="field">
+      <label>Popular trails &amp; parks (quick pick)</label>
+      <select id="presetSelect">
+        <option value="">— Choose from popular sellers —</option>
+        <optgroup label="🇺🇸 US Long Trails">
+          <option data-name="Appalachian Trail" data-region="United States" data-sub="GEORGIA TO MAINE">Appalachian Trail</option>
+          <option data-name="Pacific Crest Trail" data-region="United States" data-sub="MEXICO TO CANADA">Pacific Crest Trail</option>
+          <option data-name="John Muir Trail" data-region="California" data-sub="YOSEMITE TO MT WHITNEY">John Muir Trail</option>
+          <option data-name="Continental Divide Trail" data-region="United States" data-sub="THE GREAT DIVIDE">Continental Divide Trail</option>
+          <option data-name="Ice Age Trail" data-region="Wisconsin" data-sub="WISCONSIN">Ice Age Trail</option>
+          <option data-name="Colorado Trail" data-region="Colorado" data-sub="DENVER TO DURANGO">Colorado Trail</option>
+          <option data-name="Long Trail" data-region="Vermont" data-sub="VERMONT · EST. 1910">Long Trail, Vermont</option>
+          <option data-name="Wonderland Trail" data-region="Washington" data-sub="AROUND MT RAINIER">Wonderland Trail</option>
+          <option data-name="Tahoe Rim Trail" data-region="California" data-sub="LAKE TAHOE LOOP">Tahoe Rim Trail</option>
+        </optgroup>
+        <optgroup label="🏞 US National Parks">
+          <option data-name="Bright Angel Trail" data-region="Arizona" data-sub="GRAND CANYON">Grand Canyon — Bright Angel</option>
+          <option data-name="Angels Landing" data-region="Utah" data-sub="ZION NATIONAL PARK">Zion — Angels Landing</option>
+          <option data-name="Half Dome Trail" data-region="California" data-sub="YOSEMITE NATIONAL PARK">Yosemite — Half Dome</option>
+          <option data-name="Highline Trail" data-region="Montana" data-sub="GLACIER NATIONAL PARK">Glacier — Highline Trail</option>
+          <option data-name="Kalalau Trail" data-region="Hawaii" data-sub="NA PALI COAST · KAUAI">Kalalau Trail, Hawaii</option>
+        </optgroup>
+        <optgroup label="🇬🇧 UK &amp; Ireland">
+          <option data-name="West Highland Way" data-region="Scotland" data-sub="MILNGAVIE TO FORT WILLIAM">West Highland Way</option>
+          <option data-name="Pennine Way" data-region="England" data-sub="EDALE TO KIRK YETHOLM">Pennine Way</option>
+          <option data-name="South West Coast Path" data-region="England" data-sub="ENGLAND'S LONGEST TRAIL">South West Coast Path</option>
+          <option data-name="Hadrian's Wall Path" data-region="England" data-sub="COAST TO COAST">Hadrian's Wall Path</option>
+          <option data-name="Coast to Coast Walk" data-region="England" data-sub="ST BEES TO ROBIN HOOD'S BAY">Coast to Coast Walk</option>
+          <option data-name="Snowdon" data-region="Wales" data-sub="YR WYDDFA · WALES">Snowdon (Yr Wyddfa)</option>
+          <option data-name="Ben Nevis" data-region="Scotland" data-sub="HIGHEST PEAK IN BRITAIN">Ben Nevis</option>
+          <option data-name="Wicklow Way" data-region="Ireland" data-sub="DUBLIN TO CLONEGAL">Wicklow Way</option>
+        </optgroup>
+        <optgroup label="🇪🇺 Europe">
+          <option data-name="Tour du Mont Blanc" data-region="France" data-sub="FRANCE · ITALY · SWITZERLAND">Tour du Mont Blanc</option>
+          <option data-name="Camino de Santiago" data-region="Spain" data-sub="THE WAY OF ST JAMES">Camino de Santiago</option>
+          <option data-name="GR20" data-region="France" data-sub="CORSICA">GR20, Corsica</option>
+          <option data-name="Laugavegur" data-region="Iceland" data-sub="ICELANDIC HIGHLANDS">Laugavegur, Iceland</option>
+          <option data-name="Kungsleden" data-region="Sweden" data-sub="THE KING'S TRAIL">Kungsleden, Sweden</option>
+          <option data-name="Alta Via 1" data-region="Italy" data-sub="THE DOLOMITES">Alta Via 1, Dolomites</option>
+          <option data-name="Cinque Terre" data-region="Italy" data-sub="LIGURIAN COAST">Cinque Terre Path</option>
+        </optgroup>
+        <optgroup label="🌏 Rest of World">
+          <option data-name="Inca Trail" data-region="Peru" data-sub="TO MACHU PICCHU">Inca Trail, Peru</option>
+          <option data-name="Torres del Paine" data-region="Chile" data-sub="PATAGONIA · CHILE">Torres del Paine W Trek</option>
+          <option data-name="Milford Track" data-region="New Zealand" data-sub="FIORDLAND · NEW ZEALAND">Milford Track, NZ</option>
+          <option data-name="Tongariro Alpine Crossing" data-region="New Zealand" data-sub="NORTH ISLAND · NZ">Tongariro Crossing, NZ</option>
+          <option data-name="Overland Track" data-region="Australia" data-sub="TASMANIA">Overland Track, Tasmania</option>
+          <option data-name="Everest Base Camp Trek" data-region="Nepal" data-sub="KHUMBU · NEPAL">Everest Base Camp Trek</option>
+          <option data-name="Annapurna Circuit" data-region="Nepal" data-sub="THE HIMALAYA · NEPAL">Annapurna Circuit</option>
+          <option data-name="Kumano Kodo" data-region="Japan" data-sub="PILGRIMAGE ROUTES · JAPAN">Kumano Kodo, Japan</option>
+          <option data-name="West Coast Trail" data-region="British Columbia" data-sub="VANCOUVER ISLAND">West Coast Trail, Canada</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Or type any trail / park name</label>
+      <input id="trailName" type="text" placeholder="Start typing for suggestions…" list="trailSuggestions" />
+      <datalist id="trailSuggestions">
+        <option value="Appalachian Trail"><option value="Pacific Crest Trail"><option value="Continental Divide Trail"><option value="John Muir Trail"><option value="Ice Age Trail"><option value="Superior Hiking Trail"><option value="Long Trail"><option value="Colorado Trail"><option value="Arizona Trail"><option value="Ozark Highlands Trail"><option value="Wonderland Trail"><option value="Tahoe Rim Trail"><option value="Bright Angel Trail"><option value="South Kaibab Trail"><option value="Angels Landing"><option value="The Narrows"><option value="Half Dome Trail"><option value="Mist Trail"><option value="Highline Trail"><option value="Skyline Trail"><option value="Kalalau Trail"><option value="Franconia Ridge Loop"><option value="Old Rag Mountain"><option value="Mount Katahdin"><option value="Mount Whitney Trail">
+        <option value="West Highland Way"><option value="Pennine Way"><option value="South West Coast Path"><option value="Hadrian's Wall Path"><option value="Coast to Coast Walk"><option value="Cotswold Way"><option value="South Downs Way"><option value="Offa's Dyke Path"><option value="Pembrokeshire Coast Path"><option value="Snowdon"><option value="Ben Nevis"><option value="Scafell Pike"><option value="Great Glen Way"><option value="Cleveland Way"><option value="Thames Path"><option value="Wicklow Way"><option value="Kerry Way"><option value="Causeway Coast Way">
+        <option value="Tour du Mont Blanc"><option value="Camino de Santiago"><option value="Camino Portugués"><option value="GR20"><option value="Alta Via 1"><option value="Laugavegur"><option value="Fimmvörðuháls"><option value="Cinque Terre"><option value="Kungsleden"><option value="Rota Vicentina"><option value="Eagle Walk"><option value="Malerweg"><option value="Slovenian Mountain Trail"><option value="Lycian Way"><option value="Samaria Gorge">
+        <option value="Inca Trail"><option value="Torres del Paine W Trek"><option value="Milford Track"><option value="Routeburn Track"><option value="Kepler Track"><option value="Tongariro Alpine Crossing"><option value="Overland Track"><option value="Larapinta Trail"><option value="Bibbulmun Track"><option value="Everest Base Camp Trek"><option value="Annapurna Circuit"><option value="Kilimanjaro Machame Route"><option value="Drakensberg Grand Traverse"><option value="Kumano Kodo"><option value="Nakasendo Trail"><option value="Mount Fuji Yoshida Trail"><option value="West Coast Trail"><option value="Bruce Trail"><option value="East Coast Trail">
+      </datalist>
+    </div>
+    <div class="field">
+      <label>Region or country <span style="opacity:0.5">(helps find the right one)</span></label>
+      <input id="trailRegion" type="text" placeholder="Start typing for suggestions…" list="regionSuggestions" />
+      <datalist id="regionSuggestions">
+        <option value="United States"><option value="California"><option value="Colorado"><option value="Utah"><option value="Arizona"><option value="Montana"><option value="Washington"><option value="Oregon"><option value="Wyoming"><option value="Alaska"><option value="Hawaii"><option value="Vermont"><option value="Maine"><option value="North Carolina"><option value="Tennessee"><option value="Virginia"><option value="Wisconsin"><option value="Minnesota"><option value="Texas">
+        <option value="England"><option value="Scotland"><option value="Wales"><option value="Northern Ireland"><option value="Ireland"><option value="United Kingdom">
+        <option value="France"><option value="Italy"><option value="Spain"><option value="Portugal"><option value="Switzerland"><option value="Austria"><option value="Germany"><option value="Norway"><option value="Sweden"><option value="Iceland"><option value="Slovenia"><option value="Greece"><option value="Türkiye"><option value="Malta">
+        <option value="Canada"><option value="British Columbia"><option value="Alberta"><option value="Ontario"><option value="Peru"><option value="Chile"><option value="Argentina"><option value="New Zealand"><option value="Australia"><option value="Tasmania"><option value="Nepal"><option value="Japan"><option value="Tanzania"><option value="South Africa"><option value="Morocco">
+      </datalist>
+    </div>
+    <button class="primary block" id="searchBtn">Find Real Route</button>
+
+    <div class="divider-or">or</div>
+
+    <div class="field">
+      <label>Have a GPX file? Use it directly</label>
+      <div class="upload-zone" id="uploadZone"><b>Click here</b> or drop a .gpx file<br><span style="font-size:11px;">Free from AllTrails, Wikiloc, or park websites.</span></div>
+      <input id="gpxInput" type="file" accept=".gpx" style="display:none" />
+    </div>
+
+    <div id="searchStatus" class="status"></div>
+    <button class="block small" id="cancelBtn" style="display:none; border-color:#A23E32; color:#E39A8E;">✕ Cancel Search</button>
+
+    <details class="collapsible" style="margin-top:14px;">
+      <summary>⚡ Batch mode — many trails at once</summary>
+      <div class="inner">
+        <div class="field">
+          <label>One trail per line: <b>Name | Region</b></label>
+          <textarea id="batchList" rows="5" placeholder="Pennine Way | England
+Hadrian's Wall Path | England
+Cotswold Way | England"></textarea>
+        </div>
+        <button class="primary block" id="batchBtn">Run Batch → One Master ZIP</button>
+        <div id="batchStatus" class="status"></div>
+        <div class="progress-bar" id="batchProgress"><div class="fill" id="batchFill"></div></div>
+        <div class="note">Fetches each trail with a polite pause between requests, renders it with your <b>current style and settings</b>, and packs every selected print size for every trail into one master ZIP (a folder per trail). Long lists take a while — the map service is a free shared resource, so batches of 3–6 trails at a time are kindest.</div>
+      </div>
+    </details>
+    </div><!-- /trailSection -->
+
+    <h2 style="margin-top:20px;"><span class="step-badge">⚙</span> Design options</h2>
+
+    <details class="collapsible" open>
+      <summary>Layout &amp; line</summary>
+      <div class="inner">
+        <div class="field">
+          <label>Orientation</label>
+          <select id="optOrientation">
+            <option value="portrait">Portrait (tall)</option>
+            <option value="landscape">Landscape (wide)</option>
+            <option value="square">Square</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Title position</label>
+          <select id="optTitlePos">
+            <option value="top">Top (classic)</option>
+            <option value="bottom">Bottom (gallery style)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Title style</label>
+          <select id="optTitleStyle">
+            <option value="straight">Straight (classic)</option>
+            <option value="arc">Curved arc</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Font pairing</label>
+          <select id="optFontPair">
+            <option value="classic">Classic serif (Fraunces + Plex Mono)</option>
+            <option value="elegant">Elegant (Cormorant Garamond + Plex Mono)</option>
+            <option value="modern">Modern (Space Grotesk throughout)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Frame style</label>
+          <select id="optFrameStyle">
+            <option value="double">Double line (classic)</option>
+            <option value="single">Single line</option>
+            <option value="thickthin">Thick + thin</option>
+            <option value="rounded">Rounded corners</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Compass style</label>
+          <select id="optCompassStyle">
+            <option value="minimal">Minimal needle</option>
+            <option value="ornate">Ornate 8-point</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Route line thickness — <span id="lineWidthVal">2.5</span></label>
+          <input type="range" id="optLineWidth" min="1" max="8" step="0.5" value="2.5" />
+        </div>
+        <div class="field">
+          <label>Line style</label>
+          <select id="optLineStyle">
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed (classic map route)</option>
+            <option value="dotted">Dotted</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Route smoothing — <span id="smoothVal">None</span></label>
+          <input type="range" id="optSmooth" min="0" max="10" step="1" value="0" />
+          <div class="note" style="margin-top:4px;">Reduces jaggedness on very detailed routes. Keep low for accuracy.</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>Decorations</summary>
+      <div class="inner">
+        <div class="toggle-row"><span>Compass rose</span><label class="toggle"><input type="checkbox" id="optCompass"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Corner coordinates</span><label class="toggle"><input type="checkbox" id="optCoords" checked><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Start / End markers</span><label class="toggle"><input type="checkbox" id="optMarkers" checked><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Start / End labels</span><label class="toggle"><input type="checkbox" id="optMarkerLabels"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Background grid</span><label class="toggle"><input type="checkbox" id="optGrid"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Double border frame</span><label class="toggle"><input type="checkbox" id="optFrame" checked><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Elevation profile (GPX only)</span><label class="toggle"><input type="checkbox" id="optElevation" checked><span class="slider"></span></label></div>
+        <div class="row" style="margin-top:10px;">
+          <div class="field"><label>Start label</label><input id="optStartLabel" type="text" placeholder="START" list="markerLabelList" /></div>
+          <div class="field"><label>End label</label><input id="optEndLabel" type="text" placeholder="FINISH" list="markerLabelList" /></div>
+          <datalist id="markerLabelList">
+            <option value="START"><option value="FINISH"><option value="TRAILHEAD"><option value="SUMMIT"><option value="BASE CAMP"><option value="MILE 0"><option value="THE END"><option value="SPRINGER MTN"><option value="KATAHDIN">
+          </datalist>
+        </div>
+        <div class="field" style="margin-top:10px;">
+          <label>Corner ornaments</label>
+          <select id="optCorners">
+            <option value="none">None (clean)</option>
+            <option value="ticks">Map ticks</option>
+            <option value="flourish">Line flourishes</option>
+            <option value="deco">Art-deco corners</option>
+          </select>
+        </div>
+        <div class="toggle-row"><span>Mountain ridgeline footer</span><label class="toggle"><input type="checkbox" id="optRidgeline"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Visible © WILD GRID STUDIO line</span><label class="toggle"><input type="checkbox" id="optCopyright"><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:10px;">If a label overlaps the route line, nudge it clear using the sliders below.</div>
+        <div class="row" style="margin-top:8px;">
+          <div class="field">
+            <label>Start label position — X: <span id="startDXVal">0</span> Y: <span id="startDYVal">0</span></label>
+            <input type="range" id="optStartDX" min="-60" max="60" step="2" value="0" />
+            <input type="range" id="optStartDY" min="-60" max="60" step="2" value="0" style="margin-top:4px;" />
+          </div>
+          <div class="field">
+            <label>End label position — X: <span id="endDXVal">0</span> Y: <span id="endDYVal">0</span></label>
+            <input type="range" id="optEndDX" min="-60" max="60" step="2" value="0" />
+            <input type="range" id="optEndDY" min="-60" max="60" step="2" value="0" style="margin-top:4px;" />
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>🌊 Terrain edition (premium style)</summary>
+      <div class="inner">
+        <div class="note" style="margin-top:0; margin-bottom:10px;">The richer poster style: real lochs/lakes/rivers as filled shapes behind the route, named peaks and villages along the way, and a stats panel. All from real map data — fetch once per trail, saved with the project.</div>
+        <button class="primary block" id="fetchTerrainBtn" disabled>Fetch terrain &amp; waypoints for this route</button>
+        <div id="terrainStatus" class="status"></div>
+        <div class="toggle-row" style="margin-top:10px;"><span>Show terrain (water bodies)</span><label class="toggle"><input type="checkbox" id="optTerrain"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Show waypoint labels (peaks &amp; villages)</span><label class="toggle"><input type="checkbox" id="optWaypoints"><span class="slider"></span></label></div>
+        <div class="field" style="margin-top:8px;">
+          <label>Max waypoints — <span id="maxWpVal">14</span></label>
+          <input type="range" id="optMaxWaypoints" min="4" max="24" step="2" value="14" />
+        </div>
+        <div class="field">
+          <label>Bottom panel layout</label>
+          <select id="optLegendLayout">
+            <option value="line">Single legend line (minimalist)</option>
+            <option value="grid">Stats grid (Distance · Highest Point · Ascent · Duration)</option>
+          </select>
+        </div>
+        <div class="note">Sea coastline isn't included (inland lochs, lakes and rivers only) — coastal trails will show rivers but not open sea. Batch mode skips terrain fetching; run terrain trails individually.</div>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>Custom colours (override style)</summary>
+      <div class="inner">
+        <div class="toggle-row"><span>Use custom colours</span><label class="toggle"><input type="checkbox" id="optCustomColors"><span class="slider"></span></label></div>
+        <div class="row3" style="margin-top:10px;">
+          <div class="field"><label>Background</label><input type="color" id="colBg" value="#EDE1C8" /></div>
+          <div class="field"><label>Route line</label><input type="color" id="colLine" value="#7A3B2E" /></div>
+          <div class="field"><label>Text</label><input type="color" id="colText" value="#3B2A20" /></div>
+        </div>
+        <div class="row" >
+          <div class="field"><label>Accent</label><input type="color" id="colAccent" value="#B08D57" /></div>
+          <div class="field"><label>Frame</label><input type="color" id="colFrame" value="#7A3B2E" /></div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- CENTER -->
+  <div class="stage">
+    <h2 style="align-self:flex-start;"><span class="step-badge">2</span> Style your poster</h2>
+    <div class="canvas-wrap">
+      <div class="coords-readout" id="coordsReadout"></div>
+      <div id="posterSvgHolder"><div class="empty-hint">Your real trail route will appear here.<br>Start with Step 1 on the left —<br>pick a popular trail from the dropdown.</div></div>
+    </div>
+
+    <div class="row" style="max-width:560px; width:100%;">
+      <button class="block small" id="verifyBtn" disabled>🔍 Verify route against real map</button>
+      <button class="block small" id="mockupBtn" disabled>🖼 Wall mockup PNG</button>
+    </div>
+    <div class="toggle-row" style="max-width:560px; width:100%; border:none;"><span style="font-size:11.5px;">Mockup: transparent background (frame + poster only, for layering in Photoshop)</span><label class="toggle"><input type="checkbox" id="optMockupTransparent"><span class="slider"></span></label></div>
+
+    <div class="style-swatches" id="styleSwatches"></div>
+
+    <div class="row" style="max-width:560px; width:100%;">
+      <div class="field">
+        <label>Poster title</label>
+        <input id="posterTitle" type="text" placeholder="Trail name" list="titleSuggestions" />
+        <datalist id="titleSuggestions">
+          <option value="Appalachian Trail"><option value="Pacific Crest Trail"><option value="John Muir Trail"><option value="West Highland Way"><option value="Tour du Mont Blanc"><option value="Camino de Santiago"><option value="The Long Walk Home"><option value="Into the Wild"><option value="Trail of the Ancients"><option value="The Great Traverse">
+        </datalist>
+      </div>
+      <div class="field">
+        <label>Poster subtitle</label>
+        <input id="posterSubtitle" type="text" placeholder="e.g. GEORGIA TO MAINE" list="subtitleSuggestions" />
+        <datalist id="subtitleSuggestions">
+          <option value="GEORGIA TO MAINE"><option value="MEXICO TO CANADA"><option value="COAST TO COAST"><option value="SUMMIT TO SEA"><option value="THE LONG WAY ROUND"><option value="EVERY MILE EARNED"><option value="ONE STEP AT A TIME"><option value="ESTABLISHED 1937"><option value="A JOURNEY OF 2,190 MILES"><option value="WHERE THE TRAIL LEADS"><option value="THE WAY OF ST JAMES"><option value="MILNGAVIE TO FORT WILLIAM"><option value="YOSEMITE TO MT WHITNEY"><option value="FRANCE · ITALY · SWITZERLAND"><option value="THE ICELANDIC HIGHLANDS"><option value="FIORDLAND · NEW ZEALAND"><option value="TO MACHU PICCHU"><option value="KHUMBU · NEPAL"><option value="HIKED IT · LOVED IT"><option value="ADVENTURE AWAITS">
+        </datalist>
+      </div>
+    </div>
+
+    <h2 style="align-self:flex-start;"><span class="step-badge">3</span> Export your product</h2>
+    <div style="max-width:560px; width:100%;">
+      <label style="display:block; font-size:11.5px; color:rgba(247,243,234,0.65); margin-bottom:6px; font-weight:500;">Print sizes to include in the buyer bundle (300 DPI)</label>
+      <div class="size-grid" id="sizeGrid"></div>
+      <div class="toggle-row" style="border:none; margin-bottom:4px;"><span>Also include JPGs in bundle (some buyers prefer them)</span><label class="toggle"><input type="checkbox" id="optJpg"><span class="slider"></span></label></div>
+      <details class="collapsible">
+        <summary>Export multiple style variants at once</summary>
+        <div class="inner">
+          <div class="note" style="margin-top:0; margin-bottom:8px;">Tick extra styles to include them all in one bundle — each style gets its own folder with every selected size. Great for offering colour variants in one listing.</div>
+          <div class="size-grid" id="styleExportGrid"></div>
+        </div>
+      </details>
+      <div class="row">
+        <button class="block" id="exportSvgBtn" disabled>Download SVG <span style="font-weight:400; opacity:0.7;">(portable, fonts embedded)</span></button>
+        <button class="block" id="exportPngBtn" disabled>Quick PNG <span style="font-weight:400; opacity:0.7;">(preview)</span></button>
+      </div>
+      <button class="primary block" id="exportBundleBtn" disabled>📦 Download Full Etsy Bundle (ZIP)</button>
+      <div class="progress-bar" id="bundleProgress"><div class="fill" id="bundleFill"></div></div>
+      <div id="bundleStatus" class="status"></div>
+      <div class="row" style="margin-top:8px;">
+        <button class="block small" id="saveProjectBtn">💾 Save Project</button>
+        <button class="block small" id="loadProjectBtn">📂 Load Project</button>
+        <button class="block small" id="saveGpxBtn" disabled>🗺 Save Route as GPX</button>
+        <input id="projectInput" type="file" accept=".json" style="display:none" />
+      </div>
+      <div class="note"><b>The bundle ZIP contains:</b> every ticked size as a 300 DPI PNG (plus JPG if toggled), the portable SVG master with embedded fonts, and a ready-written "How to Print" README for your buyers. <b>Save Project</b> stores every setting as a small file so you can reopen and re-export this exact poster later.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel right">
+    <h2><span class="step-badge">🔑</span> Claude connection</h2>
+    <p class="step-hint">Facts and research need Claude. Inside a Claude chat: works automatically, leave blank. Standalone: paste your API key (starts sk-ant-), remembered on this computer.</p>
+    <div class="field">
+      <input id="apiKey" type="password" placeholder="Anthropic API key (optional)" autocomplete="off" />
+    </div>
+
+    <h2 style="margin-top:18px;"><span class="step-badge">＋</span> Trail facts for the legend</h2>
+    <div id="autoDistance" style="display:none; font-size:12px; padding:8px 10px; background:rgba(122,155,110,0.1); border-radius:4px; margin-bottom:8px;">
+      Measured from route data: <b id="autoDistanceVal" style="font-family:'IBM Plex Mono',monospace; color:var(--brass-bright);"></b>
+      <button class="small" style="margin-left:8px; padding:3px 8px; font-size:10px;" id="useDistanceBtn">Use in legend</button>
+    </div>
+    <p class="step-hint">Live web search for real distance / elevation / date facts.</p>
+    <button class="block" id="factsBtn" disabled>Look Up Trail Facts</button>
+    <div id="factsStatus" class="status"></div>
+    <div id="factsList" style="margin-top:10px;"></div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>Legend text (bottom of poster) <span style="opacity:0.5; font-weight:400;">— clears automatically for each new trail</span></label>
+      <textarea id="legendText" rows="2" placeholder="e.g. 2,190 MILES · EST. 1937"></textarea>
+      <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:7px;" id="legendChips"></div>
+    </div>
+
+    <h2 style="margin-top:20px;"><span class="step-badge">📝</span> Etsy listing draft</h2>
+    <p class="step-hint">Generates a ready-to-paste Etsy title, 13 tags, and description for this exact poster. Uses Claude — same connection as above.</p>
+    <button class="block" id="listingBtn" disabled>Generate Listing Draft</button>
+    <div id="listingStatus" class="status"></div>
+    <div id="listingOutput" class="research-output"></div>
+
+    <h2 style="margin-top:20px;"><span class="step-badge">📈</span> Market research</h2>
+    <p class="step-hint">Live search: which locations and styles are selling on Etsy now.</p>
+    <div id="researchStatus" class="status"></div>
+    <div id="researchOutput" class="research-output"></div>
+  </div>
+</div>
+
+<!-- VERIFY MODAL -->
+<div class="modal-overlay" id="verifyModal">
+  <div class="modal" style="max-width:820px;">
+    <button class="close-x" onclick="document.getElementById('verifyModal').classList.remove('show')">✕</button>
+    <h3>Route accuracy check</h3>
+    <div class="modal-sub">Your drawn route (gold) over the real OpenStreetMap — preview only, never on exports</div>
+    <p style="font-size:12px;">If the gold line follows the mapped trail/terrain sensibly, the geometry is good. Small gaps between OSM segments show as straight jumps — cosmetic on long trails.</p>
+    <div id="verifyMapHolder" style="position:relative; width:100%; overflow:hidden; border-radius:6px; background:#0a0f14;"></div>
+  </div>
+</div></div>
+
+<!-- HELP MODAL -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
+    <h3>How this tool works</h3>
+    <div class="modal-sub">From real trail to Etsy-ready product · version 7.0</div>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+
+    <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
+      <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
+      <ol style="margin:6px 0;">
+        <li><b>Pick a trail</b> from the dropdown (or City Map tab → type a place → Draw City Map)</li>
+        <li><b>Click a style swatch</b> you like</li>
+        <li><b>🗺 Save Route as GPX</b> — do this once per trail, keep the file in a "WGS Trails" folder. Next time, drag that file in instead of searching: instant, works even when map servers are busy.</li>
+        <li><b>📦 Download Full Etsy Bundle</b> — that ZIP is your finished product</li>
+      </ol>
+      <h4>If a search fails</h4>
+      <p style="margin:4px 0;"><b>"server busy / 504 / timeout"</b> → the free public map server is overloaded. Wait 10–30 minutes and try again — or use a GPX you saved earlier, which never depends on the server.</p>
+      <p style="margin:4px 0;"><b>"Failed to fetch" instantly</b> → you're probably opening the file from your computer (file:///). This tool must run from its web address (your Netlify/hosted URL) — open the bookmark instead.</p>
+      <p style="margin:4px 0 0;">That's everything. No other troubleshooting exists for normal use.</p>
+    </div>
+
+    <h4>Power features</h4>
+    <ul>
+      <li><b>⚡ Batch mode</b> (left panel): list several trails as "Name | Region" lines and get one master ZIP with every size for every trail, rendered in your current style.</li>
+      <li><b>⭐ My defaults</b>: save your preferred style/decorations/sizes once — every session starts pre-configured. Recent trails are listed there too for one-click reload.</li>
+      <li><b>🔍 Verify route</b>: overlays your drawn route on the real OpenStreetMap so you can eyeball accuracy before exporting. Preview only — never appears on exports.</li>
+      <li><b>🖼 Wall mockup</b>: one-click framed-on-a-wall PNG for a quick first listing photo.</li>
+      <li><b>Style variants</b> (Export section): tick extra styles to export every colourway in one bundle — sell them as variants in a single listing.</li>
+      <li><b>Design extras</b>: curved titles, three font pairings, four frame styles, two compass styles, and label position nudge sliders.</li>
+      <li><b>🌊 Terrain edition</b> (Design Options): the premium poster style — real lochs/lakes/rivers as filled shapes behind the route, named peaks and villages as waypoint labels, and a stats-grid footer (Distance · Highest Point · Total Ascent · Typical Duration). Click <b>Fetch terrain &amp; waypoints</b> once per trail; everything is saved with the project. Notes: highest point &amp; ascent need a GPX with elevation data; typical duration comes from Look Up Trail Facts; open sea isn't drawn (inland water only); batch mode skips terrain.</li>
+    </ul>
+
+    <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin:14px 0 8px; background:rgba(176,141,87,0.07);">
+      <h4 style="margin-top:0;">✅ QA Gates — Wild Grid Studio standard</h4>
+
+      <p style="margin:4px 0 8px;"><b>Layer 1 — Tool QA</b> (run once whenever this tool gets a new version, before production use):</p>
+      <ol style="margin:4px 0;">
+        <li><b>Gate 1 · Structural:</b> open the tool fresh — no errors, all buttons present. Load a project, save it, reload it: every setting must round-trip identically.</li>
+        <li><b>Gate 2 · Functional:</b> full workflow with the <b>West Highland Way GPX</b> as the known-good test fixture (correct answers: ~94.5 mi measured, coordinates 55.94°N 5.11°W → 56.82°N 4.32°W, Milngavie at the south/START). Load → style → facts → bundle export → open the ZIP and confirm every ticked size exists and renders → 🔍 Verify overlay → batch run with 2 trails → mockup → Word doc opens in Word.</li>
+        <li><b>Gate 3 · Visual:</b> your manual spot-check of exported PNGs at full zoom — typography, spacing, nothing overlapping.</li>
+      </ol>
+
+      <p style="margin:10px 0 8px;"><b>Layer 2 — Product QA</b> (every poster, before it is listed anywhere):</p>
+      <ol style="margin:4px 0;">
+        <li><b>🔍 Verify route</b> against the real map — the drawn line must follow the actual trail sensibly.</li>
+        <li><b>Facts check:</b> legend distance and established year confirmed against one official source (trail authority or Wikipedia).</li>
+        <li><b>Start / Finish:</b> geographically correct ends, labels not overlapping the route (use the nudge sliders).</li>
+        <li><b>Export check:</b> open the exported PNGs themselves — not just the on-screen preview — at full zoom.</li>
+        <li><b>Test print</b> one size at home for the first few products only, then spot-check occasionally.</li>
+      </ol>
+
+      <p style="margin:8px 0 0;">Never skip or combine gates. A poster that fails any check does not get listed until fixed.</p>
+    </div>
+
+    <h4>Step 1 — Pick a trail</h4>
+    <p>Choose from the <b>popular trails dropdown</b> (pre-configured, one click) or type any trail/park name — suggestions appear as you type. The tool downloads that trail's <b>real GPS route</b> from OpenStreetMap. Every bend you see is the actual trail.</p>
+    <p>If a trail isn't found, download a free <b>GPX file</b> from AllTrails.com or Wikiloc.com and drop it in the upload box — that works for any trail on Earth, and also unlocks the elevation profile chart.</p>
+
+    <h4>Design options (left panel)</h4>
+    <ul>
+      <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
+      <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
+      <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
+    </ul>
+
+    <h4>Step 2 — Style it</h4>
+    <p>Nine style swatches: Vintage, Minimal, Bold, Dark, Pastel, Blueprint, Forest, Desert, and Mono. Titles and subtitles have built-in suggestions; the legend has one-click templates.</p>
+
+    <h4>Step 3 — Export</h4>
+    <p><b>Quick PNG</b> gives a single preview image. <b>SVG</b> is the editable master for Recraft/Illustrator. <b>📦 Full Etsy Bundle</b> is the real product: tick the print sizes you want to sell, and it generates every one at true 300 DPI, plus the SVG and a ready-written "How to Print" guide for buyers, zipped into one file — upload that ZIP straight to your Etsy digital listing.</p>
+
+    <h4>Print sizes explained</h4>
+    <p>Standard Etsy poster bundles cover three ratio families so buyers can print any common frame size: <b>2:3</b> (covers 4×6" up to 24×36"), <b>3:4</b> (9×12, 18×24), <b>4:5</b> (8×10, 16×20), <b>11×14</b>, and <b>ISO A-sizes</b> (A4–A1) for international buyers. Tick them all for maximum listing appeal — generation takes a few seconds per size.</p>
+
+    <h4>The web-search buttons</h4>
+    <p><b>Look Up Trail Facts</b> finds real distance/elevation/established data for the legend. <b>Research What's Selling</b> reports current popular locations, styles, and pricing on Etsy. Both work automatically inside a Claude chat, or standalone with your API key (uses your API credits — roughly a cent or two per lookup). Always verify facts against an official source before publishing.</p>
+
+    <h4>What this tool never does</h4>
+    <p>It never invents geography. Routes always come from real map data or real GPS recordings. If neither source has the trail, it says so rather than guessing.</p>
+
+    <h4>After export — remaining steps to a live listing</h4>
+    <ol>
+      <li>Optional polish: open the SVG in Recraft/Illustrator for texture or extra typography.</li>
+      <li>Visually check the route against a reference map (long trails can have small gaps between mapped segments).</li>
+      <li>Test-print one size at home before listing.</li>
+      <li>Create listing mockups (framed wall shots) with your existing Listing Asset Factory / Magnific workflow.</li>
+      <li>Write the listing (title, tags, description) and check Etsy's Creativity Standards for the right creation-method disclosure.</li>
+    </ol>
+  </div>
+</div>
+</div><!-- /wgsApp -->
+
+<script>
+// ---------------------------------------------------------------
+// STATE
+// ---------------------------------------------------------------
+let currentPoints = [];
+let currentStyle = 'vintage';
+let dataMode = 'trail';           // 'trail' | 'city'
+let cityWays = [];                // [{cls, pts:[{lat,lon}]}]
+let cityWaterways = [];
+let cityCenter = null;            // {lat, lon}
+let cityRadiusKm = 2;
+
+// ---------------------------------------------------------------
+// MODE SWITCHING
+// ---------------------------------------------------------------
+function setMode(mode){
+  dataMode = mode;
+  document.getElementById('modeTrail').classList.toggle('active', mode==='trail');
+  document.getElementById('modeCity').classList.toggle('active', mode==='city');
+  document.getElementById('trailSection').style.display = mode==='trail' ? 'block' : 'none';
+  document.getElementById('citySection').style.display = mode==='city' ? 'block' : 'none';
+  if ((mode==='trail' && currentPoints.length>1) || (mode==='city' && cityWays.length)) drawPoster();
+}
+document.getElementById('modeTrail').onclick = () => setMode('trail');
+document.getElementById('modeCity').onclick = () => setMode('city');
+document.getElementById('cityRadius').addEventListener('input', (e) => {
+  document.getElementById('radiusVal').textContent = parseFloat(e.target.value).toFixed(1);
+});
+['cityPin','cityWater'].forEach(id => document.getElementById(id).addEventListener('input', () => { if (cityWays.length) drawPoster(); }));
+
+// ---------------------------------------------------------------
+// CITY MAP: geocode (Nominatim) + roads (Overpass)
+// ---------------------------------------------------------------
+const ROAD_CLASSES = {
+  motorway: 3.2, trunk: 3.0, primary: 2.4, secondary: 1.8,
+  tertiary: 1.3, residential: 0.7, unclassified: 0.7, service: 0.4,
+  living_street: 0.6, pedestrian: 0.5, footway: 0.3, cycleway: 0.3, path: 0.3
+};
+
+// Overpass with automatic mirror fallback
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.osm.jp/api/interpreter'
+];
+let activeFetchController = null;
+async function fetchOverpass(query){
+  let lastErr;
+  for (const url of OVERPASS_MIRRORS) {
+    // try POST first, then GET (some antivirus/extensions block POST from local files)
+    for (const method of ['POST','GET']) {
+      activeFetchController = new AbortController();
+      const timeout = setTimeout(() => activeFetchController.abort('timeout'), 45000);
+      try {
+        const opts = { signal: activeFetchController.signal };
+        let target = url;
+        if (method === 'POST') { opts.method = 'POST'; opts.body = 'data=' + encodeURIComponent(query); }
+        else { target = url + '?data=' + encodeURIComponent(query); }
+        const resp = await fetch(target, opts);
+        clearTimeout(timeout);
+        if (resp.ok) return resp.json();
+        if (resp.status === 504 || resp.status === 429 || resp.status === 503) {
+          // server overloaded/rate-limited — wait briefly and retry once before giving up on this mirror
+          lastErr = new Error('map server busy (status ' + resp.status + ')');
+          await new Promise(r => setTimeout(r, 3000));
+          const retryController = new AbortController();
+          const retryTimeout = setTimeout(() => retryController.abort('timeout'), 45000);
+          try {
+            const retryResp = await fetch(target, { ...opts, signal: retryController.signal });
+            clearTimeout(retryTimeout);
+            if (retryResp.ok) return retryResp.json();
+            lastErr = new Error('map server still busy (status ' + retryResp.status + ') — try again in a few minutes, or use a GPX file');
+          } catch (e2) { clearTimeout(retryTimeout); }
+          break;
+        }
+        lastErr = new Error('map server returned ' + resp.status);
+        break; // server reachable but rejected query — GET retry won't change that
+      } catch (e) {
+        clearTimeout(timeout);
+        if (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'cancelled') {
+          throw new Error('Search cancelled.');
+        }
+        lastErr = (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'timeout') ? new Error('server took too long (45s)') : e;
+      }
+    }
+  }
+  throw new Error((lastErr && lastErr.message || 'all map servers unreachable') +
+    '. If you are previewing inside the Claude chat, download this file and open it directly in your browser — map data cannot load inside the chat preview.');
+}
+
+// elapsed-seconds ticker for long fetches
+let fetchTicker = null;
+function startTicker(statusId, baseMsg){
+  let secs = 0;
+  stopTicker();
+  fetchTicker = setInterval(() => {
+    secs++;
+    const el = document.getElementById(statusId);
+    if (el.className.includes('loading')) el.textContent = baseMsg + ' — ' + secs + 's elapsed';
+  }, 1000);
+}
+function stopTicker(){ if (fetchTicker) { clearInterval(fetchTicker); fetchTicker = null; } }
+
+document.getElementById('cityBtn').onclick = async () => {
+  const q = document.getElementById('cityQuery').value.trim();
+  if (!q) { setStatus('searchStatus','error','Type a place name or address first.'); return; }
+  cityRadiusKm = parseFloat(document.getElementById('cityRadius').value);
+
+  const btn = document.getElementById('cityBtn');
+  btn.disabled = true;
+  setStatus('searchStatus','loading','Finding the location…');
+
+  try {
+    // 1. Geocode
+    const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    const geo = await geoResp.json();
+    if (!geo.length) throw new Error(`"${q}" not found — try a more specific place name or add a country.`);
+    cityCenter = { lat: parseFloat(geo[0].lat), lon: parseFloat(geo[0].lon) };
+    const displayName = (geo[0].display_name || q).split(',')[0];
+
+    // 2. Fetch roads (and optionally water) within radius
+    setStatus('searchStatus','loading',`Found ${displayName}. Downloading every street within ${cityRadiusKm} km…`);
+    startTicker('searchStatus', `Found ${displayName}. Downloading streets within ${cityRadiusKm} km…`);
+    document.getElementById('cancelBtn').style.display = 'block';
+    const r = Math.round(cityRadiusKm * 1000);
+    const wantWater = document.getElementById('cityWater').checked;
+    const query = `[out:json][timeout:60];
+(
+  way["highway"](around:${r},${cityCenter.lat},${cityCenter.lon});
+  ${wantWater ? `way["waterway"~"river|canal|stream"](around:${r},${cityCenter.lat},${cityCenter.lon});` : ''}
+);
+out geom;`;
+
+    const data = await fetchOverpass(query);
+
+    cityWays = []; cityWaterways = [];
+    let segCount = 0;
+    (data.elements || []).forEach(el => {
+      if (el.type !== 'way' || !el.geometry || el.geometry.length < 2) return;
+      const pts = el.geometry.map(g => ({ lat: g.lat, lon: g.lon }));
+      if (el.tags && el.tags.waterway) {
+        cityWaterways.push({ pts });
+      } else if (el.tags && el.tags.highway) {
+        const cls = ROAD_CLASSES[el.tags.highway] !== undefined ? el.tags.highway : 'residential';
+        cityWays.push({ cls, pts });
+      }
+      segCount++;
+    });
+
+    if (!cityWays.length) throw new Error('No streets found here — try a different location or larger radius.');
+
+    setStatus('searchStatus','success',`✓ ${cityWays.length.toLocaleString()} street segments loaded${cityWaterways.length ? ` + ${cityWaterways.length} waterways` : ''}. Drawing…`);
+    document.getElementById('posterTitle').value = displayName;
+    document.getElementById('posterSubtitle').value = `${Math.abs(cityCenter.lat).toFixed(4)}°${cityCenter.lat>=0?'N':'S'} · ${Math.abs(cityCenter.lon).toFixed(4)}°${cityCenter.lon>=0?'E':'W'}`;
+    resetPerTrailFields();
+    document.getElementById('factsBtn').disabled = false;
+    drawPoster();
+  } catch (err) {
+    setStatus('searchStatus','error', err.message);
+  } finally {
+    stopTicker();
+    btn.disabled = false;
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+};
+
+// project city data: fixed square bounds around center
+function projectCity(width, height, padding){
+  const latSpan = cityRadiusKm / 111.32;
+  const lonSpan = cityRadiusKm / (111.32 * Math.cos(cityCenter.lat * Math.PI/180));
+  const minLat = cityCenter.lat - latSpan, maxLat = cityCenter.lat + latSpan;
+  const minLon = cityCenter.lon - lonSpan, maxLon = cityCenter.lon + lonSpan;
+  const usableW = width - padding*2, usableH = height - padding*2;
+  const side = Math.min(usableW, usableH);
+  const ox = padding + (usableW - side)/2, oy = padding + (usableH - side)/2;
+  const toXY = (p) => ({
+    x: ox + ((p.lon - minLon) / (maxLon - minLon)) * side,
+    y: oy + ((maxLat - p.lat) / (maxLat - minLat)) * side
+  });
+  return { toXY, side, ox, oy };
+}
+
+function buildCitySvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH){
+  const parts = [];
+  const pad = Math.min(W,H) * 0.09;
+  const proj = projectCity(W, mapAreaH, pad);
+
+  // clip to map square so streets don't bleed into title/legend
+  const clipId = 'mapclip' + Math.random().toString(36).slice(2,7);
+  parts.push(`<clipPath id="${clipId}"><rect x="${proj.ox}" y="${proj.oy + mapOffsetY}" width="${proj.side}" height="${proj.side}"/></clipPath>`);
+
+  let waterPaths = '', roadGroups = { thin:'', mid:'', thick:'' };
+  cityWaterways.forEach(w => {
+    waterPaths += 'M ' + w.pts.map(p => { const c = proj.toXY(p); return `${c.x.toFixed(1)},${(c.y+mapOffsetY).toFixed(1)}`; }).join(' L ') + ' ';
+  });
+  cityWays.forEach(w => {
+    const weight = ROAD_CLASSES[w.cls] || 0.7;
+    const d = 'M ' + w.pts.map(p => { const c = proj.toXY(p); return `${c.x.toFixed(1)},${(c.y+mapOffsetY).toFixed(1)}`; }).join(' L ') + ' ';
+    if (weight >= 2.2) roadGroups.thick += d;
+    else if (weight >= 1.2) roadGroups.mid += d;
+    else roadGroups.thin += d;
+  });
+
+  parts.push(`<g clip-path="url(#${clipId})">`);
+  if (waterPaths) parts.push(`<path d="${waterPaths}" fill="none" stroke="${s.accent}" stroke-width="${2.2*scaleFactor}" opacity="0.55" stroke-linecap="round"/>`);
+  if (roadGroups.thin)  parts.push(`<path d="${roadGroups.thin}" fill="none" stroke="${s.line}" stroke-width="${0.55*scaleFactor}" opacity="0.75"/>`);
+  if (roadGroups.mid)   parts.push(`<path d="${roadGroups.mid}" fill="none" stroke="${s.line}" stroke-width="${1.3*scaleFactor}"/>`);
+  if (roadGroups.thick) parts.push(`<path d="${roadGroups.thick}" fill="none" stroke="${s.line}" stroke-width="${2.4*scaleFactor}"/>`);
+  parts.push(`</g>`);
+
+  // center pin
+  const pin = document.getElementById('cityPin').value;
+  if (pin !== 'none') {
+    const c = proj.toXY(cityCenter);
+    const cx = c.x, cy = c.y + mapOffsetY, r = 9*scaleFactor;
+    const pinColor = '#C0392B';
+    if (pin === 'heart') {
+      parts.push(`<path transform="translate(${cx},${cy}) scale(${scaleFactor})" d="M0,4 C-1,1 -6,-1 -6,-5 C-6,-8 -4,-10 -1.5,-10 C0,-10 0,-8.5 0,-8.5 C0,-8.5 0,-10 1.5,-10 C4,-10 6,-8 6,-5 C6,-1 1,1 0,4 Z" fill="${pinColor}"/>`);
+    } else if (pin === 'pin') {
+      parts.push(`<path transform="translate(${cx},${cy}) scale(${scaleFactor})" d="M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z" fill="${pinColor}"/><circle cx="${cx}" cy="${cy - 9.5*scaleFactor}" r="${2.4*scaleFactor}" fill="${s.bg}"/>`);
+    } else if (pin === 'star') {
+      parts.push(`<path transform="translate(${cx},${cy}) scale(${scaleFactor*0.9})" d="M0,-10 L2.4,-3.2 L9.5,-3.1 L3.9,1.2 L5.9,8.1 L0,4 L-5.9,8.1 L-3.9,1.2 L-9.5,-3.1 L-2.4,-3.2 Z" fill="${pinColor}"/>`);
+    } else {
+      parts.push(`<circle cx="${cx}" cy="${cy}" r="${5*scaleFactor}" fill="${pinColor}"/>`);
+    }
+  }
+  return parts;
+}
+
+const STYLES = {
+  vintage:  { label:'Vintage',   bg:'#EDE1C8', line:'#7A3B2E', frame:'#7A3B2E', text:'#3B2A20', accent:'#B08D57', dot:'#B08D57', land:'#E0CBA4', water:'#C9DAD3' },
+  minimal:  { label:'Minimal',   bg:'#F7F5F0', line:'#2A2E35', frame:'#2A2E35', text:'#2A2E35', accent:'#2A2E35', dot:'#2A2E35', land:'#EAE6DB', water:'#D8E4E6' },
+  bold:     { label:'Bold',      bg:'#FBEBD8', line:'#C4491F', frame:'#1B1B1B', text:'#1B1B1B', accent:'#C4491F', dot:'#C4491F', land:'#F0D3A6', water:'#CDE0DC' },
+  dark:     { label:'Dark',      bg:'#1C2430', line:'#D2AC72', frame:'#D2AC72', text:'#EDE6D6', accent:'#D2AC72', dot:'#D2AC72', land:'#26303E', water:'#141C26' },
+  pastel:   { label:'Pastel',    bg:'#F2ECE4', line:'#8FA98C', frame:'#8FA98C', text:'#4A4A42', accent:'#C99A8E', dot:'#C99A8E', land:'#E7DECE', water:'#D3E0DA' },
+  blueprint:{ label:'Blueprint', bg:'#1B3A5C', line:'#EAF2F8', frame:'#EAF2F8', text:'#EAF2F8', accent:'#7FB3D8', dot:'#EAF2F8', land:'#234A70', water:'#16334F' },
+  forest:   { label:'Forest',    bg:'#1E2B22', line:'#C9A96A', frame:'#8FA98C', text:'#E8E4D8', accent:'#8FA98C', dot:'#C9A96A', land:'#2A3A2E', water:'#16211C' },
+  desert:   { label:'Desert',    bg:'#F0DEC4', line:'#B3542E', frame:'#8C6D4F', text:'#5C4633', accent:'#D89B5F', dot:'#B3542E', land:'#E3C79E', water:'#CBDBD2' },
+  mono:     { label:'Mono',      bg:'#FFFFFF', line:'#111111', frame:'#111111', text:'#111111', accent:'#777777', dot:'#111111', land:'#ECECEC', water:'#FAFAFA' },
+  midnight: { label:'Midnight',  bg:'#101418', line:'#E8B54D', frame:'#3A4148', text:'#D9DEE3', accent:'#E8B54D', dot:'#E8B54D', land:'#1A2027', water:'#0B0F13' },
+  ocean:    { label:'Ocean',     bg:'#EAF2F2', line:'#1E5F74', frame:'#1E5F74', text:'#173F4E', accent:'#5FA8B5', dot:'#1E5F74', land:'#DCE9E4', water:'#C2DBE0' },
+  rose:     { label:'Rose',      bg:'#F7EFEA', line:'#9C5148', frame:'#9C5148', text:'#5C3A34', accent:'#C98A7D', dot:'#9C5148', land:'#EEDFD3', water:'#DCE7E2' },
+  alpine:   { label:'Alpine',    bg:'#F4F6F5', line:'#3E5C4B', frame:'#3E5C4B', text:'#2C3E33', accent:'#88A896', dot:'#3E5C4B', land:'#E4EAE2', water:'#CFE0E2' },
+};
+
+// Terrain edition state
+let terrainPolys = [];   // [{pts:[{lat,lon}]}] water bodies
+let waypointPts = [];    // [{lat,lon,name,kind:'peak'|'place',ele?}]
+
+const PRINT_SIZES = [
+  { id:'2x3',   label:'2:3 · 24×36" family', w:24, h:36, unit:'in' },
+  { id:'3x4',   label:'3:4 · 18×24" family', w:18, h:24, unit:'in' },
+  { id:'4x5',   label:'4:5 · 16×20" family', w:16, h:20, unit:'in' },
+  { id:'11x14', label:'11×14"',              w:11, h:14, unit:'in' },
+  { id:'A2',    label:'ISO A2 (covers A4/A3)', w:16.54, h:23.39, unit:'in' },
+  { id:'5x7',   label:'5×7"',                w:5,  h:7,  unit:'in' },
+];
+const DPI = 300;
+const MAX_PIXEL_DIM = 7200; // canvas safety cap
+
+// ---------------------------------------------------------------
+// SIZE GRID
+// ---------------------------------------------------------------
+const sizeGrid = document.getElementById('sizeGrid');
+PRINT_SIZES.forEach(s => {
+  const chip = document.createElement('label');
+  chip.className = 'size-chip';
+  chip.innerHTML = `<input type="checkbox" value="${s.id}" ${['2x3','3x4','4x5','11x14','A2'].includes(s.id)?'checked':''}> ${s.label}`;
+  sizeGrid.appendChild(chip);
+});
+
+// STYLE EXPORT GRID (multi-style variants)
+const styleExportGrid = document.getElementById('styleExportGrid');
+Object.entries(STYLES).forEach(([key, st]) => {
+  const chip = document.createElement('label');
+  chip.className = 'size-chip';
+  chip.innerHTML = `<input type="checkbox" value="${key}"> <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${st.bg}; border:2px solid ${st.line}; vertical-align:middle;"></span> ${st.label}`;
+  styleExportGrid.appendChild(chip);
+});
+
+// ---------------------------------------------------------------
+// SWATCHES
+// ---------------------------------------------------------------
+function renderSwatches(){
+  const holder = document.getElementById('styleSwatches');
+  holder.innerHTML = '';
+  Object.entries(STYLES).forEach(([key, s]) => {
+    const el = document.createElement('div');
+    el.className = 'swatch' + (key === currentStyle ? ' active' : '');
+    el.innerHTML = `<div class="dot" style="background:${s.bg}; border:2px solid ${s.line};"></div><div class="label">${s.label}</div>`;
+    el.onclick = () => {
+      currentStyle = key;
+      // sync custom color pickers to the chosen style for easy tweaking
+      const st = STYLES[key];
+      document.getElementById('colBg').value = st.bg;
+      document.getElementById('colLine').value = st.line;
+      document.getElementById('colText').value = st.text;
+      document.getElementById('colAccent').value = st.accent;
+      document.getElementById('colFrame').value = st.frame;
+      renderSwatches(); drawPoster();
+    };
+    holder.appendChild(el);
+  });
+}
+renderSwatches();
+
+// ---------------------------------------------------------------
+// LEGEND CHIPS
+// ---------------------------------------------------------------
+// Template chips — placeholders only, never real-looking numbers (accidentally inserting
+// another trail's genuine stats onto a poster is a silent accuracy failure)
+const LEGEND_TEMPLATES = [
+  '[DISTANCE] MILES · EST. [YEAR]',
+  'DISTANCE · ELEVATION · ESTABLISHED',
+  'LAT [LAT]°N · LON [LON]°W',
+  'COMPLETED [YEAR]',
+  'HIKED [DATE] · [YOUR NAME]',
+  '· · · THE JOURNEY IS THE DESTINATION · · ·',
+];
+const chipHolder = document.getElementById('legendChips');
+LEGEND_TEMPLATES.forEach(t => {
+  const chip = document.createElement('button');
+  chip.className = 'small';
+  chip.style.cssText = 'font-size:10px; padding:4px 8px; font-weight:500; opacity:0.85;';
+  chip.textContent = t;
+  chip.onclick = () => { document.getElementById('legendText').value = t; drawPoster(); };
+  chipHolder.appendChild(chip);
+});
+// One genuinely-safe smart chip: this trail's real measured distance
+const measuredChip = document.createElement('button');
+measuredChip.className = 'small';
+measuredChip.style.cssText = 'font-size:10px; padding:4px 8px; font-weight:600;';
+measuredChip.textContent = '✓ Use measured distance';
+measuredChip.onclick = () => {
+  if (currentPoints.length < 2) return;
+  const km = routeDistanceKm(currentPoints);
+  const mi = km * 0.621371;
+  document.getElementById('legendText').value = `${mi.toFixed(0)} MILES · ${km.toFixed(0)} KM`;
+  drawPoster();
+};
+chipHolder.appendChild(measuredChip);
+
+// ---------------------------------------------------------------
+// OPTION LISTENERS
+// ---------------------------------------------------------------
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal' };
+optionIds.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    if (id === 'optLineWidth') document.getElementById('lineWidthVal').textContent = el.value;
+    if (id === 'optSmooth') document.getElementById('smoothVal').textContent = el.value === '0' ? 'None' : el.value;
+    if (nudgeLabelMap[id]) document.getElementById(nudgeLabelMap[id]).textContent = el.value;
+    if (id === 'optMaxWaypoints') document.getElementById('maxWpVal').textContent = el.value;
+    drawPoster();
+  });
+});
+
+// ---------------------------------------------------------------
+// PRESET DROPDOWN
+// ---------------------------------------------------------------
+let pendingSubtitle = '';
+document.getElementById('presetSelect').onchange = (e) => {
+  const opt = e.target.selectedOptions[0];
+  if (!opt || !opt.dataset.name) return;
+  document.getElementById('trailName').value = opt.dataset.name;
+  document.getElementById('trailRegion').value = opt.dataset.region || '';
+  pendingSubtitle = opt.dataset.sub || '';
+  document.getElementById('searchBtn').click();
+};
+
+// ---------------------------------------------------------------
+// STATUS HELPERS
+// ---------------------------------------------------------------
+function setStatus(elId, type, msg){
+  const el = document.getElementById(elId);
+  el.className = 'status show ' + type;
+  el.textContent = msg;
+}
+
+// ---------------------------------------------------------------
+// OVERPASS SEARCH
+// ---------------------------------------------------------------
+document.getElementById('searchBtn').onclick = async () => {
+  const name = document.getElementById('trailName').value.trim();
+  const region = document.getElementById('trailRegion').value.trim();
+  if (!name) { setStatus('searchStatus','error','Type a trail name first, or pick one from the dropdown above.'); return; }
+
+  setStatus('searchStatus','loading','Fetching the real route from OpenStreetMap…');
+  startTicker('searchStatus','Fetching the real route from OpenStreetMap…');
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('cancelBtn').style.display = 'block';
+
+  try {
+    const safeName = name.replace(/"/g, '\\"');
+    let query;
+    if (region) {
+      const safeRegion = region.replace(/"/g, '\\"');
+      query = `[out:json][timeout:30];
+area["name"="${safeRegion}"]->.searchArea;
+(
+  way["name"~"${safeName}",i](area.searchArea);
+  relation["name"~"${safeName}",i](area.searchArea);
+);
+out geom;`;
+    } else {
+      query = `[out:json][timeout:30];
+(
+  way["name"~"${safeName}",i]["highway"];
+  way["name"~"${safeName}",i]["route"];
+  relation["name"~"${safeName}",i]["route"];
+);
+out geom;`;
+    }
+
+    const data = await fetchOverpass(query);
+
+    const points = extractPointsFromOverpass(data);
+    if (points.length < 2) {
+      setStatus('searchStatus','error', `Couldn't find "${name}" on OpenStreetMap. Try adding or changing the region, or download a free GPX from AllTrails/Wikiloc and upload it below — that always works.`);
+      return;
+    }
+
+    currentPoints = dedupePoints(points);
+    terrainPolys = []; waypointPts = []; window._lastFacts = null;
+    document.getElementById('optTerrain').checked = false;
+    document.getElementById('optWaypoints').checked = false;
+    document.getElementById('fetchTerrainBtn').disabled = false;
+    setStatus('searchStatus','success', `✓ Real route found — ${currentPoints.length.toLocaleString()} GPS points from OpenStreetMap.`);
+    document.getElementById('posterTitle').value = name;
+    resetPerTrailFields();
+    if (pendingSubtitle) { document.getElementById('posterSubtitle').value = pendingSubtitle; pendingSubtitle = ''; }
+    else { const known = matchKnownTrail(name); if (known && known.sub) document.getElementById('posterSubtitle').value = known.sub; }
+    document.getElementById('factsBtn').disabled = false;
+    drawPoster();
+    addRecentTrail(name);
+  } catch (err) {
+    setStatus('searchStatus','error', 'Search failed: ' + err.message + '. Try again in a moment, or use a GPX upload instead.');
+  } finally {
+    stopTicker();
+    document.getElementById('searchBtn').disabled = false;
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+};
+
+document.getElementById('cancelBtn').onclick = () => {
+  if (activeFetchController) activeFetchController.abort('cancelled');
+};
+
+function extractPointsFromOverpass(data){
+  const pts = [];
+  (data.elements || []).forEach(el => {
+    if (el.type === 'way' && el.geometry) {
+      el.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
+    } else if (el.type === 'relation' && el.members) {
+      el.members.forEach(m => {
+        if (m.geometry) m.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
+      });
+    }
+  });
+  return pts;
+}
+
+// ---------------------------------------------------------------
+// GPX UPLOAD
+// ---------------------------------------------------------------
+const uploadZone = document.getElementById('uploadZone');
+const gpxInput = document.getElementById('gpxInput');
+uploadZone.onclick = () => gpxInput.click();
+uploadZone.ondragover = (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--brass)'; };
+uploadZone.ondragleave = () => { uploadZone.style.borderColor = ''; };
+uploadZone.ondrop = (e) => {
+  e.preventDefault(); uploadZone.style.borderColor = '';
+  if (e.dataTransfer.files.length) handleGpxFile(e.dataTransfer.files[0]);
+};
+gpxInput.onchange = (e) => { if (e.target.files.length) handleGpxFile(e.target.files[0]); };
+
+// Match a messy GPX filename against the known preset trails (e.g. "WHW2026" → West Highland Way)
+function matchKnownTrail(guess){
+  const norm = (s) => s.toLowerCase().replace(/[^a-z]/g, '');
+  const g = norm(guess);
+  const opts = [...document.querySelectorAll('#presetSelect option[data-name]')];
+  // direct/contained name match
+  for (const o of opts) {
+    const n = norm(o.dataset.name);
+    if (g.includes(n) || n.includes(g)) return { name: o.dataset.name, sub: o.dataset.sub || '' };
+  }
+  // initials match (e.g. whw → West Highland Way, pct → Pacific Crest Trail)
+  const gLetters = g.replace(/[0-9]/g, '');
+  for (const o of opts) {
+    const initials = o.dataset.name.split(/\s+/).map(w => w[0]).join('').toLowerCase();
+    if (gLetters === initials || gLetters.startsWith(initials)) return { name: o.dataset.name, sub: o.dataset.sub || '' };
+  }
+  return null;
+}
+
+function handleGpxFile(file){
+  setStatus('searchStatus','loading', 'Reading ' + file.name + '…');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const xml = new DOMParser().parseFromString(e.target.result, 'text/xml');
+      // namespace-safe lookups — handles GPX from older devices that prefix elements (e.g. <gpx:trkpt>, <ns:ele>)
+      let pointEls = xml.getElementsByTagNameNS('*', 'trkpt');
+      if (!pointEls.length) pointEls = xml.getElementsByTagNameNS('*', 'rtept');
+      if (!pointEls.length) pointEls = xml.getElementsByTagName('trkpt'); // final fallback for non-namespaced parsing quirks
+      const pts = [];
+      for (let i = 0; i < pointEls.length; i++) {
+        const lat = parseFloat(pointEls[i].getAttribute('lat'));
+        const lon = parseFloat(pointEls[i].getAttribute('lon'));
+        let eleEl = pointEls[i].getElementsByTagNameNS('*', 'ele')[0];
+        if (!eleEl) eleEl = pointEls[i].getElementsByTagName('ele')[0];
+        const ele = eleEl ? parseFloat(eleEl.textContent) : undefined;
+        if (!isNaN(lat) && !isNaN(lon)) pts.push({ lat, lon, ele: isNaN(ele) ? undefined : ele });
+      }
+      if (pts.length < 2) throw new Error('No GPS track points found in this file.');
+      currentPoints = dedupePoints(pts);
+      terrainPolys = []; waypointPts = []; window._lastFacts = null;
+      document.getElementById('optTerrain').checked = false;
+      document.getElementById('optWaypoints').checked = false;
+      document.getElementById('fetchTerrainBtn').disabled = false;
+      setStatus('searchStatus','success', `✓ Loaded ${currentPoints.length.toLocaleString()} real GPS points from ${file.name}.`);
+      const guessName = file.name.replace(/\.gpx$/i, '').replace(/[_-]/g, ' ');
+      const known = matchKnownTrail(guessName);
+      document.getElementById('posterTitle').value = known ? known.name : guessName;
+      resetPerTrailFields();
+      if (known && known.sub) document.getElementById('posterSubtitle').value = known.sub;
+      if (known) setTimeout(() => setStatus('searchStatus','success', `✓ Loaded — recognised as ${known.name}, title and subtitle filled in. Not right? Just edit them.`), 50);
+      document.getElementById('factsBtn').disabled = false;
+      drawPoster();
+      addRecentTrail(guessName);
+    } catch (err) {
+      setStatus('searchStatus','error', 'Could not read file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---------------------------------------------------------------
+// GEOMETRY HELPERS
+// ---------------------------------------------------------------
+function dedupePoints(points){
+  if (points.length < 3) return points;
+  const out = [points[0]];
+  const EPS = 5e-6; // ~0.5 m
+  for (let i = 1; i < points.length; i++) {
+    const prev = out[out.length-1];
+    if (Math.abs(points[i].lat - prev.lat) > EPS || Math.abs(points[i].lon - prev.lon) > EPS) out.push(points[i]);
+  }
+  return out;
+}
+
+function smoothPoints(points, level){
+  if (level <= 0 || points.length < 50) return points;
+  const keep = Math.max(2, Math.round(points.length / (1 + level * 1.5)));
+  const step = points.length / keep;
+  const out = [];
+  for (let i = 0; i < points.length; i += step) out.push(points[Math.floor(i)]);
+  if (out[out.length-1] !== points[points.length-1]) out.push(points[points.length-1]);
+  return out;
+}
+
+function safeMin(arr){ let m = Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] < m) m = arr[i]; } return m; }
+function safeMax(arr){ let m = -Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] > m) m = arr[i]; } return m; }
+
+function projectPoints(points, width, height, padding){
+  const lats = points.map(p => p.lat);
+  const lons = points.map(p => p.lon);
+  const minLat = safeMin(lats), maxLat = safeMax(lats);
+  const minLon = safeMin(lons), maxLon = safeMax(lons);
+  const avgLat = (minLat + maxLat) / 2;
+  const cosLat = Math.cos(avgLat * Math.PI / 180);
+
+  const spanX = (maxLon - minLon) * cosLat || 0.0001;
+  const spanY = (maxLat - minLat) || 0.0001;
+  const usableW = width - padding * 2;
+  const usableH = height - padding * 2;
+  const scale = Math.min(usableW / spanX, usableH / spanY);
+
+  const offsetX = padding + (usableW - spanX * scale) / 2;
+  const offsetY = padding + (usableH - spanY * scale) / 2;
+
+  const toXY = (p) => ({
+    x: offsetX + (p.lon - minLon) * cosLat * scale,
+    y: offsetY + (maxLat - p.lat) * scale
+  });
+  return {
+    pts: points.map(p => ({
+      x: offsetX + (p.lon - minLon) * cosLat * scale,
+      y: offsetY + (maxLat - p.lat) * scale,
+      ele: p.ele
+    })),
+    bounds: { minLat, maxLat, minLon, maxLon },
+    toXY
+  };
+}
+
+let styleOverride = null; // used during multi-style export
+function getActiveStyle(){
+  if (styleOverride) return STYLES[styleOverride];
+  if (document.getElementById('optCustomColors').checked) {
+    return {
+      bg: document.getElementById('colBg').value,
+      line: document.getElementById('colLine').value,
+      frame: document.getElementById('colFrame').value,
+      text: document.getElementById('colText').value,
+      accent: document.getElementById('colAccent').value,
+      dot: document.getElementById('colAccent').value,
+    };
+  }
+  return STYLES[currentStyle];
+}
+
+function getCanvasDims(aspect){
+  // aspect = h/w for portrait basis
+  const orient = document.getElementById('optOrientation').value;
+  let W = 600, H = Math.round(600 * aspect);
+  if (orient === 'landscape') { W = Math.round(600 * aspect); H = 600; const t = W; W = Math.max(W,H); H = Math.min(600, Math.round(W / aspect)); W = Math.round(H * aspect); [W,H] = [Math.max(W,H), Math.min(W,H)]; }
+  if (orient === 'square') { W = 600; H = 600; }
+  return { W, H };
+}
+
+// ---------------------------------------------------------------
+// SVG GENERATION (parameterised for preview + all export sizes)
+// ---------------------------------------------------------------
+const FONT_PAIRS = {
+  classic: { title: 'Fraunces, Georgia, serif', mono: 'IBM Plex Mono, monospace' },
+  elegant: { title: "'Cormorant Garamond', Georgia, serif", mono: 'IBM Plex Mono, monospace' },
+  modern:  { title: "'Space Grotesk', Inter, sans-serif", mono: "'Space Grotesk', monospace" },
+};
+let _F = FONT_PAIRS.classic;
+
+function buildSvg(W, H){
+  const isCity = dataMode === 'city' && cityWays.length;
+  if (!isCity && currentPoints.length < 2) return null;
+  _F = FONT_PAIRS[document.getElementById('optFontPair').value] || FONT_PAIRS.classic;
+  const s = getActiveStyle();
+
+  const legendLayout = document.getElementById('optLegendLayout').value;
+  const titleAreaH = H * 0.16;
+  const legendAreaH = legendLayout === 'grid' ? H * 0.20 : H * 0.14;
+  const mapAreaH = H - titleAreaH - legendAreaH;
+  const mapOffsetY = titleAreaH;
+  const scaleFactor = Math.min(W, H) / 600;
+  const fs = (n) => (n * scaleFactor).toFixed(1);
+
+  const title = document.getElementById('posterTitle').value || (isCity ? 'City Name' : 'Trail Name');
+  const subtitle = document.getElementById('posterSubtitle').value || '';
+  const legend = document.getElementById('legendText').value || '';
+
+  let parts = [];
+  parts.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="${s.bg}"/>`);
+
+  // seeded pseudo-random so each trail's procedural decorations are unique but stable
+  const seedStr = title || 'wgs';
+  let _seed = 0; for (let i = 0; i < seedStr.length; i++) _seed = (_seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+  const srand = () => { _seed = (_seed * 1664525 + 1013904223) >>> 0; return _seed / 4294967296; };
+
+  // contour-line background (subtle topographic feel)
+  if (document.getElementById('optContours').checked) {
+    let contours = '';
+    const bands = 7;
+    for (let b = 0; b < bands; b++) {
+      const cy0 = H * (0.12 + 0.76 * (b / (bands - 1))) + (srand() - 0.5) * H * 0.05;
+      let d = `M -10,${cy0.toFixed(1)}`;
+      const segs = 8;
+      for (let sgi = 1; sgi <= segs; sgi++) {
+        const x = (W + 20) * sgi / segs - 10;
+        const y = cy0 + Math.sin(sgi * 1.7 + b * 2.1) * H * 0.03 + (srand() - 0.5) * H * 0.02;
+        const cx1 = x - (W + 20) / segs / 2;
+        d += ` Q ${cx1.toFixed(1)},${(cy0 + (srand()-0.5)*H*0.04).toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;
+      }
+      contours += `<path d="${d}" fill="none" stroke="${s.text}" stroke-width="${0.5*scaleFactor}" opacity="0.06"/>`;
+    }
+    parts.push(`<g>${contours}</g>`);
+  }
+
+  // background grid
+  if (document.getElementById('optGrid').checked) {
+    const gridStep = Math.min(W,H) / 12;
+    let gridLines = '';
+    for (let x = gridStep; x < W; x += gridStep) gridLines += `<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
+    for (let y = gridStep; y < H; y += gridStep) gridLines += `<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
+    parts.push(`<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`);
+  }
+
+  // frame
+  if (document.getElementById('optFrame').checked) {
+    const m1 = 24 * scaleFactor, m2 = 30 * scaleFactor;
+    const frameStyle = document.getElementById('optFrameStyle').value;
+    if (frameStyle === 'single') {
+      parts.push(`<rect x="${m1}" y="${m1}" width="${W-m1*2}" height="${H-m1*2}" fill="none" stroke="${s.frame}" stroke-width="${1.5*scaleFactor}"/>`);
+    } else if (frameStyle === 'thickthin') {
+      parts.push(`<rect x="${m1}" y="${m1}" width="${W-m1*2}" height="${H-m1*2}" fill="none" stroke="${s.frame}" stroke-width="${4*scaleFactor}"/>`);
+      parts.push(`<rect x="${m2+3*scaleFactor}" y="${m2+3*scaleFactor}" width="${W-(m2+3*scaleFactor)*2}" height="${H-(m2+3*scaleFactor)*2}" fill="none" stroke="${s.frame}" stroke-width="${0.6*scaleFactor}"/>`);
+    } else if (frameStyle === 'rounded') {
+      const rr = 14 * scaleFactor;
+      parts.push(`<rect x="${m1}" y="${m1}" width="${W-m1*2}" height="${H-m1*2}" rx="${rr}" fill="none" stroke="${s.frame}" stroke-width="${2*scaleFactor}"/>`);
+      parts.push(`<rect x="${m2}" y="${m2}" width="${W-m2*2}" height="${H-m2*2}" rx="${rr*0.7}" fill="none" stroke="${s.frame}" stroke-width="${0.5*scaleFactor}" opacity="0.5"/>`);
+    } else {
+      parts.push(`<rect x="${m1}" y="${m1}" width="${W-m1*2}" height="${H-m1*2}" fill="none" stroke="${s.frame}" stroke-width="${2*scaleFactor}"/>`);
+      parts.push(`<rect x="${m2}" y="${m2}" width="${W-m2*2}" height="${H-m2*2}" fill="none" stroke="${s.frame}" stroke-width="${0.5*scaleFactor}" opacity="0.5"/>`);
+    }
+  }
+
+  // corner ornaments
+  const cornerStyle = document.getElementById('optCorners').value;
+  if (cornerStyle !== 'none') {
+    const cm = 40 * scaleFactor;
+    const corners = [[cm, cm, 1, 1], [W-cm, cm, -1, 1], [cm, H-cm, 1, -1], [W-cm, H-cm, -1, -1]];
+    let orn = '';
+    corners.forEach(([cx2, cy2, sx, sy]) => {
+      if (cornerStyle === 'ticks') {
+        orn += `<path d="M ${cx2},${cy2 + sy*14*scaleFactor} L ${cx2},${cy2} L ${cx2 + sx*14*scaleFactor},${cy2}" fill="none" stroke="${s.accent}" stroke-width="${1.4*scaleFactor}"/>`;
+      } else if (cornerStyle === 'flourish') {
+        orn += `<path d="M ${cx2},${cy2 + sy*18*scaleFactor} Q ${cx2},${cy2} ${cx2 + sx*18*scaleFactor},${cy2}" fill="none" stroke="${s.accent}" stroke-width="${1.2*scaleFactor}"/>
+                <circle cx="${cx2 + sx*4*scaleFactor}" cy="${cy2 + sy*4*scaleFactor}" r="${1.6*scaleFactor}" fill="${s.accent}"/>`;
+      } else if (cornerStyle === 'deco') {
+        orn += `<path d="M ${cx2},${cy2 + sy*16*scaleFactor} L ${cx2},${cy2} L ${cx2 + sx*16*scaleFactor},${cy2}" fill="none" stroke="${s.accent}" stroke-width="${1.6*scaleFactor}"/>
+                <path d="M ${cx2 + sx*5*scaleFactor},${cy2 + sy*10*scaleFactor} L ${cx2 + sx*5*scaleFactor},${cy2 + sy*5*scaleFactor} L ${cx2 + sx*10*scaleFactor},${cy2 + sy*5*scaleFactor}" fill="none" stroke="${s.accent}" stroke-width="${scaleFactor}" opacity="0.7"/>`;
+      }
+    });
+    parts.push(`<g>${orn}</g>`);
+  }
+
+  // mountain ridgeline footer (sits behind legend area, above frame bottom)
+  if (document.getElementById('optRidgeline').checked) {
+    const baseY = H - legendAreaH * 0.55;
+    let ridge = `M ${W*0.1},${baseY}`;
+    const peaks = 6 + Math.floor(srand() * 3);
+    for (let p = 1; p <= peaks; p++) {
+      const px2 = W * 0.1 + (W * 0.8) * p / peaks;
+      const peakH = (10 + srand() * 22) * scaleFactor;
+      const midX = W * 0.1 + (W * 0.8) * (p - 0.5) / peaks;
+      ridge += ` L ${midX.toFixed(1)},${(baseY - peakH).toFixed(1)} L ${px2.toFixed(1)},${baseY.toFixed(1)}`;
+    }
+    parts.push(`<path d="${ridge}" fill="none" stroke="${s.accent}" stroke-width="${scaleFactor}" opacity="0.45" stroke-linejoin="round"/>`);
+  }
+
+  // paper grain texture (SVG turbulence — rasterises correctly into PNG exports)
+  if (document.getElementById('optGrain').checked) {
+    const grainId = 'grain' + Math.random().toString(36).slice(2,7);
+    parts.push(`<filter id="${grainId}"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.05 0"/></filter>
+      <rect x="0" y="0" width="${W}" height="${H}" filter="url(#${grainId})"/>`);
+  }
+
+  // title
+  const titlePos = document.getElementById('optTitlePos').value;
+  const titleY = titlePos === 'bottom' ? H - legendAreaH - 6*scaleFactor : titleAreaH*0.55;
+  const titleStyle = document.getElementById('optTitleStyle').value;
+  if (titleStyle === 'arc') {
+    const arcId = 'titlearc' + Math.random().toString(36).slice(2,7);
+    const arcRise = 26 * scaleFactor;
+    parts.push(`<defs><path id="${arcId}" d="M ${W*0.12},${titleY + arcRise*0.4} Q ${W/2},${titleY - arcRise} ${W*0.88},${titleY + arcRise*0.4}" fill="none"/></defs>`);
+    parts.push(`<text font-family="${_F.title}" font-weight="600" font-size="${fs(30)}" fill="${s.text}" letter-spacing="${scaleFactor}"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">${escapeXml(title.toUpperCase())}</textPath></text>`);
+  } else {
+    parts.push(`<text x="${W/2}" y="${titleY}" text-anchor="middle" font-family="${_F.title}" font-weight="600" font-size="${fs(30)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(title.toUpperCase())}</text>`);
+  }
+  if (subtitle) parts.push(`<text x="${W/2}" y="${titleY + 28*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(12)}" fill="${s.accent}" letter-spacing="${3*scaleFactor}">${escapeXml(subtitle.toUpperCase())}</text>`);
+
+  if (isCity) {
+    parts = parts.concat(buildCitySvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH));
+  } else {
+    parts = parts.concat(buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAreaH, fs));
+  }
+
+  // bottom panel: single legend line, or stats grid
+  if (legendLayout === 'grid' && !isCity) {
+    const gridTop = H - legendAreaH + 14*scaleFactor;
+    const colL = W * 0.20, colR = W * 0.62;
+    const rowGap = legendAreaH * 0.36;
+    const facts = window._lastFacts || {};
+
+    // Distance: prefer researched, else measured
+    let distVal = extractShortDistance(facts.distance || '');
+    if (!distVal && currentPoints.length > 1) {
+      const km = routeDistanceKm(currentPoints);
+      distVal = (km * 0.621371).toFixed(0) + ' MILES / ' + km.toFixed(0) + ' KM';
+    }
+    // Highest point + total ascent from GPX elevation
+    let highVal = '', ascentVal = '';
+    const eles = currentPoints.filter(p => p.ele !== undefined).map(p => p.ele);
+    if (eles.length > 10) {
+      const maxE = safeMax(eles);
+      highVal = Math.round(maxE * 3.28084).toLocaleString() + ' FT / ' + Math.round(maxE).toLocaleString() + ' M';
+      let ascent = 0;
+      for (let i = 1; i < eles.length; i++) { const d = eles[i] - eles[i-1]; if (d > 0) ascent += d; }
+      ascentVal = Math.round(ascent * 3.28084).toLocaleString() + ' FT / ' + Math.round(ascent).toLocaleString() + ' M';
+    }
+    const durVal = (facts.typical_duration || '').toUpperCase();
+    const estVal = facts.established ? 'EST. ' + facts.established : '';
+
+    const cells = [
+      ['DISTANCE', distVal],
+      ['HIGHEST POINT', highVal || estVal],
+      ['TOTAL ASCENT', ascentVal || (legend ? legend.toUpperCase() : '')],
+      ['TYPICAL DURATION', durVal || estVal],
+    ].filter(c => c[1]);
+
+    const positions = [[colL, gridTop], [colR, gridTop], [colL, gridTop + rowGap], [colR, gridTop + rowGap]];
+    cells.slice(0,4).forEach((c, i) => {
+      const [cx3, cy3] = positions[i];
+      parts.push(`<text x="${cx3}" y="${cy3}" font-family="${_F.mono}" font-size="${fs(7.5)}" font-weight="600" fill="${s.accent}" letter-spacing="${1.5*scaleFactor}">${escapeXml(c[0])}</text>`);
+      parts.push(`<text x="${cx3}" y="${cy3 + 13*scaleFactor}" font-family="${_F.mono}" font-size="${fs(8.5)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(c[1])}</text>`);
+    });
+    // thin divider above the grid
+    parts.push(`<line x1="${W*0.14}" y1="${gridTop - 16*scaleFactor}" x2="${W*0.86}" y2="${gridTop - 16*scaleFactor}" stroke="${s.frame}" stroke-width="${0.6*scaleFactor}" opacity="0.5"/>`);
+  } else if (legend) {
+    parts.push(`<text x="${W/2}" y="${H - 44*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(10)}" fill="${s.text}" opacity="0.75" letter-spacing="${scaleFactor}">${escapeXml(legend.toUpperCase())}</text>`);
+  }
+
+  if (document.getElementById('optCopyright').checked) {
+    parts.push(`<text x="${W - 36*scaleFactor}" y="${H - 30*scaleFactor}" text-anchor="end" font-family="${_F.mono}" font-size="${fs(6.5)}" fill="${s.text}" opacity="0.4" letter-spacing="${scaleFactor}">© WILD GRID STUDIO</text>`);
+  }
+
+  // invisible ownership metadata — always embedded, never rendered (per WGS standard: no year)
+  const meta = `<metadata>© Wild Grid Studio — wildgridstudio.com — All rights reserved. Personal use only; resale or redistribution prohibited.</metadata>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">${meta}${parts.join('\n')}</svg>`;
+}
+
+function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAreaH, fs){
+  const smoothLevel = parseInt(document.getElementById('optSmooth').value);
+  const pointsToUse = smoothPoints(currentPoints, smoothLevel);
+  const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * 0.1);
+  const projected = proj.pts;
+  const b = proj.bounds;
+
+  const parts = [];
+
+  // TERRAIN: land panel + real water polygons, clipped to the map area
+  if (document.getElementById('optTerrain').checked && terrainPolys.length) {
+    const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
+    const tm = 30 * scaleFactor; // sit inside the frame
+    parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}"/></clipPath>`);
+    let landWater = `<rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}" fill="${s.land}"/>`;
+    const step = Math.max(1, Math.floor(terrainPolys.length / 4000));
+    terrainPolys.forEach(poly => {
+      const ptStep = Math.max(1, Math.floor(poly.pts.length / 300));
+      let d = '';
+      for (let i = 0; i < poly.pts.length; i += ptStep) {
+        const c = proj.toXY(poly.pts[i]);
+        d += (d ? ' L ' : 'M ') + c.x.toFixed(1) + ',' + (c.y + mapOffsetY).toFixed(1);
+      }
+      landWater += `<path d="${d} Z" fill="${s.water}"/>`;
+    });
+    parts.push(`<g clip-path="url(#${clipId})">${landWater}</g>`);
+  }
+
+  const pathD = 'M ' + projected.map(p => `${p.x.toFixed(1)},${(p.y + mapOffsetY).toFixed(1)}`).join(' L ');
+  const lineWidth = parseFloat(document.getElementById('optLineWidth').value);
+  const lineStyle = document.getElementById('optLineStyle').value;
+  const dashAttr = lineStyle === 'dashed' ? `stroke-dasharray="${lineWidth*3},${lineWidth*2}"` :
+                   lineStyle === 'dotted' ? `stroke-dasharray="0.1,${lineWidth*2.5}" stroke-linecap="round"` : '';
+
+  parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
+
+  // WAYPOINTS: named peaks and villages, capped and overlap-avoided
+  if (document.getElementById('optWaypoints').checked && waypointPts.length) {
+    const maxWp = parseInt(document.getElementById('optMaxWaypoints').value);
+    const placed = [];
+    const minGap = 26 * scaleFactor;
+    let count = 0;
+    for (const wp of waypointPts) {
+      if (count >= maxWp) break;
+      const c = proj.toXY(wp);
+      const wx = c.x, wy = c.y + mapOffsetY;
+      // must be inside the map area
+      if (wx < 40*scaleFactor || wx > W - 40*scaleFactor || wy < mapOffsetY*0.6 || wy > mapOffsetY + mapAreaH) continue;
+      // overlap avoidance
+      if (placed.some(p => Math.abs(p.x - wx) < minGap*2.2 && Math.abs(p.y - wy) < minGap*0.7)) continue;
+      placed.push({ x: wx, y: wy });
+      count++;
+      const label = wp.name + (wp.kind === 'peak' && wp.ele ? ' ' + Math.round(wp.ele * 3.28084) + 'ft' : '');
+      if (wp.kind === 'peak') {
+        parts.push(`<path d="M ${wx},${wy - 3.2*scaleFactor} L ${wx - 3*scaleFactor},${wy + 2*scaleFactor} L ${wx + 3*scaleFactor},${wy + 2*scaleFactor} Z" fill="${s.text}" opacity="0.85"/>`);
+      } else {
+        parts.push(`<circle cx="${wx}" cy="${wy}" r="${1.8*scaleFactor}" fill="${s.text}" opacity="0.8"/>`);
+      }
+      parts.push(`<text x="${wx + 5*scaleFactor}" y="${wy + 2*scaleFactor}" font-family="${_F.mono}" font-size="${fs(6)}" fill="${s.text}" opacity="0.85">${escapeXml(label)}</text>`);
+    }
+  }
+
+  if (document.getElementById('optMarkers').checked) {
+    const p0 = projected[0], pN = projected[projected.length-1];
+    parts.push(`<circle cx="${p0.x}" cy="${p0.y+mapOffsetY}" r="${4*scaleFactor}" fill="${s.dot}"/>`);
+    parts.push(`<circle cx="${pN.x}" cy="${pN.y+mapOffsetY}" r="${4*scaleFactor}" fill="none" stroke="${s.dot}" stroke-width="${1.5*scaleFactor}"/>`);
+    if (document.getElementById('optMarkerLabels').checked) {
+      const sl = document.getElementById('optStartLabel').value || 'START';
+      const el2 = document.getElementById('optEndLabel').value || 'FINISH';
+      const sdx = parseFloat(document.getElementById('optStartDX').value) * scaleFactor;
+      const sdy = parseFloat(document.getElementById('optStartDY').value) * scaleFactor;
+      const edx = parseFloat(document.getElementById('optEndDX').value) * scaleFactor;
+      const edy = parseFloat(document.getElementById('optEndDY').value) * scaleFactor;
+      parts.push(`<text x="${p0.x + sdx}" y="${p0.y+mapOffsetY - 8*scaleFactor + sdy}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(8)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(sl.toUpperCase())}</text>`);
+      parts.push(`<text x="${pN.x + edx}" y="${pN.y+mapOffsetY - 8*scaleFactor + edy}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(8)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(el2.toUpperCase())}</text>`);
+    }
+  }
+
+  if (document.getElementById('optCompass').checked) {
+    const cx = W - 62*scaleFactor, cy = mapOffsetY + 30*scaleFactor, r = 16*scaleFactor;
+    const compassStyle = document.getElementById('optCompassStyle').value;
+    if (compassStyle === 'ornate') {
+      let star = '';
+      for (let k = 0; k < 8; k++) {
+        const ang = k * Math.PI / 4;
+        const len = (k % 2 === 0) ? r : r * 0.45;
+        const wdt = (k % 2 === 0) ? 3.2*scaleFactor : 2*scaleFactor;
+        const tipX = cx + Math.sin(ang)*len, tipY = cy - Math.cos(ang)*len;
+        const lX = cx + Math.sin(ang - 0.35)*wdt, lY = cy - Math.cos(ang - 0.35)*wdt;
+        const rX = cx + Math.sin(ang + 0.35)*wdt, rY = cy - Math.cos(ang + 0.35)*wdt;
+        star += `<path d="M ${lX},${lY} L ${tipX},${tipY} L ${rX},${rY} Z" fill="${s.accent}" ${k%2?'opacity="0.55"':''}/>`;
+      }
+      parts.push(`<g><circle cx="${cx}" cy="${cy}" r="${r*1.25}" fill="none" stroke="${s.accent}" stroke-width="${scaleFactor}"/>${star}<text x="${cx}" y="${cy - r*1.25 - 4*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(9)}" fill="${s.text}">N</text></g>`);
+    } else {
+      parts.push(`<g stroke="${s.accent}" fill="${s.accent}">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke-width="${scaleFactor}"/>
+        <path d="M ${cx} ${cy-r+3*scaleFactor} L ${cx-3*scaleFactor} ${cy} L ${cx} ${cy+r-6*scaleFactor} L ${cx+3*scaleFactor} ${cy} Z"/>
+        <text x="${cx}" y="${cy-r-4*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(9)}" fill="${s.text}" stroke="none">N</text>
+      </g>`);
+    }
+  }
+
+  if (document.getElementById('optCoords').checked) {
+    const m = 38 * scaleFactor;
+    parts.push(`<text x="${m}" y="${H-m+4*scaleFactor}" font-family="${_F.mono}" font-size="${fs(7)}" fill="${s.text}" opacity="0.5">${b.minLat.toFixed(2)}°N ${Math.abs(b.minLon).toFixed(2)}°${b.minLon<0?'W':'E'}</text>`);
+    parts.push(`<text x="${W-m}" y="${m+4*scaleFactor}" text-anchor="end" font-family="${_F.mono}" font-size="${fs(7)}" fill="${s.text}" opacity="0.5">${b.maxLat.toFixed(2)}°N ${Math.abs(b.maxLon).toFixed(2)}°${b.maxLon<0?'W':'E'}</text>`);
+  }
+
+  const hasEle = pointsToUse.some(p => p.ele !== undefined);
+  if (hasEle && document.getElementById('optElevation').checked && document.getElementById('optLegendLayout').value !== 'grid') {
+    const eles = pointsToUse.filter(p => p.ele !== undefined).map(p => p.ele);
+    const minE = safeMin(eles), maxE = safeMax(eles);
+    const chartW = W * 0.7, chartH = legendAreaH * 0.45, chartX = (W-chartW)/2, chartY = H - legendAreaH * 0.95;
+    const step = chartW / (eles.length - 1);
+    const elePath = 'M ' + eles.map((e,i) => {
+      const x = chartX + i * step;
+      const y = chartY + chartH - ((e - minE) / (maxE - minE || 1)) * chartH;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' L ');
+    parts.push(`<path d="${elePath}" fill="none" stroke="${s.accent}" stroke-width="${1.5*scaleFactor}" opacity="0.8"/>`);
+  }
+  return parts;
+}
+
+function resetPerTrailFields(){
+  document.getElementById('legendText').value = '';
+  document.getElementById('posterSubtitle').value = '';
+  document.getElementById('optStartLabel').value = '';
+  document.getElementById('optEndLabel').value = '';
+  document.getElementById('factsList').innerHTML = '';
+  document.getElementById('autoDistance').style.display = 'none';
+  const listingOut = document.getElementById('listingOutput');
+  if (listingOut) { listingOut.classList.remove('show'); listingOut.innerHTML = ''; }
+}
+
+// ---------------------------------------------------------------
+// TERRAIN & WAYPOINTS — real water bodies + named peaks/villages for the route area
+// ---------------------------------------------------------------
+document.getElementById('fetchTerrainBtn').onclick = async () => {
+  if (currentPoints.length < 2) return;
+  const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
+  const minLat = safeMin(lats), maxLat = safeMax(lats);
+  const minLon = safeMin(lons), maxLon = safeMax(lons);
+  // pad generously so terrain fills the whole map area, not just the route's bounding box
+  const padLat = Math.max((maxLat - minLat) * 0.45, 0.02);
+  const padLon = Math.max((maxLon - minLon) * 0.45, 0.02);
+  const bbox = `${(minLat-padLat).toFixed(4)},${(minLon-padLon).toFixed(4)},${(maxLat+padLat).toFixed(4)},${(maxLon+padLon).toFixed(4)}`;
+
+  const btn = document.getElementById('fetchTerrainBtn');
+  btn.disabled = true;
+  setStatus('terrainStatus','loading','Fetching water bodies and named waypoints for this area… (15–45s for big areas)');
+  startTicker('terrainStatus','Fetching terrain & waypoints…');
+
+  try {
+    const query = `[out:json][timeout:45];
+(
+  way["natural"="water"](${bbox});
+  relation["natural"="water"](${bbox});
+  way["waterway"="riverbank"](${bbox});
+  node["natural"="peak"]["name"](${bbox});
+  node["place"~"^(town|village)$"]["name"](${bbox});
+);
+out geom;`;
+    const data = await fetchOverpass(query);
+
+    terrainPolys = [];
+    const peaks = [], places = [];
+    (data.elements || []).forEach(el => {
+      if ((el.type === 'way') && el.geometry && el.geometry.length > 3) {
+        terrainPolys.push({ pts: el.geometry.map(g => ({ lat: g.lat, lon: g.lon })) });
+      } else if (el.type === 'relation' && el.members) {
+        el.members.forEach(m => {
+          if (m.geometry && m.geometry.length > 3 && m.role !== 'inner') {
+            terrainPolys.push({ pts: m.geometry.map(g => ({ lat: g.lat, lon: g.lon })) });
+          }
+        });
+      } else if (el.type === 'node' && el.tags && el.tags.name) {
+        if (el.tags.natural === 'peak') {
+          peaks.push({ lat: el.lat, lon: el.lon, name: el.tags.name, kind: 'peak', ele: parseFloat(el.tags.ele) || undefined });
+        } else if (el.tags.place) {
+          places.push({ lat: el.lat, lon: el.lon, name: el.tags.name, kind: 'place' });
+        }
+      }
+    });
+
+    // prioritise: tallest peaks first, then places; final cap applied at render time via the slider
+    peaks.sort((a,b) => (b.ele||0) - (a.ele||0));
+    waypointPts = peaks.slice(0, 24).concat(places.slice(0, 24));
+
+    document.getElementById('optTerrain').checked = terrainPolys.length > 0;
+    document.getElementById('optWaypoints').checked = waypointPts.length > 0;
+    stopTicker();
+    setStatus('terrainStatus','success', `✓ ${terrainPolys.length.toLocaleString()} water shapes + ${peaks.length} peaks + ${places.length} villages/towns fetched. Toggles switched on — saved with your project.`);
+    drawPoster();
+  } catch (err) {
+    stopTicker();
+    setStatus('terrainStatus','error','Terrain fetch failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ---------------------------------------------------------------
+// BATCH MODE — fetch, render, and export many trails into one master ZIP
+// ---------------------------------------------------------------
+function buildTrailQuery(name, region){
+  const safeName = name.replace(/"/g, '\\"');
+  if (region) {
+    const safeRegion = region.replace(/"/g, '\\"');
+    return `[out:json][timeout:30];\narea["name"="${safeRegion}"]->.searchArea;\n(\n  way["name"~"${safeName}",i](area.searchArea);\n  relation["name"~"${safeName}",i](area.searchArea);\n);\nout geom;`;
+  }
+  return `[out:json][timeout:30];\n(\n  way["name"~"${safeName}",i]["highway"];\n  way["name"~"${safeName}",i]["route"];\n  relation["name"~"${safeName}",i]["route"];\n);\nout geom;`;
+}
+
+document.getElementById('batchBtn').onclick = async () => {
+  const lines = document.getElementById('batchList').value.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) { setStatus('batchStatus','error','Add at least one trail line first (Name | Region).'); return; }
+  const checkedSizes = [...sizeGrid.querySelectorAll('input:checked')].map(i => i.value);
+  if (!checkedSizes.length) { setStatus('batchStatus','error','Tick at least one print size in the Export section first.'); return; }
+
+  const btn = document.getElementById('batchBtn');
+  btn.disabled = true;
+  const prog = document.getElementById('batchProgress');
+  const fill = document.getElementById('batchFill');
+  prog.classList.add('show'); fill.style.width = '0%';
+
+  const masterZip = new JSZip();
+  const sizes = PRINT_SIZES.filter(s => checkedSizes.includes(s.id));
+  const orient = document.getElementById('optOrientation').value;
+  const results = [];
+
+  try {
+    for (let li = 0; li < lines.length; li++) {
+      const [rawName, rawRegion] = lines[li].split('|').map(x => (x||'').trim());
+      const name = rawName;
+      if (!name) continue;
+      setStatus('batchStatus','loading', `(${li+1}/${lines.length}) Fetching ${name}…`);
+
+      try {
+        const data = await fetchOverpass(buildTrailQuery(name, rawRegion));
+        let points = dedupePoints(extractPointsFromOverpass(data));
+        if (points.length < 2) { results.push(name + ' — not found (try a GPX)'); continue; }
+
+        currentPoints = points;
+        document.getElementById('posterTitle').value = name;
+        resetPerTrailFields();
+        drawPoster();
+        addRecentTrail(name);
+
+        const folder = name.replace(/\s+/g,'_').replace(/[^\w-]/g,'') + '/';
+
+        // honour multi-style variant selection, same as single-poster bundle export
+        const extraStyles = [...styleExportGrid.querySelectorAll('input:checked')].map(i => i.value);
+        const usingCustom = document.getElementById('optCustomColors').checked;
+        let styleList = usingCustom ? [null] : [currentStyle];
+        extraStyles.forEach(sk => { if (!styleList.includes(sk)) styleList.push(sk); });
+        const multiStyle = styleList.length > 1;
+
+        for (const styleKey of styleList) {
+          styleOverride = (styleKey && (multiStyle || styleKey !== currentStyle)) ? styleKey : null;
+          if (usingCustom && styleKey === null) styleOverride = null;
+          const styleFolder = multiStyle ? folder + (STYLES[styleKey] ? STYLES[styleKey].label.replace(/\s+/g,'_') : 'Custom') + '/' : folder;
+          for (const sz of sizes) {
+            let inW = sz.w, inH = sz.h;
+            if (orient === 'landscape') [inW, inH] = [inH, inW];
+            if (orient === 'square') { inW = Math.min(sz.w, sz.h); inH = inW; }
+            let pxW = Math.round(inW * DPI), pxH = Math.round(inH * DPI);
+            const maxDim = Math.max(pxW, pxH);
+            if (maxDim > MAX_PIXEL_DIM) { const f = MAX_PIXEL_DIM / maxDim; pxW = Math.round(pxW*f); pxH = Math.round(pxH*f); }
+            const svg = buildSvg(pxW/3, pxH/3);
+            const blob = await svgToPngBlob(svg, pxW, pxH);
+            masterZip.file(styleFolder + baseFilename() + `_${sz.id}_300DPI.png`, blob);
+          }
+          masterZip.file(styleFolder + baseFilename() + '_EDITABLE.svg', buildSvg(600, 780));
+        }
+        styleOverride = null;
+        results.push(name + ' — ✓ ' + points.length.toLocaleString() + ' points, ' + sizes.length + ' sizes' + (multiStyle ? ', ' + styleList.length + ' styles' : ''));
+      } catch (err) {
+        results.push(name + ' — failed: ' + err.message);
+      }
+
+      fill.style.width = Math.round(((li+1) / lines.length) * 95) + '%';
+      if (li < lines.length - 1) {
+        const remaining = lines.length - (li + 1);
+        const etaSec = remaining * 22; // ~16s render/fetch + 6s pause per trail, rough average
+        const etaTxt = etaSec >= 60 ? Math.ceil(etaSec/60) + ' min' : etaSec + 's';
+        setStatus('batchStatus','loading', `Pausing 6s before next trail… ${remaining} remaining, roughly ${etaTxt} to go.`);
+        await new Promise(r => setTimeout(r, 6000));
+      }
+    }
+
+    masterZip.file('BATCH_SUMMARY.txt', 'WGS Batch Export Summary\n========================\n\n' + results.join('\n') + '\n\nLegend text and trail facts were intentionally left blank for each poster — add them per-trail before final listing, or re-open each via Recent Trails.');
+    fill.style.width = '100%';
+    const zipBlob = await masterZip.generateAsync({ type:'blob' });
+    await saveAsFile(zipBlob, 'WGS_Batch_' + new Date().toISOString().slice(0,10) + '.zip', 'ZIP Archive', ['.zip']);
+    setStatus('batchStatus','success', `✓ Batch complete — ${results.length} trails processed. See BATCH_SUMMARY.txt inside the ZIP for per-trail results.`);
+  } catch (err) {
+    setStatus('batchStatus','error','Batch stopped: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => prog.classList.remove('show'), 2000);
+  }
+};
+
+// ---------------------------------------------------------------
+// ROUTE VERIFICATION — real OSM tiles + route overlay in Web Mercator (preview only)
+// ---------------------------------------------------------------
+function lon2tileX(lon, z){ return (lon + 180) / 360 * Math.pow(2, z); }
+function lat2tileY(lat, z){ return (1 - Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180)) / Math.PI) / 2 * Math.pow(2, z); }
+
+document.getElementById('verifyBtn').onclick = () => {
+  if (currentPoints.length < 2) return;
+  const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
+  const minLat = safeMin(lats), maxLat = safeMax(lats), minLon = safeMin(lons), maxLon = safeMax(lons);
+
+  // pick highest zoom where the tile grid stays small
+  let z = 12;
+  for (; z > 2; z--) {
+    const cols = Math.floor(lon2tileX(maxLon, z)) - Math.floor(lon2tileX(minLon, z)) + 1;
+    const rows = Math.floor(lat2tileY(minLat, z)) - Math.floor(lat2tileY(maxLat, z)) + 1;
+    if (cols * rows <= 24 && cols <= 6 && rows <= 6) break;
+  }
+  const x0 = Math.floor(lon2tileX(minLon, z)), x1 = Math.floor(lon2tileX(maxLon, z));
+  const y0 = Math.floor(lat2tileY(maxLat, z)), y1 = Math.floor(lat2tileY(minLat, z));
+  const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
+  const TILE = 256;
+  const holder = document.getElementById('verifyMapHolder');
+  const displayW = Math.min(740, cols * TILE);
+  const scale = displayW / (cols * TILE);
+  holder.style.height = (rows * TILE * scale) + 'px';
+
+  let tiles = '';
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      tiles += `<img src="https://tile.openstreetmap.org/${z}/${tx}/${ty}.png" style="position:absolute; left:${(tx-x0)*TILE*scale}px; top:${(ty-y0)*TILE*scale}px; width:${TILE*scale}px; height:${TILE*scale}px;" loading="lazy" alt="">`;
+    }
+  }
+
+  // route polyline in the same mercator pixel space
+  const step = Math.max(1, Math.floor(currentPoints.length / 4000));
+  let pathPts = [];
+  for (let i = 0; i < currentPoints.length; i += step) {
+    const px = (lon2tileX(currentPoints[i].lon, z) - x0) * TILE * scale;
+    const py = (lat2tileY(currentPoints[i].lat, z) - y0) * TILE * scale;
+    pathPts.push(px.toFixed(1) + ',' + py.toFixed(1));
+  }
+  const svgOverlay = `<svg style="position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none;" viewBox="0 0 ${cols*TILE*scale} ${rows*TILE*scale}"><polyline points="${pathPts.join(' ')}" fill="none" stroke="#D2AC72" stroke-width="3" opacity="0.9"/><polyline points="${pathPts.join(' ')}" fill="none" stroke="#7A3B2E" stroke-width="1"/></svg>`;
+
+  holder.innerHTML = tiles + svgOverlay + '<div style="position:absolute; right:6px; bottom:4px; font-size:9px; color:#333; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:3px;">© OpenStreetMap contributors</div>';
+  document.getElementById('verifyModal').classList.add('show');
+};
+document.getElementById('verifyModal').onclick = (e) => {
+  if (e.target === document.getElementById('verifyModal')) document.getElementById('verifyModal').classList.remove('show');
+};
+
+// ---------------------------------------------------------------
+// WALL MOCKUP PNG — quick lifestyle-style listing image
+// ---------------------------------------------------------------
+document.getElementById('mockupBtn').onclick = async () => {
+  if (currentPoints.length < 2 && !cityWays.length) return;
+  setStatus('bundleStatus','loading','Building wall mockup…');
+  try {
+    const { W, H } = getCanvasDims(780/600);
+    const posterBlob = await svgToPngBlob(buildSvg(W, H), W*3, H*3);
+    const posterImg = await blobToImage(posterBlob);
+
+    const MW = 2000, MH = 1600;
+    const canvas = document.createElement('canvas');
+    canvas.width = MW; canvas.height = MH;
+    const ctx = canvas.getContext('2d');
+    const transparent = document.getElementById('optMockupTransparent').checked;
+
+    if (!transparent) {
+      // wall
+      const wallGrad = ctx.createLinearGradient(0, 0, 0, MH);
+      wallGrad.addColorStop(0, '#e9e4db');
+      wallGrad.addColorStop(1, '#d5cec2');
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(0, 0, MW, MH);
+      // floor hint
+      ctx.fillStyle = '#b9a98f';
+      ctx.fillRect(0, MH*0.88, MW, MH*0.12);
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      ctx.fillRect(0, MH*0.88, MW, 6);
+    }
+
+    // poster geometry centered
+    const ph = MH * 0.68;
+    const pw = ph * (W / H);
+    const px = (MW - pw) / 2, py = MH * 0.09;
+    const frameB = 26;
+
+    // shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
+    ctx.fillStyle = '#1c1a17';
+    ctx.fillRect(px - frameB, py - frameB, pw + frameB*2, ph + frameB*2);
+    ctx.restore();
+    // frame inner lip
+    ctx.fillStyle = '#2a2723';
+    ctx.fillRect(px - frameB, py - frameB, pw + frameB*2, ph + frameB*2);
+    ctx.fillStyle = '#f4f1ea';
+    ctx.fillRect(px - 6, py - 6, pw + 12, ph + 12);
+    // poster
+    ctx.drawImage(posterImg, px, py, pw, ph);
+
+    canvas.toBlob(async (blob) => {
+      await saveAsFile(blob, baseFilename() + '_wall_mockup.png', 'PNG Image', ['.png']);
+      setStatus('bundleStatus','success','✓ Wall mockup saved — a quick first listing image; your Listing Asset Factory remains the full pipeline.');
+    }, 'image/png');
+  } catch (err) {
+    setStatus('bundleStatus','error','Mockup failed: ' + err.message);
+  }
+};
+
+function blobToImage(blob){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// ---------------------------------------------------------------
+// MY DEFAULTS (persisted settings preset) + RECENT TRAILS
+// ---------------------------------------------------------------
+const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY']);
+
+function collectDefaults(){
+  const d = { style: currentStyle, fields: {} };
+  optionIds.forEach(id => {
+    if (DEFAULTS_EXCLUDE.has(id)) return;
+    const el = document.getElementById(id);
+    d.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
+  });
+  d.sizes = [...sizeGrid.querySelectorAll('input:checked')].map(i => i.value);
+  d.optJpg = document.getElementById('optJpg').checked;
+  return d;
+}
+
+function applyDefaults(d){
+  if (!d) return;
+  currentStyle = d.style || currentStyle;
+  Object.entries(d.fields || {}).forEach(([id, val]) => {
+    if (DEFAULTS_EXCLUDE.has(id)) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!val; else el.value = val;
+  });
+  if (d.sizes) sizeGrid.querySelectorAll('input').forEach(i => i.checked = d.sizes.includes(i.value));
+  if (d.optJpg !== undefined) document.getElementById('optJpg').checked = d.optJpg;
+  document.getElementById('lineWidthVal').textContent = document.getElementById('optLineWidth').value;
+  document.getElementById('smoothVal').textContent = document.getElementById('optSmooth').value === '0' ? 'None' : document.getElementById('optSmooth').value;
+  renderSwatches();
+}
+
+document.getElementById('saveDefaultsBtn').onclick = () => {
+  try {
+    localStorage.setItem('wgs_defaults', JSON.stringify(collectDefaults()));
+    setStatus('searchStatus','success','✓ Saved as your defaults — every new session starts with these settings.');
+  } catch(e) { setStatus('searchStatus','error','Could not save defaults (storage unavailable).'); }
+};
+document.getElementById('clearDefaultsBtn').onclick = () => {
+  try { localStorage.removeItem('wgs_defaults'); setStatus('searchStatus','success','Defaults cleared — tool will start fresh next time.'); } catch(e) {}
+};
+try {
+  const saved = localStorage.getItem('wgs_defaults');
+  if (saved) applyDefaults(JSON.parse(saved));
+} catch(e) {}
+
+// Recent trails (stores route data when small enough to fit browser storage)
+function addRecentTrail(name){
+  try {
+    let recents = JSON.parse(localStorage.getItem('wgs_recent') || '[]');
+    recents = recents.filter(r => r.name !== name);
+    const entry = { name, ts: Date.now() };
+    if (currentPoints.length > 1 && currentPoints.length <= 20000) entry.points = currentPoints;
+    recents.unshift(entry);
+    recents = recents.slice(0, 10);
+    localStorage.setItem('wgs_recent', JSON.stringify(recents));
+  } catch(e) {
+    // Over browser storage quota. Never lose the existing list — progressively strip stored
+    // points from the OLDEST entries until it fits, then retry adding this one (name-only).
+    try {
+      let recents = JSON.parse(localStorage.getItem('wgs_recent') || '[]');
+      recents = recents.filter(r => r.name !== name);
+      recents.unshift({ name, ts: Date.now() });
+      recents = recents.slice(0, 10);
+      for (let attempt = 0; attempt < recents.length; attempt++) {
+        try { localStorage.setItem('wgs_recent', JSON.stringify(recents)); break; }
+        catch(eq) {
+          // strip points from the oldest entry that still has them
+          for (let j = recents.length - 1; j >= 0; j--) {
+            if (recents[j].points) { delete recents[j].points; break; }
+          }
+        }
+      }
+    } catch(e2) {}
+  }
+  renderRecentTrails();
+}
+
+function renderRecentTrails(){
+  const holder = document.getElementById('recentTrails');
+  let recents = [];
+  try { recents = JSON.parse(localStorage.getItem('wgs_recent') || '[]'); } catch(e) {}
+  if (!recents.length) { holder.innerHTML = '<div class="note">No recent trails yet.</div>'; return; }
+  holder.innerHTML = '<label style="display:block; font-size:11.5px; color:rgba(247,243,234,0.65); margin-bottom:6px; font-weight:500;">Recent trails (click to reload)</label>' +
+    recents.map((r, i) =>
+      `<button class="small" style="display:block; width:100%; text-align:left; margin-bottom:4px; ${r.points ? '' : 'opacity:0.55;'}" data-ri="${i}">${escapeXml(r.name)}${r.points ? '' : ' (too large to store — re-search or re-upload)'}</button>`
+    ).join('');
+  holder.querySelectorAll('button[data-ri]').forEach(btn => {
+    btn.onclick = () => {
+      const r = recents[parseInt(btn.dataset.ri)];
+      if (!r.points) { setStatus('searchStatus','error', r.name + ' was too large to store — search or upload it again.'); return; }
+      currentPoints = r.points;
+      terrainPolys = []; waypointPts = []; window._lastFacts = null;
+      document.getElementById('optTerrain').checked = false;
+      document.getElementById('optWaypoints').checked = false;
+      document.getElementById('fetchTerrainBtn').disabled = false;
+      setMode('trail');
+      document.getElementById('posterTitle').value = r.name;
+      resetPerTrailFields();
+      document.getElementById('factsBtn').disabled = false;
+      drawPoster();
+      setStatus('searchStatus','success','✓ Reloaded ' + r.name + ' from recent trails.');
+    };
+  });
+}
+renderRecentTrails();
+
+function drawPoster(){
+  const isCity = dataMode === 'city' && cityWays.length;
+  if (!isCity && currentPoints.length < 2) return;
+  // Auto-suggest smoothing for extremely large routes (e.g. full Appalachian Trail at 300k+ points)
+  if (!isCity && currentPoints.length > 50000) {
+    const smoothEl = document.getElementById('optSmooth');
+    if (parseInt(smoothEl.value) === 0) {
+      smoothEl.value = 6;
+      document.getElementById('smoothVal').textContent = '6';
+      setStatus('bundleStatus','loading','Very large route detected (' + currentPoints.length.toLocaleString() + ' points) — smoothing auto-applied to keep things fast. Adjust the slider if you want more detail.');
+    }
+  }
+  const { W, H } = getCanvasDims(780/600);
+  const svg = buildSvg(W, H);
+  document.getElementById('posterSvgHolder').innerHTML = svg;
+  ['exportSvgBtn','exportPngBtn','exportBundleBtn','listingBtn','mockupBtn'].forEach(id => document.getElementById(id).disabled = false);
+  document.getElementById('verifyBtn').disabled = isCity; // verification is for trail routes
+  document.getElementById('saveGpxBtn').disabled = !(currentPoints.length > 1);
+
+  if (isCity) {
+    document.getElementById('coordsReadout').textContent =
+      `center ${cityCenter.lat.toFixed(4)}°, ${cityCenter.lon.toFixed(4)}° · radius ${cityRadiusKm} km · ${cityWays.length.toLocaleString()} streets`;
+    document.getElementById('autoDistance').style.display = 'none';
+    return;
+  }
+
+  const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
+  document.getElementById('coordsReadout').textContent =
+    `${safeMin(lats).toFixed(3)}°, ${safeMin(lons).toFixed(3)}° → ${safeMax(lats).toFixed(3)}°, ${safeMax(lons).toFixed(3)}°`;
+
+  // auto distance (haversine along the route)
+  const km = routeDistanceKm(currentPoints);
+  if (km > 0.1) {
+    const mi = km * 0.621371;
+    document.getElementById('autoDistanceVal').textContent = `${km.toFixed(1)} km / ${mi.toFixed(1)} mi`;
+    document.getElementById('autoDistance').style.display = 'block';
+  }
+}
+
+function routeDistanceKm(points){
+  let d = 0;
+  const R = 6371;
+  for (let i = 1; i < points.length; i++) {
+    const dLat = (points[i].lat - points[i-1].lat) * Math.PI/180;
+    const dLon = (points[i].lon - points[i-1].lon) * Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(points[i-1].lat*Math.PI/180) * Math.cos(points[i].lat*Math.PI/180) * Math.sin(dLon/2)**2;
+    const seg = 2 * R * Math.asin(Math.sqrt(a));
+    if (seg < 50) d += seg; // skip jumps between disconnected OSM segments
+  }
+  return d;
+}
+
+// Save fetched/loaded route as a standard GPX file (builds a permanent local library)
+document.getElementById('saveGpxBtn').onclick = async () => {
+  if (currentPoints.length < 2) return;
+  const name = document.getElementById('posterTitle').value || 'route';
+  const trkpts = currentPoints.map(p =>
+    `      <trkpt lat="${p.lat}" lon="${p.lon}">${p.ele !== undefined ? `<ele>${p.ele}</ele>` : ''}</trkpt>`
+  ).join('\n');
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="WGS Trail Map Poster Builder" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>${escapeXml(name)}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+  await saveAsFile(new Blob([gpx], { type:'application/gpx+xml' }), baseFilename() + '.gpx', 'GPX Route File', ['.gpx']);
+  setStatus('bundleStatus','success','✓ GPX saved — keep it in your WGS trails folder and re-upload it anytime, no server needed.');
+};
+
+document.getElementById('useDistanceBtn').onclick = () => {
+  const km = routeDistanceKm(currentPoints);
+  const mi = km * 0.621371;
+  document.getElementById('legendText').value = `${mi.toFixed(0)} MILES · ${km.toFixed(0)} KM`;
+  drawPoster();
+};
+
+function escapeXml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------------------------------------------------------------
+// EXPORTS
+// ---------------------------------------------------------------
+// ---------------------------------------------------------------
+// FONT EMBEDDING — makes exported SVGs portable (fonts travel inside the file)
+// ---------------------------------------------------------------
+let embeddedFontCss = null;
+async function getEmbeddedFontCss(){
+  if (embeddedFontCss) return embeddedFontCss;
+  try {
+    const cssResp = await fetch('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;600&family=Cormorant+Garamond:wght@600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    let css = await cssResp.text();
+    const urls = [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
+    for (const u of urls) {
+      const fontResp = await fetch(u);
+      const buf = await fontResp.arrayBuffer();
+      let binary = '';
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode.apply(null, bytes.subarray(i, i+8192));
+      const b64 = btoa(binary);
+      css = css.replace(u, `data:font/woff2;base64,${b64}`);
+    }
+    embeddedFontCss = css;
+    return css;
+  } catch (e) {
+    return null; // offline — SVG still exports with font-name references + fallbacks
+  }
+}
+
+async function buildPortableSvg(W, H){
+  const svg = buildSvg(W, H);
+  const fontCss = await getEmbeddedFontCss();
+  if (!fontCss) return svg;
+  return svg.replace('>', `><defs><style type="text/css"><![CDATA[\n${fontCss}\n]]></style></defs>`);
+}
+
+document.getElementById('exportSvgBtn').onclick = async () => {
+  if (currentPoints.length < 2 && !cityWays.length) return;
+  setStatus('bundleStatus','loading','Embedding fonts into SVG…');
+  const { W, H } = getCanvasDims(780/600);
+  const svg = await buildPortableSvg(W, H);
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  await saveAsFile(blob, baseFilename() + '.svg', 'SVG Image', ['.svg']);
+  setStatus('bundleStatus','success','✓ Portable SVG saved — fonts embedded, opens correctly on any machine.');
+};
+
+document.getElementById('exportPngBtn').onclick = async () => {
+  const { W, H } = getCanvasDims(780/600);
+  const blob = await svgToPngBlob(buildSvg(W, H), W*3, H*3);
+  await saveAsFile(blob, baseFilename() + '_preview.png', 'PNG Image', ['.png']);
+};
+
+function svgToPngBlob(svgString, pxW, pxH){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = pxW; canvas.height = pxH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, pxW, pxH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('PNG render failed')), 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
+    img.src = url;
+  });
+}
+
+function svgToJpgBlob(svgString, pxW, pxH, bgColor){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = pxW; canvas.height = pxH;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor || '#FFFFFF';
+      ctx.fillRect(0, 0, pxW, pxH);
+      ctx.drawImage(img, 0, 0, pxW, pxH);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('JPG render failed')), 'image/jpeg', 0.92);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
+    img.src = url;
+  });
+}
+
+// ---------------------------------------------------------------
+// SAVE / LOAD PROJECT
+// ---------------------------------------------------------------
+function collectProject(){
+  const proj = { version: 3, mode: dataMode, style: currentStyle, points: currentPoints,
+    cityWays, cityWaterways, cityCenter, cityRadiusKm,
+    terrainPolys, waypointPts, lastFacts: window._lastFacts || null, fields: {} };
+  optionIds.forEach(id => {
+    const el = document.getElementById(id);
+    proj.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
+  });
+  ['cityQuery','cityRadius','cityPin','cityWater'].forEach(id => {
+    const el = document.getElementById(id);
+    proj.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
+  });
+  proj.fields.sizes = [...sizeGrid.querySelectorAll('input:checked')].map(i => i.value);
+  proj.fields.optJpg = document.getElementById('optJpg').checked;
+  return proj;
+}
+
+document.getElementById('saveProjectBtn').onclick = async () => {
+  const hasData = currentPoints.length > 1 || cityWays.length;
+  if (!hasData) { setStatus('bundleStatus','error','Load a trail or city first, then save.'); return; }
+  const blob = new Blob([JSON.stringify(collectProject())], { type:'application/json' });
+  await saveAsFile(blob, baseFilename() + '_project.json', 'WGS Project File', ['.json']);
+  setStatus('bundleStatus','success','✓ Project saved — reopen it anytime with Load Project.');
+};
+
+document.getElementById('loadProjectBtn').onclick = () => document.getElementById('projectInput').click();
+document.getElementById('projectInput').onchange = (e) => {
+  if (!e.target.files.length) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const proj = JSON.parse(ev.target.result);
+      const hasTrail = proj.points && proj.points.length >= 2;
+      const hasCity = proj.cityWays && proj.cityWays.length;
+      if (!hasTrail && !hasCity) throw new Error('No route or city data in this project file.');
+      currentPoints = proj.points || [];
+      terrainPolys = proj.terrainPolys || [];
+      waypointPts = proj.waypointPts || [];
+      window._lastFacts = proj.lastFacts || null;
+      document.getElementById('fetchTerrainBtn').disabled = !(proj.points && proj.points.length > 1);
+      cityWays = proj.cityWays || [];
+      cityWaterways = proj.cityWaterways || [];
+      cityCenter = proj.cityCenter || null;
+      cityRadiusKm = proj.cityRadiusKm || 2;
+      currentStyle = proj.style || 'vintage';
+      Object.entries(proj.fields || {}).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = !!val; else el.value = val;
+      });
+      document.getElementById('radiusVal').textContent = parseFloat(document.getElementById('cityRadius').value).toFixed(1);
+      setMode(proj.mode || (hasCity && !hasTrail ? 'city' : 'trail'));
+      if (proj.fields.sizes) {
+        sizeGrid.querySelectorAll('input').forEach(i => i.checked = proj.fields.sizes.includes(i.value));
+      }
+      if (proj.fields.optJpg !== undefined) document.getElementById('optJpg').checked = proj.fields.optJpg;
+      document.getElementById('lineWidthVal').textContent = document.getElementById('optLineWidth').value;
+      renderSwatches();
+      document.getElementById('factsBtn').disabled = false;
+      drawPoster();
+      setStatus('bundleStatus','success','✓ Project loaded — all settings and route restored.');
+    } catch (err) {
+      setStatus('bundleStatus','error','Could not load project: ' + err.message);
+    }
+  };
+  reader.readAsText(e.target.files[0]);
+};
+
+// ---------------------------------------------------------------
+// ETSY LISTING GENERATOR (Claude)
+// ---------------------------------------------------------------
+document.getElementById('listingBtn').onclick = async () => {
+  const title = document.getElementById('posterTitle').value.trim();
+  if (!title) { setStatus('listingStatus','error','Set a poster title first.'); return; }
+  const subtitle = document.getElementById('posterSubtitle').value.trim();
+  const styleName = document.getElementById('optCustomColors').checked ? 'custom colour' : STYLES[currentStyle].label;
+
+  setStatus('listingStatus','loading','Drafting your Etsy listing…');
+  document.getElementById('listingBtn').disabled = true;
+
+  try {
+    const data = await callClaude({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1500,
+      messages: [{
+        role: "user",
+        content: `Write an Etsy listing for a digital download poster: a "${title}" trail map art print${subtitle ? ` (${subtitle})` : ''} in a ${styleName} style. The route is drawn from real geographic data. The download includes multiple print sizes (2:3, 3:4, 4:5 ratios, 11x14, A2) at 300 DPI plus a print guide. Respond with ONLY a JSON object, no markdown fences: {"title": "", "tags": ["",...13 items], "description": ""}. Title: under 140 characters, front-loaded with search keywords buyers actually use. Tags: exactly 13, each under 20 characters, mix of broad and specific. Description: around 150 words, warm but practical tone, covering what it is, what's included, how to print, and that no physical item ships. Do not invent facts about the trail (no specific distances or dates unless commonly known).`
+      }]
+    });
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const listing = JSON.parse(cleaned);
+
+    const out = document.getElementById('listingOutput');
+    out.innerHTML = `
+      <h4>Title</h4><p style="margin:4px 0; user-select:all;">${escapeXml(listing.title||'')}</p>
+      <h4>13 Tags</h4><p style="margin:4px 0; user-select:all;">${(listing.tags||[]).map(escapeXml).join(', ')}</p>
+      <h4>Description</h4><p style="margin:4px 0; white-space:pre-wrap; user-select:all;">${escapeXml(listing.description||'')}</p>
+      <div class="row" style="margin-top:10px;">
+        <button class="small block" onclick="copyListing()">Copy All</button>
+        <button class="small block" onclick="copyTagsOnly()">Copy Tags Only</button>
+        <button class="small block" onclick="saveListingAsWord()">Save as Word</button>
+      </div>
+      <p style="margin-top:8px; font-size:10px; opacity:0.5;">Draft only — review, adjust to your voice, and check any factual claims before publishing.</p>
+    `;
+    out.classList.add('show');
+    window._lastListing = listing;
+    setStatus('listingStatus','success','Listing draft ready below.');
+  } catch (err) {
+    setStatus('listingStatus','error','Draft failed: ' + err.message + ' — check your Claude connection above.');
+  } finally {
+    document.getElementById('listingBtn').disabled = false;
+  }
+};
+
+function copyTagsOnly(){
+  const l = window._lastListing;
+  if (!l || !l.tags) return;
+  navigator.clipboard.writeText(l.tags.join(', ')).then(() => setStatus('listingStatus','success','✓ 13 tags copied — paste straight into Etsy\'s tag field.'));
+}
+
+function copyListing(){
+  const l = window._lastListing;
+  if (!l) return;
+  const text = `TITLE:\n${l.title}\n\nTAGS:\n${(l.tags||[]).join(', ')}\n\nDESCRIPTION:\n${l.description}`;
+  navigator.clipboard.writeText(text).then(() => setStatus('listingStatus','success','✓ Copied to clipboard.'));
+}
+
+// ---------------------------------------------------------------
+// Real .docx export for the Etsy listing draft (built manually via JSZip —
+// a .docx is just a zip file containing a few required XML parts)
+// ---------------------------------------------------------------
+function docxEscape(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function docxParagraph(text, opts){
+  opts = opts || {};
+  const size = opts.size || 22; // half-points; 22 = 11pt body text
+  const bold = opts.bold ? '<w:b/>' : '';
+  const runProps = `<w:rPr>${bold}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr>`;
+  const lines = String(text).split('\n');
+  return lines.map(line =>
+    `<w:p><w:pPr>${opts.spacing || '<w:spacing w:after="200"/>'}</w:pPr><w:r>${runProps}<w:t xml:space="preserve">${docxEscape(line)}</w:t></w:r></w:p>`
+  ).join('');
+}
+
+async function saveListingAsWord(){
+  const l = window._lastListing;
+  if (!l) return;
+  const trailName = document.getElementById('posterTitle').value || 'Trail Poster';
+
+  const body = [
+    docxParagraph('Etsy Listing Draft — ' + trailName, { bold:true, size:32 }),
+    docxParagraph('TITLE', { bold:true, size:24 }),
+    docxParagraph(l.title || ''),
+    docxParagraph('TAGS (13)', { bold:true, size:24 }),
+    docxParagraph((l.tags||[]).join(', ')),
+    docxParagraph('DESCRIPTION', { bold:true, size:24 }),
+    docxParagraph(l.description || ''),
+    docxParagraph('— Draft only. Review, adjust to your voice, and verify any factual claims before publishing.', { size:18 }),
+  ].join('');
+
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body>
+</w:document>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.folder('_rels').file('.rels', rootRels);
+  zip.folder('word').file('document.xml', documentXml);
+
+  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  await saveAsFile(blob, 'WGS_' + trailName.trim().replace(/\s+/g,'_').replace(/[^\w-]/g,'') + '_EtsyListing.docx', 'Word Document', ['.docx']);
+  setStatus('listingStatus','success','✓ Saved as a Word document.');
+}
+
+// FULL BUNDLE
+document.getElementById('exportBundleBtn').onclick = async () => {
+  const checked = [...sizeGrid.querySelectorAll('input:checked')].map(i => i.value);
+  if (!checked.length) { setStatus('bundleStatus','error','Tick at least one print size first.'); return; }
+
+  const btn = document.getElementById('exportBundleBtn');
+  btn.disabled = true;
+  const prog = document.getElementById('bundleProgress');
+  const fill = document.getElementById('bundleFill');
+  prog.classList.add('show'); fill.style.width = '0%';
+  setStatus('bundleStatus','loading','Building your Etsy bundle — generating each size at 300 DPI…');
+
+  try {
+    const zip = new JSZip();
+    const title = document.getElementById('posterTitle').value || 'Trail Poster';
+    const base = baseFilename();
+    const orient = document.getElementById('optOrientation').value;
+
+    const sizes = PRINT_SIZES.filter(s => checked.includes(s.id));
+
+    // Which styles? Current style always, plus any extra ticked variants
+    const extraStyles = [...styleExportGrid.querySelectorAll('input:checked')].map(i => i.value);
+    const usingCustom = document.getElementById('optCustomColors').checked;
+    let styleList = usingCustom ? [null] : [currentStyle];
+    extraStyles.forEach(sk => { if (!styleList.includes(sk)) styleList.push(sk); });
+    const multiStyle = styleList.length > 1;
+    const totalJobs = styleList.length * sizes.length;
+    let done = 0;
+
+    for (const styleKey of styleList) {
+      styleOverride = (styleKey && styleKey !== currentStyle) || (multiStyle && styleKey) ? styleKey : null;
+      if (usingCustom && styleKey === null) styleOverride = null;
+      const folder = multiStyle ? (STYLES[styleKey] ? STYLES[styleKey].label.replace(/\s+/g,'_') + '/' : 'Custom/') : '';
+
+      for (let i = 0; i < sizes.length; i++) {
+        const sz = sizes[i];
+        let inW = sz.w, inH = sz.h;
+        if (orient === 'landscape') [inW, inH] = [inH, inW];
+        if (orient === 'square') { inW = Math.min(sz.w, sz.h); inH = inW; }
+
+        let pxW = Math.round(inW * DPI), pxH = Math.round(inH * DPI);
+        const maxDim = Math.max(pxW, pxH);
+        if (maxDim > MAX_PIXEL_DIM) {
+          const f = MAX_PIXEL_DIM / maxDim;
+          pxW = Math.round(pxW * f); pxH = Math.round(pxH * f);
+        }
+
+        const svg = buildSvg(pxW / 3, pxH / 3);
+        const blob = await svgToPngBlob(svg, pxW, pxH);
+        const sizeLabel = orient === 'square' ? `${inW}x${inH}in` : `${sz.w}x${sz.h}in_${orient}`;
+        zip.file(`${folder}${base}_${sz.id}_${sizeLabel}_300DPI.png`, blob);
+        if (document.getElementById('optJpg').checked) {
+          const jpgBlob = await svgToJpgBlob(svg, pxW, pxH, getActiveStyle().bg);
+          zip.file(`${folder}${base}_${sz.id}_${sizeLabel}_300DPI.jpg`, jpgBlob);
+        }
+        done++;
+        fill.style.width = Math.round((done / (totalJobs+1)) * 100) + '%';
+      }
+    }
+    styleOverride = null;
+
+    // portable SVG master with embedded fonts
+    const { W, H } = getCanvasDims(780/600);
+    zip.file(`${base}_EDITABLE_MASTER.svg`, await buildPortableSvg(W, H));
+
+    // buyer README
+    zip.file('HOW_TO_PRINT_README.txt', buildReadme(title, sizes, orient));
+    fill.style.width = '100%';
+
+    const zipBlob = await zip.generateAsync({ type:'blob' });
+    await saveAsFile(zipBlob, base + '_EtsyBundle.zip', 'ZIP Archive', ['.zip']);
+    setStatus('bundleStatus','success', `✓ Bundle ready — ${sizes.length} print sizes + SVG master + buyer print guide, zipped. This is your uploadable Etsy digital product.`);
+  } catch (err) {
+    setStatus('bundleStatus','error','Bundle failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => prog.classList.remove('show'), 1500);
+  }
+};
+
+function buildReadme(title, sizes, orient){
+  const sizeList = sizes.map(s => `  • ${s.label}`).join('\n');
+  return `THANK YOU FOR YOUR PURCHASE
+${title} — Trail Map Art Print
+============================================
+
+WHAT'S INCLUDED
+${sizeList}
+  • Editable SVG master file
+All PNG files are high-resolution 300 DPI, ready for professional printing.
+
+HOW TO PRINT
+
+Option 1 — At home:
+Open the PNG matching your frame size and print on good-quality
+matte or semi-gloss paper. Select "actual size" or 100% scale in
+your print dialog (never "fit to page").
+
+Option 2 — Print shop or online service:
+Upload the PNG for your chosen size to any print service
+(e.g. a local print shop, or online poster printers). The files
+are sized exactly, so no cropping or adjustment is needed.
+
+Option 3 — Larger sizes:
+The 2:3 and 3:4 ratio files scale cleanly to any frame in the
+same ratio family (e.g. the 24x36 file also prints beautifully
+at 12x18 or 16x24).
+
+WHICH FILE FOR WHICH FRAME?
+  2:3  → 4x6, 8x12, 12x18, 16x24, 20x30, 24x36 inches
+  3:4  → 6x8, 9x12, 12x16, 18x24 inches
+  4:5  → 4x5, 8x10, 16x20 inches
+  A2   → A4, A3, A2 international paper sizes
+
+ABOUT THIS MAP
+The route on this print is drawn from real geographic data —
+every bend follows the actual trail.
+
+PLEASE NOTE
+This is a digital product. No physical item will be shipped.
+For personal use only — not for resale or redistribution.
+
+Questions? Message us through our shop — happy to help.
+
+— Wild Grid Studio
+`;
+}
+
+function baseFilename(){
+  const t = document.getElementById('posterTitle').value || 'trail-poster';
+  return 'WGS_' + t.trim().replace(/\s+/g,'_').replace(/[^\w-]/g,'');
+}
+
+function downloadBlob(blob, filename){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// "Save As" — lets you pick the folder/filename directly (Chrome/Edge). Falls back to a normal
+// download (into your Downloads folder) automatically on browsers that don't support it (Firefox/Safari).
+async function saveAsFile(blob, suggestedName, description, extensions){
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description, accept: { [blob.type || 'application/octet-stream']: extensions } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    } catch (e) {
+      if (e.name === 'AbortError') return false; // user cancelled the Save As dialog — do nothing
+      // any other error — fall through to plain download below
+    }
+  }
+  downloadBlob(blob, suggestedName);
+  return true;
+}
+
+// ---------------------------------------------------------------
+// HELP MODAL
+// ---------------------------------------------------------------
+document.getElementById('helpBtn').onclick = () => document.getElementById('helpModal').classList.add('show');
+document.getElementById('helpModal').onclick = (e) => {
+  if (e.target === document.getElementById('helpModal')) document.getElementById('helpModal').classList.remove('show');
+};
+
+// ---------------------------------------------------------------
+// CLAUDE CONNECTION
+// ---------------------------------------------------------------
+const apiKeyInput = document.getElementById('apiKey');
+try {
+  const saved = localStorage.getItem('wgs_anthropic_key');
+  if (saved) apiKeyInput.value = saved;
+} catch(e) {}
+apiKeyInput.addEventListener('change', () => {
+  try { localStorage.setItem('wgs_anthropic_key', apiKeyInput.value.trim()); } catch(e) {}
+});
+
+async function callClaude(body){
+  const key = apiKeyInput.value.trim();
+  const headers = { "Content-Type": "application/json" };
+  if (key) {
+    headers["x-api-key"] = key;
+    headers["anthropic-version"] = "2023-06-01";
+    headers["anthropic-dangerous-direct-browser-access"] = "true";
+  }
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers, body: JSON.stringify(body)
+  });
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('API key rejected — check it starts with sk-ant- and is active.');
+    let detail = '';
+    try {
+      const errBody = await response.json();
+      detail = errBody && errBody.error && errBody.error.message ? ' — ' + errBody.error.message : '';
+    } catch(e) {}
+    if (response.status === 429) throw new Error('Rate limited by the Claude API' + detail + '. Wait a minute and try again.');
+    if (response.status === 529) throw new Error('Claude API is temporarily overloaded' + detail + '. Try again shortly.');
+    throw new Error('Claude API error ' + response.status + detail);
+  }
+  return response.json();
+}
+
+// FACTS
+document.getElementById('factsBtn').onclick = async () => {
+  const name = document.getElementById('posterTitle').value.trim();
+  if (!name) { setStatus('factsStatus','error','Enter a trail name first.'); return; }
+
+  setStatus('factsStatus','loading','Searching the web for real trail facts…');
+  document.getElementById('factsBtn').disabled = true;
+
+  try {
+    const data = await callClaude({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{
+        role: "user",
+        content: `Search the web for real, verifiable facts about the trail or park called "${name}". Respond with ONLY a JSON object, no other text, no markdown fences, in this exact shape: {"proper_name": "", "subtitle": "", "location": "", "distance": "", "elevation_gain": "", "established": "", "typical_duration": "", "summary": ""}. proper_name = the trail's correct official name (e.g. "West Highland Way" — useful when I gave you a filename-like string). subtitle = a short poster subtitle in the style "MILNGAVIE TO FORT WILLIAM" (start point TO end point, uppercase; or region if endpoints don't apply). typical_duration = how long the trail typically takes, very short (e.g. "6–8 days" or "4–5 hours"). Keep "summary" to one short sentence. If a fact can't be verified, use an empty string for that field.`
+      }],
+      tools: [{ type: "web_search_20250305", name: "web_search" }]
+    });
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const facts = JSON.parse(cleaned);
+    renderFacts(facts);
+    window._lastFacts = facts;
+    // Auto-correct filename-ish titles and fill an empty subtitle with the researched suggestion
+    if (facts.proper_name && facts.proper_name.trim()) {
+      document.getElementById('posterTitle').value = facts.proper_name.trim();
+    }
+    if (facts.subtitle && facts.subtitle.trim() && !document.getElementById('posterSubtitle').value.trim()) {
+      document.getElementById('posterSubtitle').value = facts.subtitle.trim().toUpperCase();
+    }
+    setStatus('factsStatus','success','Facts found — title/subtitle updated where helpful. Always verify against an official source before publishing.');
+
+    // Build a short, poster-friendly legend by default: distance + established year only.
+    // (Full distance/elevation/established stay visible above in the facts panel for your Etsy description.)
+    const shortDistance = extractShortDistance(facts.distance);
+    const legendParts = [shortDistance, facts.established ? 'EST. ' + facts.established : ''].filter(Boolean);
+    if (legendParts.length) {
+      document.getElementById('legendText').value = legendParts.join(' · ').toUpperCase();
+      drawPoster();
+    }
+  } catch (err) {
+    setStatus('factsStatus','error','Lookup failed: ' + err.message + ' — add your API key above if using standalone, or fill the legend manually.');
+  } finally {
+    document.getElementById('factsBtn').disabled = false;
+  }
+};
+
+function extractShortDistance(distanceStr){
+  if (!distanceStr) return '';
+  // Pull just the first "<number> miles" (or km if that's all that's given) and drop everything after
+  const milesMatch = distanceStr.match(/([\d,.]+)\s*mi(?:les)?/i);
+  if (milesMatch) return milesMatch[1].replace(/,/g,'') + ' MILES';
+  const kmMatch = distanceStr.match(/([\d,.]+)\s*km/i);
+  if (kmMatch) return kmMatch[1].replace(/,/g,'') + ' KM';
+  return distanceStr; // fallback: use as-is if format is unexpected
+}
+
+function renderFacts(facts){
+  const holder = document.getElementById('factsList');
+  const rows = [
+    ['Location', facts.location],
+    ['Distance', facts.distance],
+    ['Elevation gain', facts.elevation_gain],
+    ['Established', facts.established],
+  ].filter(([,v]) => v);
+  holder.innerHTML = rows.map(([k,v]) => `<div class="fact-row"><span class="k">${k}</span><span class="v">${escapeXml(String(v))}</span></div>`).join('')
+    + (facts.summary ? `<div style="font-size:12px; color:rgba(247,243,234,0.7); margin-top:10px; line-height:1.5;">${escapeXml(facts.summary)}</div>` : '');
+}
+
+// RESEARCH
+document.getElementById('researchBtn').onclick = async () => {
+  setStatus('researchStatus','loading','Researching current Etsy trends… (20–40 seconds)');
+  document.getElementById('researchBtn').disabled = true;
+  document.getElementById('researchOutput').classList.remove('show');
+
+  try {
+    const data = await callClaude({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1500,
+      messages: [{
+        role: "user",
+        content: `Search the web for current information about which trail map posters, hiking map prints, and national park map art are selling well on Etsy right now. I'm a seller planning which posters to make. Respond with ONLY a JSON object, no markdown fences, in this shape: {"top_locations": ["", "", "", "", ""], "top_styles": ["", "", ""], "pricing_notes": "", "suggested_price": "", "opportunities": "", "caution": ""}. top_locations = 5 specific trails/parks currently popular as map posters. top_styles = 3 visual styles selling best. pricing_notes = one sentence on typical digital download price range. suggested_price = a single specific price in USD you would recommend for a multi-size digital download trail poster bundle from a new shop with no reviews, with 5 words max of reasoning. opportunities = one sentence on an underserved angle. caution = one sentence on what's oversaturated. Base everything on real search findings, not guesses.`
+      }],
+      tools: [{ type: "web_search_20250305", name: "web_search" }]
+    });
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const r = JSON.parse(cleaned);
+
+    const out = document.getElementById('researchOutput');
+    out.innerHTML = `
+      <h4>Popular locations right now</h4>
+      <ul>${(r.top_locations||[]).map(l => `<li>${escapeXml(l)}</li>`).join('')}</ul>
+      <h4>Best-selling styles</h4>
+      <ul>${(r.top_styles||[]).map(s => `<li>${escapeXml(s)}</li>`).join('')}</ul>
+      <h4>Pricing</h4><p style="margin:4px 0;">${escapeXml(r.pricing_notes||'')}</p>
+      ${r.suggested_price ? `<h4>Suggested price for you</h4><p style="margin:4px 0;">${escapeXml(r.suggested_price)}</p>` : ''}
+      <h4>Opportunity</h4><p style="margin:4px 0;">${escapeXml(r.opportunities||'')}</p>
+      <h4>Watch out</h4><p style="margin:4px 0;">${escapeXml(r.caution||'')}</p>
+      <p style="margin-top:10px; font-size:10px; opacity:0.5;">Starting point from live web search — validate with your own eRank/Etsy keyword checks before committing.</p>
+    `;
+    out.classList.add('show');
+    setStatus('researchStatus','success','Research complete.');
+  } catch (err) {
+    setStatus('researchStatus','error','Research failed: ' + err.message + ' — add your API key in the panel above if using standalone.');
+  } finally {
+    document.getElementById('researchBtn').disabled = false;
+  }
+};
+</script>
+</body>
+</html>
