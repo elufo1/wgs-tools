@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.1</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.2</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -787,9 +787,11 @@ Cotswold Way | England"></textarea>
   <div class="panel right">
     <h2><span class="step-badge">🔑</span> Claude connection</h2>
     <p class="step-hint">Facts and research need Claude. Inside a Claude chat: works automatically, leave blank. Standalone: paste your API key (starts sk-ant-), remembered on this computer.</p>
-    <div class="field">
-      <input id="apiKey" type="password" placeholder="Anthropic API key (optional)" autocomplete="off" />
+    <div class="field" style="display:flex; gap:6px; align-items:flex-start;">
+      <input id="apiKey" type="password" placeholder="Anthropic API key (optional)" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" style="flex:1;" />
+      <button type="button" id="clearApiKeyBtn" class="block" style="width:auto; padding:0 12px; white-space:nowrap;">Clear</button>
     </div>
+    <div class="note" style="margin-top:4px;">If a key appears here that you didn't paste, your browser's password manager likely auto-filled it — click Clear and paste your real key from console.anthropic.com.</div>
 
     <h2 style="margin-top:18px;"><span class="step-badge">＋</span> Trail facts for the legend</h2>
     <div id="autoDistance" style="display:none; font-size:12px; padding:8px 10px; background:rgba(122,155,110,0.1); border-radius:4px; margin-bottom:8px;">
@@ -837,7 +839,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.2 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -902,9 +904,9 @@ Cotswold Way | England"></textarea>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.1):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.1):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.1):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.2):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.2):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.2):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1878,6 +1880,14 @@ function buildSeaGeometry(coastXY, r){
                  : pointInPoly(probe, ringBwd) ? ringBwd : null;
       if (pick) seas.push(pick);
     }
+  }
+  // ENCLOSED ISLAND CASE (e.g. Malta): the whole coastline sits inside the frame as
+  // closed ring(s) with nothing touching the frame border, so no open-chain sea was
+  // built above. Without this, the ocean around the island was left unfilled — the
+  // exact bug behind "map on a small island shows no sea". The island itself still
+  // renders correctly because it's drawn AFTER seas, on top of this fill.
+  if (seas.length === 0 && islands.length > 0) {
+    seas.push([[r.x1,r.y1],[r.x2,r.y1],[r.x2,r.y2],[r.x1,r.y2],[r.x1,r.y1]]);
   }
   return { seas, islands, openChains };
 }
@@ -4016,9 +4026,17 @@ try {
 apiKeyInput.addEventListener('change', () => {
   try { localStorage.setItem('wgs_anthropic_key', apiKeyInput.value.trim()); } catch(e) {}
 });
+document.getElementById('clearApiKeyBtn').onclick = () => {
+  apiKeyInput.value = '';
+  try { localStorage.removeItem('wgs_anthropic_key'); } catch(e) {}
+  setStatus('factsStatus','ok','Key cleared. Paste your real Anthropic key (starts sk-ant-), or leave blank if you\'re using this inside a Claude chat.');
+};
 
 async function callClaude(body){
   const key = apiKeyInput.value.trim();
+  if (key && !key.startsWith('sk-ant-')) {
+    throw new Error('That doesn\'t look like an Anthropic key (should start with sk-ant-). If you didn\'t paste this yourself, your browser\'s password manager may have auto-filled it — click Clear next to the key field and paste your real key from console.anthropic.com.');
+  }
   const headers = { "Content-Type": "application/json" };
   if (key) {
     headers["x-api-key"] = key;
