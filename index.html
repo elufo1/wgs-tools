@@ -104,6 +104,14 @@
 
   .status{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:4px; display:none; line-height:1.5; white-space:pre-wrap; }
   .status.show{ display:block; }
+  .mk-row{ display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+  .mk-row input[type=text]{ flex:1; min-width:0; padding:7px 9px; border-radius:5px; background:rgba(237,230,214,0.05);
+    border:1px solid var(--line); color:var(--parchment-pale); font-size:12.5px; font-family:'Inter',sans-serif; }
+  .mk-row select{ width:88px; padding:7px 4px; border-radius:5px; background:rgba(237,230,214,0.05);
+    border:1px solid var(--line); color:var(--parchment-pale); font-size:12px; }
+  .mk-del{ flex:0 0 auto; width:30px; height:32px; border-radius:5px; cursor:pointer;
+    background:rgba(162,62,50,0.18); border:1px solid rgba(162,62,50,0.5); color:#E39A8E; font-size:15px; line-height:1; }
+  .mk-del:hover{ background:rgba(162,62,50,0.35); }
   .result-row{ width:100%; text-align:left; padding:9px 11px; margin-bottom:6px; border-radius:5px; cursor:pointer;
     background: rgba(237,230,214,0.05); border:1px solid var(--line); color: var(--parchment-pale); font-size:12.5px; font-family:'Inter',sans-serif; }
   .result-row:hover{ border-color: var(--brass); background: rgba(176,141,87,0.12); }
@@ -212,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.5</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.9</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -431,8 +439,8 @@ Cotswold Way | England"></textarea>
         <div class="field">
           <label>Compass style</label>
           <select id="optCompassStyle">
+            <option value="ornate" selected>Ornate 8-point</option>
             <option value="minimal">Minimal needle</option>
-            <option value="ornate">Ornate 8-point</option>
           </select>
         </div>
         <div class="field">
@@ -493,6 +501,16 @@ Cotswold Way | England"></textarea>
             <option value="full">Full — licence-compliant for print (recommended for anything you sell)</option>
             <option value="short">Short — "Map data © OpenStreetMap contributors"</option>
           </select>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <div class="field">
+            <label>Credit position — X: <span id="osmDXVal">0</span></label>
+            <input type="range" id="optOsmDX" min="-200" max="200" step="2" value="0" />
+          </div>
+          <div class="field">
+            <label>Credit position — Y: <span id="osmDYVal">0</span></label>
+            <input type="range" id="optOsmDY" min="-80" max="40" step="1" value="0" />
+          </div>
         </div>
         <div class="note" style="margin-top:6px;">OpenStreetMap data is free for commercial use, but the ODbL licence requires you to credit it on anything you publish or sell. For <b>printed</b> work the credit must also state that the data is available under the ODbL — that's what the Full option does. The Short version is the web/interactive standard and is not sufficient on its own for print. Turning this off is your call, but it means the poster is not licence-compliant.</div>
         <div class="field">
@@ -595,11 +613,39 @@ Cotswold Way | England"></textarea>
           </select>
         </div>
         <button class="primary block" id="pickMarkerBtn">📍 Click on the map to place a marker</button>
-        <div class="note" style="margin-top:6px; margin-bottom:10px;">Turn this on, then click any spot on the poster. If you click near a named peak or village, its name fills in automatically — otherwise it's added as a new point you can rename below.</div>
-        <div class="field">
-          <label>Markers (edit or delete lines here) — third field is the icon: pin, tent, peak, heart, star, dot</label>
-          <textarea id="customMarkersInput" rows="4" placeholder="Click the map above, or type: Label | place or lat,lon | icon"></textarea>
+        <div id="pickReadout" class="note" style="margin-top:6px; display:none; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright);">Move over the map…</div>
+        <div class="toggle-row" style="margin-top:8px;"><span>Snap to the trail (recommended)</span><label class="toggle"><input type="checkbox" id="optSnapRoute" checked><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:6px; margin-bottom:10px;">With snap on, your click jumps to the nearest point <b>on the route</b> — so campsites and stages sit exactly on the trail instead of floating beside it. Turn it off to place a point anywhere (a viewpoint, a car park). Clicking near a named peak or village uses its name automatically.</div>
+
+        <div class="note" style="margin-top:12px; margin-bottom:8px; color:var(--brass-bright);"><b>Place them automatically (most accurate)</b></div>
+        <button class="block" id="autoPeaksBtn">▲ Add peaks &amp; places that lie on the route</button>
+        <div class="field" style="margin-top:6px;">
+          <label>How close to the trail counts as "on the route" — <span id="onRouteVal">2.0</span> km</label>
+          <input type="range" id="optOnRouteKm" min="0.5" max="10" step="0.5" value="2" />
         </div>
+        <button class="block" id="autoHighBtn" style="margin-top:6px;">⛰ Add the highest point (needs GPX elevation)</button>
+        <div class="row" style="margin-top:6px;">
+          <div class="field">
+            <label>Day stages — <span id="stageVal">7</span></label>
+            <input type="range" id="optStages" min="2" max="20" step="1" value="7" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="block" id="autoStagesBtn">⛺ Add day-stage camps</button>
+          </div>
+        </div>
+        <div class="note" style="margin-top:6px; margin-bottom:10px;">Stages split the route into equal-distance legs and drop a camp marker at the end of each day — computed from the real route length, not guessed.</div>
+        <button class="block" id="clearMarkersBtn" style="margin-bottom:10px;">Clear all markers</button>
+
+        <div id="markerList"></div>
+
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:12px; color:var(--brass-bright);">Advanced — edit as text</summary>
+          <div class="field" style="margin-top:8px;">
+            <label>One per line: Label | place or lat,lon | icon</label>
+            <textarea id="customMarkersInput" rows="4" placeholder="Click the map above, or type: Label | place or lat,lon | icon"></textarea>
+          </div>
+        </details>
         <div class="note" style="margin-top:0; margin-bottom:8px;"><b>Coordinates always work offline.</b> Place names work instantly too if they're a peak or village already on the map (fetch terrain first). Only unrecognised names need the online lookup below.</div>
         <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
         <div id="markersStatus" class="status"></div>
@@ -778,7 +824,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.5 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.9 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -834,10 +880,17 @@ Cotswold Way | England"></textarea>
     <h4>Design options (left panel)</h4>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
-      <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v8.5):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v8.5):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v8.5):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>Decorations:</b> compass rose (ornate 8-point by default), corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile, and a <b>route outline</b> so the line stays readable over terrain.</li>
+      <li><b>🌊 Terrain edition:</b> real water, woodland, moorland, glaciers, rivers and streams from live OSM data — plus <b>the sea</b>, reconstructed from coastline data so coastal routes no longer render the ocean as dry land. Water can be solid, hatched, or ruled lines.</li>
+      <li><b>📍 Custom markers:</b> click <b>"Click on the map to place a marker"</b>, then click any spot on the poster. Click near a named peak or village and its name fills in automatically. Choose an icon first (pin, tent, peak, heart, star, dot). You can also type them: <b>Label | place or lat,lon | icon</b>. Labels auto-place to a free side and suppress any duplicate peak label beneath them. If a marker sits outside the picture, turn on <b>Fit all markers inside the frame</b>.</li>
+      <li><b>🔲 Map framing:</b> padding slider crops tight or leaves a wide margin; the shift sliders move the view when you're zoomed in.</li>
+      <li><b>📊 Stats grid — manual override:</b> type a Distance / Highest Point / Ascent / Duration and it beats the automatic value. Use it when a GPX has no elevation data. Whatever you type is printed exactly — check it against a real source.</li>
+      <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
+      <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
+      <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
+      <li><b>📍 Custom markers (new in v8.9):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v8.9):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v8.9):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1236,8 +1289,8 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optMarkerIcon','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
-const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal' };
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal', optOsmDX:'osmDXVal', optOsmDY:'osmDYVal', optStages:'stageVal' };
 const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
@@ -1248,6 +1301,7 @@ optionIds.forEach(id => {
     if (nudgeLabelMap[id]) document.getElementById(nudgeLabelMap[id]).textContent = el.value;
     if (id === 'optMaxWaypoints') document.getElementById('maxWpVal').textContent = el.value;
     if (id === 'optFramePad') document.getElementById('framePadVal').textContent = framePadLabel(el.value);
+    if (id === 'optOnRouteKm') document.getElementById('onRouteVal').textContent = parseFloat(el.value).toFixed(1);
     if (scaleLabelMap[id]) document.getElementById(scaleLabelMap[id]).textContent = parseFloat(el.value).toFixed(2);
     drawPoster();
   });
@@ -2086,6 +2140,8 @@ function buildSvg(W, H){
   // ODbL attribution — required on any product derived from OpenStreetMap data.
   if (document.getElementById('optOsmCredit').checked) {
     const mode = document.getElementById('optOsmCreditMode').value;
+    const odx = (parseFloat(document.getElementById('optOsmDX').value) || 0) * scaleFactor;
+    const ody = (parseFloat(document.getElementById('optOsmDY').value) || 0) * scaleFactor;
     if (mode === 'full') {
       // Print-compliant: must also state the data is available under the ODbL.
       // Centred on the very bottom edge, auto-shrunk so it always fits the width.
@@ -2094,7 +2150,9 @@ function buildSvg(W, H){
       let size = 6 * scaleFactor;
       const estW = () => txt.length * size * 0.5;
       while (estW() > avail && size > 3 * scaleFactor) size -= 0.15 * scaleFactor;
-      parts.push(`<text x="${W/2}" y="${H - 20*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${size.toFixed(1)}" fill="${s.text}" opacity="0.42">${escapeXml(txt)}</text>`);
+      // sits INSIDE the frame line (which is at H-24) — it used to be drawn at H-20,
+      // i.e. out in the margin, where it got clipped off the poster
+      parts.push(`<text x="${W/2 + odx}" y="${H - 30*scaleFactor + ody}" text-anchor="middle" font-family="${_F.mono}" font-size="${size.toFixed(1)}" fill="${s.text}" opacity="0.42">${escapeXml(txt)}</text>`);
     } else {
       const cpos = document.getElementById('optCopyrightPos').value;
       const cy5 = H - 38*scaleFactor;
@@ -2102,7 +2160,7 @@ function buildSvg(W, H){
       let cx5 = 40*scaleFactor, anchor5 = 'start';
       if (cpos === 'bl') { cx5 = W - 40*scaleFactor; anchor5 = 'end'; }
       if (cpos === 'bc') { cx5 = W - 40*scaleFactor; anchor5 = 'end'; }
-      parts.push(`<text x="${cx5}" y="${cy5}" text-anchor="${anchor5}" font-family="${_F.mono}" font-size="${fs(6)}" fill="${s.text}" opacity="0.4" letter-spacing="${0.5*scaleFactor}">MAP DATA © OPENSTREETMAP CONTRIBUTORS</text>`);
+      parts.push(`<text x="${cx5 + odx}" y="${cy5 + ody}" text-anchor="${anchor5}" font-family="${_F.mono}" font-size="${fs(6)}" fill="${s.text}" opacity="0.4" letter-spacing="${0.5*scaleFactor}">MAP DATA © OPENSTREETMAP CONTRIBUTORS</text>`);
     }
   }
 
@@ -2555,7 +2613,218 @@ function warnOffFrameMarkers(){
     `Turn on "Fit all markers inside the frame", or widen the view with the Map framing padding slider.`);
 }
 
-document.getElementById('customMarkersInput').addEventListener('input', refreshMarkersLive);
+document.getElementById('customMarkersInput').addEventListener('input', () => { refreshMarkersLive(); renderMarkerList(); });
+
+// ---------------------------------------------------------------
+// MARKER LIST — rename, change icon, and DELETE each marker
+// The textarea stays the single source of truth; the list just edits it.
+// ---------------------------------------------------------------
+const ICON_CHOICES = [['pin','Pin'],['tent','Tent'],['peak','Peak'],['heart','Heart'],['star','Star'],['dot','Dot']];
+
+function writeMarkerLines(entries){
+  document.getElementById('customMarkersInput').value =
+    entries.map(e => `${e.label} | ${e.loc} | ${e.icon || 'pin'}`).join('\n');
+  refreshMarkersLive();
+  renderMarkerList();
+}
+
+function renderMarkerList(){
+  const holder = document.getElementById('markerList');
+  const entries = parseMarkerLines();
+  holder.innerHTML = '';
+  if (!entries.length) return;
+
+  entries.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'mk-row';
+
+    const name = document.createElement('input');
+    name.type = 'text';
+    name.value = e.label;
+    name.oninput = () => { entries[i].label = name.value || 'Marker'; writeMarkerLinesDebounced(entries); };
+
+    const icon = document.createElement('select');
+    ICON_CHOICES.forEach(([v, lbl]) => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = lbl;
+      if ((e.icon || 'pin') === v) o.selected = true;
+      icon.appendChild(o);
+    });
+    icon.onchange = () => { entries[i].icon = icon.value; writeMarkerLines(entries); };
+
+    const del = document.createElement('button');
+    del.className = 'mk-del';
+    del.textContent = '×';
+    del.title = 'Delete this marker';
+    del.onclick = () => { entries.splice(i, 1); writeMarkerLines(entries); };
+
+    row.appendChild(name); row.appendChild(icon); row.appendChild(del);
+    holder.appendChild(row);
+  });
+}
+
+// renaming shouldn't rebuild the list on every keystroke (it would steal focus)
+let _mkTimer = null;
+function writeMarkerLinesDebounced(entries){
+  clearTimeout(_mkTimer);
+  document.getElementById('customMarkersInput').value =
+    entries.map(e => `${e.label} | ${e.loc} | ${e.icon || 'pin'}`).join('\n');
+  _mkTimer = setTimeout(() => { refreshMarkersLive(); }, 250);
+}
+
+// ---------------------------------------------------------------
+// AUTO-PLACED MARKERS — computed from the real geography, not eyeballed
+// ---------------------------------------------------------------
+
+// distance in km between two lat/lon points
+function kmBetween(a, b){
+  const R = 6371, toR = Math.PI/180;
+  const dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*toR)*Math.cos(b.lat*toR)*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// shortest distance from a point to the route line, in km
+function kmToRoute(p){
+  let best = Infinity;
+  const step = Math.max(1, Math.floor(currentPoints.length / 3000)); // keep it fast on huge routes
+  for (let i = 0; i < currentPoints.length; i += step) {
+    const d = kmBetween(p, currentPoints[i]);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+function addEntries(newOnes, what){
+  if (!newOnes.length) { setStatus('markersStatus','error', `Nothing to add for ${what}.`); return; }
+  const entries = parseMarkerLines();
+  const seen = new Set(entries.map(e => e.label.toLowerCase()));
+  let added = 0;
+  newOnes.forEach(n => {
+    if (seen.has(n.label.toLowerCase())) return; // don't double-add
+    entries.push(n); seen.add(n.label.toLowerCase()); added++;
+  });
+  writeMarkerLines(entries);
+  setStatus('markersStatus','ok', `Added ${added} ${what}${added===1?'':'s'}.`);
+}
+
+// 1. Named peaks & villages that actually lie along the route
+document.getElementById('autoPeaksBtn').onclick = () => {
+  if (currentPoints.length < 2) { setStatus('markersStatus','error','Load a route first.'); return; }
+  if (!waypointPts.length) { setStatus('markersStatus','error','Fetch terrain & waypoints first — that\'s where the named peaks and villages come from.'); return; }
+  const maxKm = parseFloat(document.getElementById('optOnRouteKm').value);
+  const onRoute = waypointPts
+    .map(w => ({ w, d: kmToRoute(w) }))
+    .filter(x => x.d <= maxKm)
+    .sort((a,b) => (b.w.ele || 0) - (a.w.ele || 0))
+    .slice(0, 12)
+    .map(x => ({
+      label: x.w.name,
+      loc: `${x.w.lat.toFixed(4)}, ${x.w.lon.toFixed(4)}`,
+      icon: x.w.kind === 'peak' ? 'peak' : 'dot'
+    }));
+  addEntries(onRoute, `feature within ${maxKm} km of the trail`);
+};
+
+// 2. The true highest point, taken from GPX elevation data
+document.getElementById('autoHighBtn').onclick = () => {
+  const withEle = currentPoints.filter(p => p.ele !== undefined);
+  if (withEle.length < 10) {
+    setStatus('markersStatus','error','This route has no elevation data (OSM routes usually don\'t). Upload a GPX with elevation to use this.');
+    return;
+  }
+  let hi = withEle[0];
+  withEle.forEach(p => { if (p.ele > hi.ele) hi = p; });
+  const ft = Math.round(hi.ele * 3.28084).toLocaleString();
+  addEntries([{ label: `Highest Point ${ft}ft`, loc: `${hi.lat.toFixed(4)}, ${hi.lon.toFixed(4)}`, icon: 'peak' }], 'highest point');
+};
+
+// 3. Day stages — equal-distance legs along the real route
+document.getElementById('autoStagesBtn').onclick = () => {
+  if (currentPoints.length < 2) { setStatus('markersStatus','error','Load a route first.'); return; }
+  const stages = parseInt(document.getElementById('optStages').value);
+  const total = routeDistanceKm(currentPoints);
+  const legKm = total / stages;
+
+  const out = [];
+  let acc = 0, nextMark = legKm, day = 1;
+  for (let i = 1; i < currentPoints.length && day < stages; i++) {
+    const seg = kmBetween(currentPoints[i-1], currentPoints[i]);
+    if (seg > 50) continue; // ignore jumps between disconnected segments
+    acc += seg;
+    if (acc >= nextMark) {
+      const p = currentPoints[i];
+      out.push({ label: `Day ${day} Camp`, loc: `${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`, icon: 'tent' });
+      day++; nextMark += legKm;
+    }
+  }
+  const mi = (legKm * 0.621371).toFixed(1);
+  addEntries(out, 'day camp');
+  setStatus('markersStatus','ok', `Added ${out.length} day camps — ${stages} stages of about ${legKm.toFixed(1)} km (${mi} mi) each.`);
+};
+
+document.getElementById('clearMarkersBtn').onclick = () => {
+  document.getElementById('customMarkersInput').value = '';
+  refreshMarkersLive();
+  renderMarkerList();
+  setStatus('markersStatus','ok','All markers cleared.');
+};
+
+// Snap a lat/lon to the closest point ON the route line.
+function snapToRoute(lat, lon){
+  if (!currentPoints.length) return null;
+  let best = null, bestD = Infinity;
+  const cos = Math.cos(lat * Math.PI / 180);
+  for (const p of currentPoints) {
+    const dLat = p.lat - lat, dLon = (p.lon - lon) * cos;
+    const d = dLat*dLat + dLon*dLon;
+    if (d < bestD) { bestD = d; best = p; }
+  }
+  return best ? { lat: best.lat, lon: best.lon, dist: Math.sqrt(bestD) } : null;
+}
+
+// Nearest named peak/village to a point, for auto-labelling and the hover readout.
+function nearestNamed(lat, lon){
+  let best = null, bestD = Infinity;
+  const cos = Math.cos(lat * Math.PI / 180);
+  for (const w of waypointPts) {
+    const dLat = w.lat - lat, dLon = (w.lon - lon) * cos;
+    const d = Math.sqrt(dLat*dLat + dLon*dLon);
+    if (d < bestD) { bestD = d; best = w; }
+  }
+  return best ? { name: best.name, dist: bestD } : null;
+}
+
+function clickToLatLon(ev){
+  const proj = window._clickProj;
+  const svgEl = svgHolder.querySelector('svg');
+  if (!proj || !svgEl) return null;
+  const r = svgEl.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width  * proj.W;
+  const y = (ev.clientY - r.top)  / r.height * proj.H;
+  const { lat, lon } = proj.toLatLon(x, y - proj.mapOffsetY);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { lat, lon };
+}
+
+// Live readout while placing: tells you exactly where you are before you commit.
+svgHolder.addEventListener('mousemove', (ev) => {
+  if (!pickMarkerMode) return;
+  const pos = clickToLatLon(ev);
+  const out = document.getElementById('pickReadout');
+  if (!pos) return;
+  const snap = document.getElementById('optSnapRoute').checked ? snapToRoute(pos.lat, pos.lon) : null;
+  const use = snap || pos;
+  const near = nearestNamed(use.lat, use.lon);
+  out.style.display = 'block';
+  out.textContent = `${use.lat.toFixed(4)}, ${use.lon.toFixed(4)}`
+    + (snap ? '  · on trail' : '')
+    + (near && near.dist < 0.06 ? `  · near ${near.name}` : '');
+});
+svgHolder.addEventListener('mouseleave', () => {
+  const out = document.getElementById('pickReadout');
+  if (out) out.textContent = 'Move over the map…';
+});
 
 // ---------------------------------------------------------------
 // CLICK-TO-PLACE MARKERS
@@ -2571,44 +2840,35 @@ function setPickMode(on){
   pickMarkerMode = on;
   pickBtn.textContent = on ? '✕ Stop placing markers' : '📍 Click on the map to place a marker';
   svgHolder.style.cursor = on ? 'crosshair' : '';
+  document.getElementById('pickReadout').style.display = on ? 'block' : 'none';
   if (on) setStatus('markersStatus','loading','Click anywhere on the poster to drop a marker.');
 }
 pickBtn.onclick = () => setPickMode(!pickMarkerMode);
 
 svgHolder.addEventListener('click', (ev) => {
   if (!pickMarkerMode) return;
-  const proj = window._clickProj;
-  const svgEl = svgHolder.querySelector('svg');
-  if (!proj || !svgEl) return;
+  const pos = clickToLatLon(ev);
+  if (!pos) return;
 
-  // map the click from screen pixels into the SVG's own coordinate system
-  const r = svgEl.getBoundingClientRect();
-  const x = (ev.clientX - r.left) / r.width  * proj.W;
-  const y = (ev.clientY - r.top)  / r.height * proj.H;
+  // snap to the trail so points sit exactly on the route, not floating beside it
+  const snap = document.getElementById('optSnapRoute').checked ? snapToRoute(pos.lat, pos.lon) : null;
+  const lat = snap ? snap.lat : pos.lat;
+  const lon = snap ? snap.lon : pos.lon;
 
-  const { lat, lon } = proj.toLatLon(x, y - proj.mapOffsetY);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  // borrow the name of a nearby peak/village if there is one
+  const near = nearestNamed(lat, lon);
+  const snapped = near && near.dist < 0.03;
 
-  // snap to a named waypoint if the click is close to one
-  let label = null;
-  let best = Infinity;
-  for (const w of waypointPts) {
-    const d = Math.hypot(w.lat - lat, w.lon - lon);
-    if (d < best) { best = d; label = w.name; }
-  }
-  // tolerance scales with how zoomed-out the map is
-  const span = Math.max(0.01, Math.abs(proj.toLatLon(0,0).lat - proj.toLatLon(0, proj.H).lat));
-  const snapped = label && best < span * 0.02;
-
-  const name = snapped ? label : 'Marker ' + (parseMarkerLines().length + 1);
+  const entries = parseMarkerLines();
+  const name = snapped ? near.name : 'Marker ' + (entries.length + 1);
   const icon = document.getElementById('optMarkerIcon').value;
-  const line = `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)} | ${icon}`;
 
-  const ta = document.getElementById('customMarkersInput');
-  ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + line;
-  refreshMarkersLive();
+  entries.push({ label: name, loc: `${lat.toFixed(4)}, ${lon.toFixed(4)}`, icon });
+  writeMarkerLines(entries);
+
   setStatus('markersStatus','ok',
-    (snapped ? `Added "${name}" (snapped to the named point).` : `Added "${name}".`) + ' Rename it in the box below, or keep clicking.');
+    (snapped ? `Added "${name}".` : `Added "${name}".`) +
+    (snap ? ' Snapped to the trail.' : '') + ' Rename or delete it in the list above.');
 });
 
 // Button now only does the ONLINE lookup for names that couldn't be resolved offline.
@@ -3335,7 +3595,8 @@ document.getElementById('projectInput').onchange = (e) => {
       document.getElementById('framePanXVal').textContent = document.getElementById('optFramePanX').value;
       document.getElementById('framePanYVal').textContent = document.getElementById('optFramePanY').value;
       // rebuild the custom-markers textarea from restored markers
-      document.getElementById('customMarkersInput').value = customMarkers.map(m => `${m.label} | ${m.lat.toFixed(4)}, ${m.lon.toFixed(4)}`).join('\n');
+      document.getElementById('customMarkersInput').value = customMarkers.map(m => `${m.label} | ${m.lat.toFixed(4)}, ${m.lon.toFixed(4)} | ${m.icon || 'pin'}`).join('\n');
+      renderMarkerList();
       renderSwatches();
       document.getElementById('factsBtn').disabled = false;
       drawPoster();
@@ -3365,7 +3626,7 @@ document.getElementById('listingBtn').onclick = async () => {
       max_tokens: 1500,
       messages: [{
         role: "user",
-        content: `Write an Etsy listing for a digital download poster: a "${title}" trail map art print${subtitle ? ` (${subtitle})` : ''} in a ${styleName} style. The route is drawn from real geographic data. The download includes multiple print sizes (2:3, 3:4, 4:5 ratios, 11x14, A2) at 300 DPI plus a print guide. Respond with ONLY a JSON object, no markdown fences: {"title": "", "tags": ["",...13 items], "description": ""}. Title: under 140 characters, front-loaded with search keywords buyers actually use. Tags: exactly 13, each under 20 characters, mix of broad and specific. Description: around 150 words, warm but practical tone, covering what it is, what's included, how to print, and that no physical item ships. Do not invent facts about the trail (no specific distances or dates unless commonly known).`
+        content: `Write an Etsy listing for a digital download poster: a "${title}" trail map art print${subtitle ? ` (${subtitle})` : ''} in a ${styleName} style. The route is drawn from real geographic data. The download includes multiple print sizes (2:3, 3:4, 4:5 ratios, 11x14, A2) at 300 DPI plus a print guide. Respond with ONLY a JSON object, no markdown fences: {"title": "", "tags": ["",...13 items], "description": ""}. Title: under 140 characters, front-loaded with search keywords buyers actually use. Tags: exactly 13, each under 20 characters, mix of broad and specific. Description: around 150 words, warm but practical tone, covering what it is, what's included, how to print, and that no physical item ships. Do not invent facts about the trail (no specific distances or dates unless commonly known). End the description with these two short paragraphs, kept close to this wording: (1) a decorative-use note - this is a stylised art print for wall display, not a navigational chart, and should not be used for navigation, route-finding or trip planning; always use an official map and current information from the relevant park authority. (2) a credit line - Map data (c) OpenStreetMap contributors, available under the ODbL at www.openstreetmap.org/copyright.`
       }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
@@ -3585,6 +3846,26 @@ WHICH FILE FOR WHICH FRAME?
 ABOUT THIS MAP
 The route on this print is drawn from real geographic data —
 every bend follows the actual trail.
+
+IMPORTANT — DECORATIVE USE ONLY
+This print is a work of art, not a navigational chart.
+It is stylised and simplified for wall display: some detail is
+omitted, and features are drawn for visual balance rather than
+navigational precision. Trails, water and terrain change over time,
+and the underlying map data may contain errors or be out of date.
+
+Do NOT use this print for navigation, route-finding, or trip
+planning, and do not rely on it in the outdoors or in any
+emergency. Always use an official map, a dedicated GPS device,
+and current information from the relevant land manager or
+park authority. Wild Grid Studio accepts no liability for any
+loss, injury or damage arising from use of this print as a
+navigational aid.
+
+MAP DATA & LICENCE
+Map data (c) OpenStreetMap contributors, available under the
+Open Database License (ODbL): www.openstreetmap.org/copyright
+The artwork, design and layout are (c) Wild Grid Studio.
 
 PLEASE NOTE
 This is a digital product. No physical item will be shipped.
