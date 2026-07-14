@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.2</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.3</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -478,6 +478,14 @@ Cotswold Way | England"></textarea>
         <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Visible © WILD GRID STUDIO line</span><label class="toggle"><input type="checkbox" id="optCopyright"><span class="slider"></span></label></div>
+        <div class="field">
+          <label>© position</label>
+          <select id="optCopyrightPos">
+            <option value="br">Bottom right</option>
+            <option value="bl">Bottom left</option>
+            <option value="bc">Bottom centre</option>
+          </select>
+        </div>
         <div class="note" style="margin-top:10px;">If a label overlaps the route line, nudge it clear using the sliders below.</div>
         <div class="row" style="margin-top:8px;">
           <div class="field">
@@ -649,8 +657,8 @@ Cotswold Way | England"></textarea>
   <div class="modal">
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
-    <div class="modal-sub">From real trail to Etsy-ready product · version 7.2</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.2 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.3 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -1084,7 +1092,7 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal' };
 optionIds.forEach(id => {
   const el = document.getElementById(id);
@@ -1554,7 +1562,12 @@ function buildSvg(W, H){
   }
 
   if (document.getElementById('optCopyright').checked) {
-    parts.push(`<text x="${W - 36*scaleFactor}" y="${H - 30*scaleFactor}" text-anchor="end" font-family="${_F.mono}" font-size="${fs(6.5)}" fill="${s.text}" opacity="0.4" letter-spacing="${scaleFactor}">© WILD GRID STUDIO</text>`);
+    const cpos = document.getElementById('optCopyrightPos').value;
+    const cy4 = H - 38*scaleFactor;
+    let cx4 = W - 40*scaleFactor, canchor = 'end';
+    if (cpos === 'bl') { cx4 = 40*scaleFactor; canchor = 'start'; }
+    if (cpos === 'bc') { cx4 = W/2; canchor = 'middle'; }
+    parts.push(`<text x="${cx4}" y="${cy4}" text-anchor="${canchor}" font-family="${_F.mono}" font-size="${fs(6.5)}" fill="${s.text}" opacity="0.45" letter-spacing="${scaleFactor}">© WILD GRID STUDIO</text>`);
   }
 
   // invisible ownership metadata — always embedded, never rendered (per WGS standard: no year)
@@ -1576,8 +1589,36 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   if (document.getElementById('optTerrain').checked && terrainPolys.length) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
     const tm = 30 * scaleFactor;
-    parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}"/></clipPath>`);
-    let landWater = `<rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}" fill="${s.land}"/>`;
+    const panelTop = mapOffsetY*0.98, panelBottom = panelTop + mapAreaH;
+    parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}"/></clipPath>`);
+    let landWater = `<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}" fill="${s.land}"/>`;
+
+    // continue the page's background grid seamlessly across the land panel, using the
+    // exact same step/position as the outer grid so the lines line up across the seam
+    if (document.getElementById('optGrid').checked) {
+      const gridStep = Math.min(W,H) / 12;
+      let gridLines = '';
+      for (let x = gridStep; x < W; x += gridStep) gridLines += `<line x1="${x}" y1="${panelTop}" x2="${x}" y2="${panelBottom}"/>`;
+      for (let y = gridStep; y < H; y += gridStep) if (y > panelTop && y < panelBottom) gridLines += `<line x1="${tm}" y1="${y}" x2="${W-tm}" y2="${y}"/>`;
+      landWater += `<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`;
+    }
+
+    // feather the top/bottom seams so the panel fades into the page background rather
+    // than cutting hard from title area to map area
+    const featherId = 'feather' + Math.random().toString(36).slice(2,7);
+    const featherH = Math.min(26 * scaleFactor, mapAreaH * 0.15);
+    landWater = `<defs>
+      <linearGradient id="${featherId}Top" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${s.bg}" stop-opacity="1"/>
+        <stop offset="100%" stop-color="${s.bg}" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="${featherId}Bot" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${s.bg}" stop-opacity="0"/>
+        <stop offset="100%" stop-color="${s.bg}" stop-opacity="1"/>
+      </linearGradient>
+    </defs>` + landWater;
+    landWater += `<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${featherH}" fill="url(#${featherId}Top)"/>`;
+    landWater += `<rect x="${tm}" y="${panelBottom-featherH}" width="${W-tm*2}" height="${featherH}" fill="url(#${featherId}Bot)"/>`;
 
     // Build each water shape, then drop tiny/degenerate slivers (stray river fragments etc.)
     // so only real, bold, readable lakes and lochs remain — matching a proper printed map look.
@@ -1624,8 +1665,13 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       if (count >= maxWp) break;
       const c = proj.toXY(wp);
       const wx = c.x, wy = c.y + mapOffsetY;
-      // must be inside the map area
-      if (wx < 40*scaleFactor || wx > W - 40*scaleFactor || wy < mapOffsetY*0.6 || wy > mapOffsetY + mapAreaH) continue;
+      // must be inside the map area (below the title zone)
+      if (wx < 40*scaleFactor || wx > W - 40*scaleFactor || wy < mapOffsetY*1.02 || wy > mapOffsetY + mapAreaH) continue;
+      // keep clear of the start/finish markers so labels never collide with START/FINISH
+      const p0m = projected[0], pNm = projected[projected.length-1];
+      const clearR = 34 * scaleFactor;
+      if (Math.abs(wx - p0m.x) < clearR && Math.abs(wy - (p0m.y+mapOffsetY)) < clearR) continue;
+      if (Math.abs(wx - pNm.x) < clearR && Math.abs(wy - (pNm.y+mapOffsetY)) < clearR) continue;
       // overlap avoidance
       if (placed.some(p => Math.abs(p.x - wx) < minGap*2.2 && Math.abs(p.y - wy) < minGap*0.7)) continue;
       placed.push({ x: wx, y: wy });
@@ -1636,7 +1682,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       } else {
         parts.push(`<circle cx="${wx}" cy="${wy}" r="${1.8*scaleFactor}" fill="${s.text}" opacity="0.8"/>`);
       }
-      parts.push(`<text x="${wx + 5*scaleFactor}" y="${wy + 2*scaleFactor}" font-family="${_F.mono}" font-size="${fs(6)}" fill="${s.text}" opacity="0.85">${escapeXml(label)}</text>`);
+      parts.push(`<text x="${wx + 5*scaleFactor}" y="${wy + 2*scaleFactor}" font-family="${_F.mono}" font-size="${fs(6.8)}" font-weight="600" fill="${s.text}" opacity="0.92">${escapeXml(label)}</text>`);
     }
   }
 
