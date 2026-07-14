@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.2</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.4</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -496,6 +496,7 @@ Cotswold Way | England"></textarea>
             <option value="none">None — one continuous line</option>
             <option value="alternate">Alternating solid / dashed (shows each day)</option>
             <option value="tint">Alternating solid / faded</option>
+            <option value="color">Alternating route colour / accent colour</option>
           </select>
         </div>
         <div class="note" style="margin-bottom:8px;">Uses the same stage count as the day-camp markers. A broken line here means "this is day two" — which is the one time a dashed route is right.</div>
@@ -503,6 +504,8 @@ Cotswold Way | England"></textarea>
         <div class="toggle-row"><span>Route outline (halo, keeps the line readable over terrain)</span><label class="toggle"><input type="checkbox" id="optCasing" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Night sky accent (stars, dark styles only)</span><label class="toggle"><input type="checkbox" id="optStars"><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:6px;">A scattered field of tiny flat vector stars across the upper third — only draws on dark backgrounds (Dark, Midnight, Blueprint, Noir, Forest); has no effect on light styles like Vintage or Ocean.</div>
         <div class="toggle-row"><span>Visible © WILD GRID STUDIO line</span><label class="toggle"><input type="checkbox" id="optCopyright"><span class="slider"></span></label></div>
         <div class="toggle-row"><span><b>OpenStreetMap credit line</b></span><label class="toggle"><input type="checkbox" id="optOsmCredit" checked><span class="slider"></span></label></div>
         <div class="field" style="margin-top:8px;">
@@ -588,6 +591,8 @@ Cotswold Way | England"></textarea>
           <label>Max waypoints — <span id="maxWpVal">14</span></label>
           <input type="range" id="optMaxWaypoints" min="4" max="24" step="2" value="14" />
         </div>
+        <div class="toggle-row"><span>Floating panel look (void margin around the map)</span><label class="toggle"><input type="checkbox" id="optFloatingPanel"><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:6px;">Pulls the terrain fill inward from the frame and draws a thin rule around it, so the map reads as an isolated inset panel on the page rather than filling edge to edge. Affects terrain mode only.</div>
         <div class="field">
           <label>Water style</label>
           <select id="optWaterStyle">
@@ -839,7 +844,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.2 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.4 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -899,14 +904,17 @@ Cotswold Way | England"></textarea>
       <li><b>🌊 Terrain edition:</b> real water, woodland, moorland, glaciers, rivers and streams from live OSM data — plus <b>the sea</b>, reconstructed from coastline data so coastal routes no longer render the ocean as dry land. Water can be solid, hatched, or ruled lines.</li>
       <li><b>📍 Custom markers:</b> click <b>"Click on the map to place a marker"</b>, then click any spot on the poster. Click near a named peak or village and its name fills in automatically. Choose an icon first (pin, tent, peak, heart, star, dot). You can also type them: <b>Label | place or lat,lon | icon</b>. Labels auto-place to a free side and suppress any duplicate peak label beneath them. If a marker sits outside the picture, turn on <b>Fit all markers inside the frame</b>.</li>
       <li><b>🔲 Map framing:</b> padding slider crops tight or leaves a wide margin; the shift sliders move the view when you're zoomed in.</li>
+      <li><b>Segment colours (Day-stage route segments):</b> the alternating dashed/faded options now also include an alternating route-colour/accent-colour option — a coloured, block-by-block infographic look for multi-day trails.</li>
+      <li><b>Night sky accent:</b> a seeded scatter of tiny flat stars across the upper third — only appears on dark styles (Dark, Midnight, Blueprint, Noir, Forest); does nothing on light styles.</li>
+      <li><b>Floating panel look (Terrain edition):</b> pulls the map inward from the frame with a void margin and a thin rule, so it reads as an isolated inset panel rather than an edge-to-edge fill. Terrain mode only.</li>
       <li><b>Keepsake log (bottom panel layout):</b> turns the poster into a fill-in-after-your-hike keepsake — write-in lines for Date, Weather, Companions, Notes and Memory. Flat vector rules, no boxes — matches the map's own typography. Off by default; select it from the Bottom panel layout dropdown in Terrain edition.</li>
       <li><b>📊 Stats grid — manual override:</b> type a Distance / Highest Point / Ascent / Duration and it beats the automatic value. Use it when a GPX has no elevation data. Whatever you type is printed exactly — check it against a real source.</li>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.2):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.2):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.2):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.4):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.4):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.4):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1305,7 +1313,7 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optStars','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optFloatingPanel','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal', optOsmDX:'osmDXVal', optOsmDY:'osmDYVal', optStages:'stageVal' };
 const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
@@ -2013,6 +2021,26 @@ function buildSvg(W, H){
     parts.push(`<g>${contours}</g>`);
   }
 
+  // NIGHT SKY ACCENT: tiny flat vector stars, seeded so they're stable per trail name.
+  // Only draws on dark backgrounds — on a light page it would just look like dirt.
+  if (document.getElementById('optStars').checked && luma(s.bg) < 0.45) {
+    let stars = '';
+    const count = 60 + Math.floor(srand() * 30);
+    for (let i = 0; i < count; i++) {
+      const sx = srand() * W;
+      const sy = srand() * (H * 0.32); // upper third only, stays clear of the map/legend
+      const r2 = (0.5 + srand() * 1.3) * scaleFactor;
+      const op = 0.25 + srand() * 0.5;
+      if (srand() < 0.15) {
+        // occasional 4-point sparkle glyph instead of a plain dot
+        stars += `<path d="M ${sx},${(sy-r2*2.2).toFixed(1)} L ${(sx+r2*0.5).toFixed(1)},${(sy-r2*0.5).toFixed(1)} L ${(sx+r2*2.2).toFixed(1)},${sy} L ${(sx+r2*0.5).toFixed(1)},${(sy+r2*0.5).toFixed(1)} L ${sx},${(sy+r2*2.2).toFixed(1)} L ${(sx-r2*0.5).toFixed(1)},${(sy+r2*0.5).toFixed(1)} L ${(sx-r2*2.2).toFixed(1)},${sy} L ${(sx-r2*0.5).toFixed(1)},${(sy-r2*0.5).toFixed(1)} Z" fill="${s.text}" opacity="${op.toFixed(2)}"/>`;
+      } else {
+        stars += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${r2.toFixed(2)}" fill="${s.text}" opacity="${op.toFixed(2)}"/>`;
+      }
+    }
+    parts.push(`<g id="Night-Sky">${stars}</g>`);
+  }
+
   // background grid
   if (document.getElementById('optGrid').checked) {
     const gridStep = Math.min(W,H) / 12;
@@ -2258,8 +2286,10 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   // panel colour — that's what was creating the "pasted block" seam), clipped to the map area
   if (document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length || coastWays.length)) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
-    const tm = 30 * scaleFactor;
-    const panelTop = mapOffsetY*0.98, panelBottom = panelTop + mapAreaH;
+    const floating = document.getElementById('optFloatingPanel').checked;
+    const floatInset = floating ? 26 * scaleFactor : 0;
+    const tm = 30 * scaleFactor + floatInset;
+    const panelTop = mapOffsetY*0.98 + floatInset, panelBottom = panelTop + mapAreaH - floatInset*2;
     parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${mapAreaH}"/></clipPath>`);
     // same fill as the page background (s.bg, not s.land) — the map area is now visually
     // continuous with the title/footer areas instead of a separate coloured panel
@@ -2396,6 +2426,9 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
     });
 
     parts.push(`<g id="Terrain" clip-path="url(#${clipId})">${landWater}</g>`);
+    if (floating) {
+      parts.push(`<rect x="${tm}" y="${panelTop}" width="${W-tm*2}" height="${panelBottom-panelTop}" fill="none" stroke="${s.frame}" stroke-width="${0.8*scaleFactor}" opacity="0.6"/>`);
+    }
   }
 
   const pathD = 'M ' + projected.map(p => `${p.x.toFixed(1)},${(p.y + mapOffsetY).toFixed(1)}`).join(' L ');
@@ -2438,9 +2471,9 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       const odd = k % 2 === 1;
       let segDash = '';
       if (segMode === 'alternate' && odd) segDash = `stroke-dasharray="${lineWidth*3},${lineWidth*2}"`;
-      if (segMode === 'tint' && odd) { /* handled by opacity below */ }
       const op = (segMode === 'tint' && odd) ? 0.55 : 1;
-      parts.push(`<path d="${d}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" opacity="${op}" ${segDash}/>`);
+      const segColor = (segMode === 'color' && odd) ? s.accent : s.line;
+      parts.push(`<path d="${d}" fill="none" stroke="${segColor}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" opacity="${op}" ${segDash}/>`);
     }
   } else {
     parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
@@ -2889,6 +2922,16 @@ function nearestNamed(lat, lon){
   return best ? { name: best.name, dist: bestD } : null;
 }
 
+// ---------------------------------------------------------------
+// CLICK-TO-PLACE MARKERS (declarations first — used by the hover readout below)
+// Turn a click on the preview back into lat/lon via the inverse projection.
+// If the click lands near a named peak/village we already fetched, reuse that
+// name so the label is filled in automatically instead of typed.
+// ---------------------------------------------------------------
+let pickMarkerMode = false;
+const pickBtn = document.getElementById('pickMarkerBtn');
+const svgHolder = document.getElementById('posterSvgHolder');
+
 function clickToLatLon(ev){
   const proj = window._clickProj;
   const svgEl = svgHolder.querySelector('svg');
@@ -2919,16 +2962,6 @@ svgHolder.addEventListener('mouseleave', () => {
   const out = document.getElementById('pickReadout');
   if (out) out.textContent = 'Move over the map…';
 });
-
-// ---------------------------------------------------------------
-// CLICK-TO-PLACE MARKERS
-// Turn a click on the preview back into lat/lon via the inverse projection.
-// If the click lands near a named peak/village we already fetched, reuse that
-// name so the label is filled in automatically instead of typed.
-// ---------------------------------------------------------------
-let pickMarkerMode = false;
-const pickBtn = document.getElementById('pickMarkerBtn');
-const svgHolder = document.getElementById('posterSvgHolder');
 
 function setPickMode(on){
   pickMarkerMode = on;
