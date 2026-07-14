@@ -102,7 +102,7 @@
   .upload-zone:hover{ border-color: var(--brass); }
   .upload-zone b{ color: var(--brass-bright); }
 
-  .status{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:4px; display:none; line-height:1.5; }
+  .status{ font-size:12px; margin-top:10px; padding:9px 11px; border-radius:4px; display:none; line-height:1.5; white-space:pre-wrap; }
   .status.show{ display:block; }
   .status.loading{ background: rgba(176,141,87,0.12); color: var(--brass-bright); }
   .status.error{ background: rgba(162,62,50,0.15); color: #E39A8E; }
@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.7</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.0</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -348,6 +348,8 @@
       </datalist>
     </div>
     <button class="primary block" id="searchBtn">Find Real Route</button>
+    <button class="block" id="diagBtn" style="margin-top:6px;">Test map-data connection</button>
+    <div id="diagStatus" class="status"></div>
 
     <div class="divider-or">or</div>
 
@@ -478,6 +480,15 @@ Cotswold Way | England"></textarea>
         <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Visible © WILD GRID STUDIO line</span><label class="toggle"><input type="checkbox" id="optCopyright"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span><b>OpenStreetMap credit line</b></span><label class="toggle"><input type="checkbox" id="optOsmCredit" checked><span class="slider"></span></label></div>
+        <div class="field" style="margin-top:8px;">
+          <label>Credit wording</label>
+          <select id="optOsmCreditMode">
+            <option value="full">Full — licence-compliant for print (recommended for anything you sell)</option>
+            <option value="short">Short — "Map data © OpenStreetMap contributors"</option>
+          </select>
+        </div>
+        <div class="note" style="margin-top:6px;">OpenStreetMap data is free for commercial use, but the ODbL licence requires you to credit it on anything you publish or sell. For <b>printed</b> work the credit must also state that the data is available under the ODbL — that's what the Full option does. The Short version is the web/interactive standard and is not sufficient on its own for print. Turning this off is your call, but it means the poster is not licence-compliant.</div>
         <div class="field">
           <label>© position</label>
           <select id="optCopyrightPos">
@@ -511,6 +522,7 @@ Cotswold Way | England"></textarea>
         <div class="toggle-row" style="margin-top:10px;"><span>Show terrain (water bodies)</span><label class="toggle"><input type="checkbox" id="optTerrain"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Show waypoint labels (peaks &amp; villages)</span><label class="toggle"><input type="checkbox" id="optWaypoints"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Show rivers &amp; streams</span><label class="toggle"><input type="checkbox" id="optRivers" checked><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Fill the sea (coastal routes)</span><label class="toggle"><input type="checkbox" id="optSea" checked><span class="slider"></span></label></div>
         <div class="field" style="margin-top:8px;">
           <label>Max waypoints — <span id="maxWpVal">14</span></label>
           <input type="range" id="optMaxWaypoints" min="4" max="24" step="2" value="14" />
@@ -522,16 +534,19 @@ Cotswold Way | England"></textarea>
             <option value="grid">Stats grid (Distance · Highest Point · Ascent · Duration)</option>
           </select>
         </div>
-        <div class="note">Sea coastline isn't included (inland lochs, lakes and rivers only) — coastal trails will show rivers but not open sea. Batch mode skips terrain fetching; run terrain trails individually.</div>
+        <div class="note">The sea is now reconstructed from real coastline data, so coastal routes render the ocean correctly instead of as dry land. Batch mode skips terrain fetching; run terrain trails individually.</div>
       </div>
     </details>
 
     <details class="collapsible">
       <summary>📍 Custom markers (your own points)</summary>
       <div class="inner">
-        <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met". One per line as <b>Label | place or lat,lon</b>. Markers appear on the poster <b>as you type</b> — no button press needed.</div>
+        <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met".</div>
+        <button class="primary block" id="pickMarkerBtn">📍 Click on the map to place a marker</button>
+        <div class="note" style="margin-top:6px; margin-bottom:10px;">Turn this on, then click any spot on the poster. If you click near a named peak or village, its name fills in automatically — otherwise it's added as a new point you can rename below.</div>
         <div class="field">
-          <textarea id="customMarkersInput" rows="4" placeholder="Camp 1 | 56.79, -5.00&#10;Summit | Ben Nevis&#10;Where we met | 56.82, -4.32"></textarea>
+          <label>Markers (edit or delete lines here)</label>
+          <textarea id="customMarkersInput" rows="4" placeholder="Click the map above, or type: Label | place or lat,lon"></textarea>
         </div>
         <div class="note" style="margin-top:0; margin-bottom:8px;"><b>Coordinates always work offline.</b> Place names work instantly too if they're a peak or village already on the map (fetch terrain first). Only unrecognised names need the online lookup below.</div>
         <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
@@ -629,11 +644,12 @@ Cotswold Way | England"></textarea>
     <div style="max-width:560px; width:100%;">
       <label style="display:block; font-size:11.5px; color:rgba(247,243,234,0.65); margin-bottom:6px; font-weight:500;">Print sizes to include in the buyer bundle (300 DPI)</label>
       <div class="size-grid" id="sizeGrid"></div>
-      <div class="toggle-row" style="border:none; margin-bottom:4px;"><span>Also include JPGs in bundle (some buyers prefer them)</span><label class="toggle"><input type="checkbox" id="optJpg"><span class="slider"></span></label></div>
+      <div class="toggle-row" style="border:none; margin-bottom:4px;"><span>Also include JPGs in bundle (some buyers prefer them)</span><label class="toggle"><input type="checkbox" id="optJpg" checked><span class="slider"></span></label></div>
       <details class="collapsible">
         <summary>Export multiple style variants at once</summary>
         <div class="inner">
           <div class="note" style="margin-top:0; margin-bottom:8px;">Tick extra styles to include them all in one bundle — each style gets its own folder with every selected size. Great for offering colour variants in one listing.</div>
+          <div class="toggle-row" style="border:none; margin:0 0 8px;"><span><b>Select all styles</b></span><label class="toggle"><input type="checkbox" id="optAllStyles"><span class="slider"></span></label></div>
           <div class="size-grid" id="styleExportGrid"></div>
         </div>
       </details>
@@ -708,7 +724,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.7 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -732,7 +748,7 @@ Cotswold Way | England"></textarea>
       <li><b>🖼 Wall mockup</b>: one-click framed-on-a-wall PNG for a quick first listing photo.</li>
       <li><b>Style variants</b> (Export section): tick extra styles to export every colourway in one bundle — sell them as variants in a single listing.</li>
       <li><b>Design extras</b>: curved titles, three font pairings, four frame styles, two compass styles, and label position nudge sliders.</li>
-      <li><b>🌊 Terrain edition</b> (Design Options): the premium poster style — real lochs/lakes/rivers as filled shapes behind the route, named peaks and villages as waypoint labels, and a stats-grid footer (Distance · Highest Point · Total Ascent · Typical Duration). Click <b>Fetch terrain &amp; waypoints</b> once per trail; everything is saved with the project. Notes: highest point &amp; ascent need a GPX with elevation data; typical duration comes from Look Up Trail Facts; open sea isn't drawn (inland water only); batch mode skips terrain.</li>
+      <li><b>🌊 Terrain edition</b> (Design Options): the premium poster style — real lochs/lakes/rivers as filled shapes behind the route, named peaks and villages as waypoint labels, and a stats-grid footer (Distance · Highest Point · Total Ascent · Typical Duration). Click <b>Fetch terrain &amp; waypoints</b> once per trail; everything is saved with the project. Notes: highest point &amp; ascent need a GPX with elevation data; typical duration comes from Look Up Trail Facts; the sea is reconstructed from OSM coastline data; batch mode skips terrain.</li>
     </ul>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin:14px 0 8px; background:rgba(176,141,87,0.07);">
@@ -765,9 +781,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v7.7):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v7.7):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v7.7):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v8.0):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v8.0):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v8.0):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -841,7 +857,10 @@ const ROAD_CLASSES = {
 const OVERPASS_MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.osm.jp/api/interpreter'
+  'https://overpass.osm.jp/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.osm.ch/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
 let activeFetchController = null;
 async function fetchOverpass(query){
@@ -1051,6 +1070,7 @@ const STYLES = {
 let terrainPolys = [];   // [{pts:[{lat,lon}]}] water bodies
 let waypointPts = [];    // [{lat,lon,name,kind:'peak'|'place',ele?}]
 let terrainLines = [];   // [{pts:[{lat,lon}], kind:'river'|'stream'}] watercourses
+let coastWays = [];      // [{pts:[{lat,lon}]}] natural=coastline ways (sea reconstruction)
 
 // Custom markers state — user's own named points
 let customMarkers = [];  // [{lat,lon,label}]
@@ -1073,7 +1093,7 @@ const sizeGrid = document.getElementById('sizeGrid');
 PRINT_SIZES.forEach(s => {
   const chip = document.createElement('label');
   chip.className = 'size-chip';
-  chip.innerHTML = `<input type="checkbox" value="${s.id}" ${['2x3','3x4','4x5','11x14','A2'].includes(s.id)?'checked':''}> ${s.label}`;
+  chip.innerHTML = `<input type="checkbox" value="${s.id}" checked> ${s.label}`;
   sizeGrid.appendChild(chip);
 });
 
@@ -1084,6 +1104,17 @@ Object.entries(STYLES).forEach(([key, st]) => {
   chip.className = 'size-chip';
   chip.innerHTML = `<input type="checkbox" value="${key}"> <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${st.bg}; border:2px solid ${st.line}; vertical-align:middle;"></span> ${st.label}`;
   styleExportGrid.appendChild(chip);
+});
+
+// "Select all styles" master toggle
+const allStylesToggle = document.getElementById('optAllStyles');
+allStylesToggle.addEventListener('change', () => {
+  styleExportGrid.querySelectorAll('input').forEach(i => { i.checked = allStylesToggle.checked; });
+});
+// keep the master toggle honest if styles are ticked individually
+styleExportGrid.addEventListener('change', () => {
+  const boxes = [...styleExportGrid.querySelectorAll('input')];
+  allStylesToggle.checked = boxes.length > 0 && boxes.every(i => i.checked);
 });
 
 // ---------------------------------------------------------------
@@ -1151,7 +1182,7 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optCopyrightPos','optTerrain','optRivers','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
@@ -1187,6 +1218,59 @@ function setStatus(elId, type, msg){
   el.className = 'status show ' + type;
   el.textContent = msg;
 }
+
+// ---------------------------------------------------------------
+// CONNECTION DIAGNOSTIC
+// "Failed to fetch" is almost always the network blocking the map servers
+// (DNS filtering, VPN, ad-blocker, corporate proxy) rather than a tool bug.
+// This tells the user exactly which endpoints are reachable and what to do.
+// ---------------------------------------------------------------
+document.getElementById('diagBtn').onclick = async () => {
+  const btn = document.getElementById('diagBtn');
+  btn.disabled = true;
+  setStatus('diagStatus','loading','Testing map servers…');
+  const results = [];
+  for (const url of OVERPASS_MIRRORS) {
+    const host = url.replace('https://','').split('/')[0];
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const resp = await fetch(url + '?data=' + encodeURIComponent('[out:json][timeout:5];node(1);out;'), { signal: ctrl.signal });
+      clearTimeout(t);
+      results.push({ host, ok: resp.ok, note: resp.ok ? 'reachable' : 'HTTP ' + resp.status });
+    } catch (e) {
+      results.push({ host, ok: false, note: 'blocked / unreachable' });
+    }
+  }
+  // Nominatim powers place-name lookup for markers
+  let nomOk = false;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://nominatim.openstreetmap.org/search?q=London&format=json&limit=1', { signal: ctrl.signal });
+    clearTimeout(t);
+    nomOk = r.ok;
+  } catch (e) { nomOk = false; }
+
+  btn.disabled = false;
+  const good = results.filter(r => r.ok);
+  const lines = results.map(r => (r.ok ? '✓ ' : '✗ ') + r.host + ' — ' + r.note).join('\n');
+  const isFile = location.protocol === 'file:';
+
+  if (good.length) {
+    setStatus('diagStatus','success',
+      `✓ ${good.length} of ${results.length} map servers reachable. Search should work.\n\n${lines}\n${nomOk ? '✓' : '✗'} place-name lookup (nominatim)`);
+  } else {
+    setStatus('diagStatus','error',
+      `✗ All ${results.length} map servers are blocked from this browser.\n\n${lines}\n${nomOk ? '✓' : '✗'} place-name lookup (nominatim)\n\n` +
+      `This is a network block, not a tool fault. Most likely causes, in order:\n` +
+      `1. DNS filtering (AdGuard/NextDNS/Pi-hole/router filter) — try switching DNS to 1.1.1.1 or 8.8.8.8.\n` +
+      `2. An ad-blocker or privacy extension — disable it for this page.\n` +
+      `3. A VPN or corporate proxy — turn it off and retry.\n` +
+      (isFile ? `4. You are opening this file directly (file://). Some browsers restrict requests from local files — try the GitHub Pages copy instead.\n` : '') +
+      `\nGPX upload always works offline and needs none of the above.`);
+  }
+};
 
 // ---------------------------------------------------------------
 // OVERPASS SEARCH
@@ -1232,7 +1316,7 @@ out geom;`;
     }
 
     currentPoints = dedupePoints(points);
-    terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+    terrainPolys = []; terrainLines = []; coastWays = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
     document.getElementById('optTerrain').checked = false;
     document.getElementById('optWaypoints').checked = false;
     document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1325,7 +1409,7 @@ function handleGpxFile(file){
       }
       if (pts.length < 2) throw new Error('No GPS track points found in this file.');
       currentPoints = dedupePoints(pts);
-      terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+      terrainPolys = []; terrainLines = []; coastWays = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -1396,6 +1480,11 @@ function projectPoints(points, width, height, padding, panX, panY){
     x: offsetX + (p.lon - minLon) * cosLat * scale,
     y: offsetY + (maxLat - p.lat) * scale
   });
+  // inverse: screen -> lat/lon, used for click-to-place markers
+  const toLatLon = (x, y) => ({
+    lon: minLon + (x - offsetX) / (cosLat * scale),
+    lat: maxLat - (y - offsetY) / scale
+  });
   return {
     pts: points.map(p => ({
       x: offsetX + (p.lon - minLon) * cosLat * scale,
@@ -1403,8 +1492,143 @@ function projectPoints(points, width, height, padding, panX, panY){
       ele: p.ele
     })),
     bounds: { minLat, maxLat, minLon, maxLon },
-    toXY
+    toXY, toLatLon
   };
+}
+
+// ---------------------------------------------------------------
+// SEA / COASTLINE ENGINE
+// OSM rule: coastline ways are directed with LAND on the LEFT, SEA on the RIGHT.
+// Our screen space has y pointing DOWN (latitude is flipped by the projection),
+// so the geographic right-hand side of a heading (dx,dy) is the screen normal (-dy, dx).
+// We stitch the coastline into chains, clip them to the map frame, then close each
+// chain along the frame border on whichever side the sea actually lies.
+// ---------------------------------------------------------------
+const COAST_EPS = 0.75;
+function coastNear(a, b){ return Math.abs(a[0]-b[0]) < COAST_EPS && Math.abs(a[1]-b[1]) < COAST_EPS; }
+
+function stitchChains(ways){
+  const chains = ways.map(w => w.slice());
+  let merged = true, guard = 0;
+  while (merged && guard++ < 4000) {
+    merged = false;
+    outer:
+    for (let i = 0; i < chains.length; i++){
+      for (let j = 0; j < chains.length; j++){
+        if (i === j) continue;
+        const a = chains[i], b = chains[j];
+        if (coastNear(a[a.length-1], b[0])) {
+          chains[i] = a.concat(b.slice(1));
+          chains.splice(j,1); merged = true; break outer;
+        }
+      }
+    }
+  }
+  return chains;
+}
+function chainClosed(ch){ return ch.length > 3 && coastNear(ch[0], ch[ch.length-1]); }
+
+function ptInRect(p, r){ return p[0] >= r.x1 && p[0] <= r.x2 && p[1] >= r.y1 && p[1] <= r.y2; }
+
+// Clip a polyline to the rect, returning the pieces that lie inside.
+function clipChainToRect(ch, r){
+  const out = [];
+  let cur = [];
+  const intersect = (p, q) => {
+    // walk from p to q, find where it crosses the rect border
+    let t0 = 0, t1 = 1;
+    const dx = q[0]-p[0], dy = q[1]-p[1];
+    const tests = [[-dx, p[0]-r.x1],[dx, r.x2-p[0]],[-dy, p[1]-r.y1],[dy, r.y2-p[1]]];
+    for (const [pp, qq] of tests){
+      if (pp === 0) { if (qq < 0) return null; continue; }
+      const t = qq / pp;
+      if (pp < 0) { if (t > t1) return null; if (t > t0) t0 = t; }
+      else        { if (t < t0) return null; if (t < t1) t1 = t; }
+    }
+    return [[p[0]+t0*dx, p[1]+t0*dy], [p[0]+t1*dx, p[1]+t1*dy]];
+  };
+  for (let i = 0; i < ch.length - 1; i++){
+    const p = ch[i], q = ch[i+1];
+    const seg = intersect(p, q);
+    if (!seg) { if (cur.length > 1) out.push(cur); cur = []; continue; }
+    const [a, b] = seg;
+    if (!cur.length) cur.push(a);
+    else if (!coastNear(cur[cur.length-1], a)) { if (cur.length > 1) out.push(cur); cur = [a]; }
+    cur.push(b);
+  }
+  if (cur.length > 1) out.push(cur);
+  return out;
+}
+
+function perimT(p, r){
+  const tol = 0.5;
+  const w = r.x2 - r.x1, h = r.y2 - r.y1;
+  if (Math.abs(p[1] - r.y1) < tol) return (p[0] - r.x1) / w;
+  if (Math.abs(p[0] - r.x2) < tol) return 1 + (p[1] - r.y1) / h;
+  if (Math.abs(p[1] - r.y2) < tol) return 2 + (r.x2 - p[0]) / w;
+  if (Math.abs(p[0] - r.x1) < tol) return 3 + (r.y2 - p[1]) / h;
+  return null;
+}
+function perimPoint(t, r){
+  const w = r.x2 - r.x1, h = r.y2 - r.y1;
+  t = ((t % 4) + 4) % 4;
+  if (t <= 1) return [r.x1 + t*w, r.y1];
+  if (t <= 2) return [r.x2, r.y1 + (t-1)*h];
+  if (t <= 3) return [r.x2 - (t-2)*w, r.y2];
+  return [r.x1, r.y2 - (t-3)*h];
+}
+function perimWalk(t0, t1, dir, r){
+  const pts = [];
+  let t = t0;
+  for (let guard = 0; guard < 8; guard++){
+    const next = dir > 0 ? Math.floor(t) + 1 : Math.ceil(t) - 1;
+    const reached = dir > 0
+      ? ((t1 - t + 4) % 4) <= ((next - t + 4) % 4)
+      : ((t - t1 + 4) % 4) <= ((t - next + 4) % 4);
+    if (reached) break;
+    pts.push(perimPoint(next, r));
+    t = next;
+  }
+  return pts;
+}
+function pointInPoly(pt, poly){
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+// Returns { seas:[poly], islands:[poly], openChains:[chain] }
+function buildSeaGeometry(coastXY, r){
+  const chains = stitchChains(coastXY);
+  const seas = [], islands = [], openChains = [];
+  for (const ch of chains){
+    if (chainClosed(ch)) {
+      // a closed ring is an island (land) — only useful if it's actually on screen
+      if (ch.some(p => ptInRect(p, r))) islands.push(ch);
+      continue;
+    }
+    for (const piece of clipChainToRect(ch, r)){
+      if (piece.length < 2) continue;
+      openChains.push(piece);
+      const t0 = perimT(piece[0], r), t1 = perimT(piece[piece.length-1], r);
+      if (t0 == null || t1 == null) continue; // doesn't span the frame; can't close it reliably
+      const m = Math.floor(piece.length/2);
+      const a = piece[Math.max(0, m-1)], b = piece[Math.min(piece.length-1, m+1)];
+      let dx = b[0]-a[0], dy = b[1]-a[1];
+      const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+      // probe just to the SEA side (right of travel)
+      const probe = [ (a[0]+b[0])/2 + (-dy)*3, (a[1]+b[1])/2 + dx*3 ];
+      const ringFwd = piece.concat(perimWalk(t1, t0, +1, r)).concat([piece[0]]);
+      const ringBwd = piece.concat(perimWalk(t1, t0, -1, r)).concat([piece[0]]);
+      const pick = pointInPoly(probe, ringFwd) ? ringFwd
+                 : pointInPoly(probe, ringBwd) ? ringBwd : null;
+      if (pick) seas.push(pick);
+    }
+  }
+  return { seas, islands, openChains };
 }
 
 let styleOverride = null; // used during multi-style export
@@ -1487,7 +1711,7 @@ function buildSvg(W, H){
   const s = getActiveStyle();
 
   const legendLayout = document.getElementById('optLegendLayout').value;
-  const isTerrain = document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length);
+  const isTerrain = document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length || coastWays.length);
   // Terrain posters get extra breathing room under the title before the map/water area begins,
   // so the title never feels like it's touching the terrain.
   const titleAreaH = H * (isTerrain ? 0.20 : 0.16);
@@ -1671,8 +1895,31 @@ function buildSvg(W, H){
     parts.push(`<text x="${cx4}" y="${cy4}" text-anchor="${canchor}" font-family="${_F.mono}" font-size="${fs(6.5)}" fill="${s.text}" opacity="0.45" letter-spacing="${scaleFactor}">© WILD GRID STUDIO</text>`);
   }
 
+  // ODbL attribution — required on any product derived from OpenStreetMap data.
+  if (document.getElementById('optOsmCredit').checked) {
+    const mode = document.getElementById('optOsmCreditMode').value;
+    if (mode === 'full') {
+      // Print-compliant: must also state the data is available under the ODbL.
+      // Centred on the very bottom edge, auto-shrunk so it always fits the width.
+      const txt = 'Contains information from OpenStreetMap, made available at openstreetmap.org under the Open Database License (ODbL).';
+      const avail = W - 80*scaleFactor;
+      let size = 6 * scaleFactor;
+      const estW = () => txt.length * size * 0.5;
+      while (estW() > avail && size > 3 * scaleFactor) size -= 0.15 * scaleFactor;
+      parts.push(`<text x="${W/2}" y="${H - 20*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${size.toFixed(1)}" fill="${s.text}" opacity="0.42">${escapeXml(txt)}</text>`);
+    } else {
+      const cpos = document.getElementById('optCopyrightPos').value;
+      const cy5 = H - 38*scaleFactor;
+      // sit opposite the studio mark so the two never collide
+      let cx5 = 40*scaleFactor, anchor5 = 'start';
+      if (cpos === 'bl') { cx5 = W - 40*scaleFactor; anchor5 = 'end'; }
+      if (cpos === 'bc') { cx5 = W - 40*scaleFactor; anchor5 = 'end'; }
+      parts.push(`<text x="${cx5}" y="${cy5}" text-anchor="${anchor5}" font-family="${_F.mono}" font-size="${fs(6)}" fill="${s.text}" opacity="0.4" letter-spacing="${0.5*scaleFactor}">MAP DATA © OPENSTREETMAP CONTRIBUTORS</text>`);
+    }
+  }
+
   // invisible ownership metadata — always embedded, never rendered (per WGS standard: no year)
-  const meta = `<metadata>© Wild Grid Studio — wildgridstudio.com — All rights reserved. Personal use only; resale or redistribution prohibited.</metadata>`;
+  const meta = `<metadata>© Wild Grid Studio — wildgridstudio.com — All rights reserved. Personal use only; resale or redistribution prohibited. Map data © OpenStreetMap contributors, licensed under the Open Database License (ODbL).</metadata>`;
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">${meta}${parts.join('\n')}</svg>`;
 }
@@ -1684,6 +1931,8 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   const panX = (parseFloat(document.getElementById('optFramePanX').value) || 0) / 100;
   const panY = (parseFloat(document.getElementById('optFramePanY').value) || 0) / 100;
   const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * framePad, panX, panY);
+  // remember the projection so a click on the preview can be turned back into lat/lon
+  window._clickProj = { toLatLon: proj.toLatLon, mapOffsetY, W, H };
   const projected = proj.pts;
   const b = proj.bounds;
 
@@ -1691,7 +1940,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   // TERRAIN: water polygons over a continuous page background (no separate land
   // panel colour — that's what was creating the "pasted block" seam), clipped to the map area
-  if (document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length)) {
+  if (document.getElementById('optTerrain').checked && (terrainPolys.length || terrainLines.length || coastWays.length)) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
     const tm = 30 * scaleFactor;
     const panelTop = mapOffsetY*0.98, panelBottom = panelTop + mapAreaH;
@@ -1710,6 +1959,37 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       landWater += `<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`;
     }
 
+
+    // SEA: drawn first, underneath everything. OSM has no "sea polygon" — the sea is
+    // implied by coastline direction — so we reconstruct it. This is what stops coastal
+    // trails from rendering the ocean as dry land.
+    if (document.getElementById('optSea').checked && coastWays.length) {
+      const rect = { x1: tm, y1: panelTop, x2: W - tm, y2: panelBottom };
+      const coastXY = coastWays.map(w => w.pts.map(p => {
+        const c = proj.toXY(p);
+        return [c.x, c.y + mapOffsetY];
+      }));
+      const { seas, islands, openChains } = buildSeaGeometry(coastXY, rect);
+
+      const toPath = (poly) => poly.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
+
+      if (seas.length) {
+        seas.forEach(poly => {
+          landWater += `<path d="${toPath(poly)}" fill="${s.water}" stroke="none"/>`;
+        });
+        // islands sit on top of the sea as land again
+        islands.forEach(poly => {
+          landWater += `<path d="${toPath(poly)}" fill="${s.bg}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
+        });
+      } else if (openChains.length) {
+        // Fallback: we couldn't confidently close the sea (unusual coastline topology).
+        // Draw the shoreline itself rather than silently painting sea as land.
+        openChains.forEach(ch => {
+          const d = ch.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+          landWater += `<path d="${d}" fill="none" stroke="${s.line}" stroke-width="${0.8*scaleFactor}" stroke-opacity="0.55"/>`;
+        });
+      }
+    }
 
     // Build the terrain layers. Each polygon is projected, then tiny/degenerate
     // slivers are dropped so only real, readable landforms remain.
@@ -2019,6 +2299,61 @@ function refreshMarkersLive(){
 
 document.getElementById('customMarkersInput').addEventListener('input', refreshMarkersLive);
 
+// ---------------------------------------------------------------
+// CLICK-TO-PLACE MARKERS
+// Turn a click on the preview back into lat/lon via the inverse projection.
+// If the click lands near a named peak/village we already fetched, reuse that
+// name so the label is filled in automatically instead of typed.
+// ---------------------------------------------------------------
+let pickMarkerMode = false;
+const pickBtn = document.getElementById('pickMarkerBtn');
+const svgHolder = document.getElementById('posterSvgHolder');
+
+function setPickMode(on){
+  pickMarkerMode = on;
+  pickBtn.textContent = on ? '✕ Stop placing markers' : '📍 Click on the map to place a marker';
+  svgHolder.style.cursor = on ? 'crosshair' : '';
+  if (on) setStatus('markersStatus','loading','Click anywhere on the poster to drop a marker.');
+}
+pickBtn.onclick = () => setPickMode(!pickMarkerMode);
+
+svgHolder.addEventListener('click', (ev) => {
+  if (!pickMarkerMode) return;
+  const proj = window._clickProj;
+  const svgEl = svgHolder.querySelector('svg');
+  if (!proj || !svgEl) return;
+
+  // map the click from screen pixels into the SVG's own coordinate system
+  const r = svgEl.getBoundingClientRect();
+  const x = (ev.clientX - r.left) / r.width  * proj.W;
+  const y = (ev.clientY - r.top)  / r.height * proj.H;
+
+  const { lat, lon } = proj.toLatLon(x, y - proj.mapOffsetY);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+  // snap to a named waypoint if the click is close to one
+  let label = null;
+  let best = Infinity;
+  for (const w of waypointPts) {
+    const d = Math.hypot(w.lat - lat, w.lon - lon);
+    if (d < best) { best = d; label = w.name; }
+  }
+  // tolerance scales with how zoomed-out the map is
+  const span = Math.max(0.01, Math.abs(proj.toLatLon(0,0).lat - proj.toLatLon(0, proj.H).lat));
+  const snapped = label && best < span * 0.02;
+
+  const name = snapped ? label : 'Marker ' + (parseMarkerLines().length + 1);
+  const line = snapped
+    ? `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)}`
+    : `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+  const ta = document.getElementById('customMarkersInput');
+  ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + line;
+  refreshMarkersLive();
+  setStatus('markersStatus','ok',
+    (snapped ? `Added "${name}" (snapped to the named point).` : `Added "${name}".`) + ' Rename it in the box below, or keep clicking.');
+});
+
 // Button now only does the ONLINE lookup for names that couldn't be resolved offline.
 document.getElementById('addMarkersBtn').onclick = async () => {
   const entries = parseMarkerLines();
@@ -2094,6 +2429,7 @@ document.getElementById('fetchTerrainBtn').onclick = async () => {
   way["natural"~"^(scrub|heath|moor|grassland|fell)$"](${bbox});
   way["natural"="glacier"](${bbox});
   way["waterway"~"^(river|stream)$"](${bbox});
+  way["natural"="coastline"](${bbox});
   node["natural"="peak"]["name"](${bbox});
   node["place"~"^(town|village)$"]["name"](${bbox});
 );
@@ -2112,9 +2448,15 @@ out geom;`;
 
     terrainPolys = [];
     terrainLines = [];
+    coastWays = [];
     const peaks = [], places = [];
     (data.elements || []).forEach(el => {
       const tags = el.tags || {};
+      // coastline -> used to reconstruct the sea (OSM has no sea polygon)
+      if (el.type === 'way' && tags.natural === 'coastline' && el.geometry && el.geometry.length > 1) {
+        coastWays.push({ pts: el.geometry.map(g => ({ lat: g.lat, lon: g.lon })) });
+        return;
+      }
       // linear watercourses -> drawn as lines, not fills
       if (el.type === 'way' && (tags.waterway === 'river' || tags.waterway === 'stream') && el.geometry && el.geometry.length > 1) {
         terrainLines.push({
@@ -2149,10 +2491,10 @@ out geom;`;
     const nWood  = terrainPolys.filter(p => p.kind === 'wood').length;
     const nMoor  = terrainPolys.filter(p => p.kind === 'moor' || p.kind === 'glacier').length;
 
-    document.getElementById('optTerrain').checked = terrainPolys.length > 0 || terrainLines.length > 0;
+    document.getElementById('optTerrain').checked = terrainPolys.length > 0 || terrainLines.length > 0 || coastWays.length > 0;
     document.getElementById('optWaypoints').checked = waypointPts.length > 0;
     stopTicker();
-    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${peaks.length} peaks · ${places.length} villages. Toggles on — saved with your project.`);
+    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${coastWays.length.toLocaleString()} coastline${coastWays.length ? ' (sea will be filled)' : ''} · ${peaks.length} peaks · ${places.length} villages. Saved with your project.`);
     drawPoster();
   } catch (err) {
     stopTicker();
@@ -2480,7 +2822,7 @@ function renderRecentTrails(){
       const r = recents[parseInt(btn.dataset.ri)];
       if (!r.points) { setStatus('searchStatus','error', r.name + ' was too large to store — search or upload it again.'); return; }
       currentPoints = r.points;
-      terrainPolys = []; terrainLines = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
+      terrainPolys = []; terrainLines = []; coastWays = []; waypointPts = []; customMarkers = []; window._lastFacts = null; { const cm = document.getElementById("customMarkersInput"); if (cm) cm.value = ""; }
       document.getElementById('optTerrain').checked = false;
       document.getElementById('optWaypoints').checked = false;
       document.getElementById('fetchTerrainBtn').disabled = false;
@@ -2674,7 +3016,7 @@ function svgToJpgBlob(svgString, pxW, pxH, bgColor){
 function collectProject(){
   const proj = { version: 3, mode: dataMode, style: currentStyle, points: currentPoints,
     cityWays, cityWaterways, cityCenter, cityRadiusKm,
-    terrainPolys, terrainLines, waypointPts, customMarkers, lastFacts: window._lastFacts || null, fields: {} };
+    terrainPolys, terrainLines, coastWays, waypointPts, customMarkers, lastFacts: window._lastFacts || null, fields: {} };
   optionIds.forEach(id => {
     const el = document.getElementById(id);
     proj.fields[id] = (el.type === 'checkbox') ? el.checked : el.value;
@@ -2709,6 +3051,7 @@ document.getElementById('projectInput').onchange = (e) => {
       currentPoints = proj.points || [];
       terrainPolys = proj.terrainPolys || [];
       terrainLines = proj.terrainLines || [];
+      coastWays = proj.coastWays || [];
       waypointPts = proj.waypointPts || [];
       customMarkers = proj.customMarkers || [];
       window._lastFacts = proj.lastFacts || null;
