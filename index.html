@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.0</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.1</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -477,6 +477,7 @@ Cotswold Way | England"></textarea>
           </select>
         </div>
         <div class="toggle-row"><span>Mountain ridgeline footer</span><label class="toggle"><input type="checkbox" id="optRidgeline"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Route outline (halo, keeps the line readable over terrain)</span><label class="toggle"><input type="checkbox" id="optCasing" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Visible © WILD GRID STUDIO line</span><label class="toggle"><input type="checkbox" id="optCopyright"><span class="slider"></span></label></div>
@@ -514,6 +515,33 @@ Cotswold Way | England"></textarea>
     </details>
 
     <details class="collapsible">
+      <summary>Typography size</summary>
+      <div class="inner">
+        <div class="note" style="margin-top:0; margin-bottom:10px;">Long trail names can look small, short ones can look overbearing. Nudge them here.</div>
+        <div class="field">
+          <label>Title scale — <span id="titleScaleVal">1.00</span>×</label>
+          <input type="range" id="optTitleScale" min="0.5" max="1.5" step="0.05" value="1" />
+        </div>
+        <div class="field">
+          <label>Subtitle scale — <span id="subScaleVal">1.00</span>×</label>
+          <input type="range" id="optSubScale" min="0.5" max="1.5" step="0.05" value="1" />
+        </div>
+      </div>
+    </details>
+
+    <details class="collapsible">
+      <summary>📊 Stats grid — manual override</summary>
+      <div class="inner">
+        <div class="note" style="margin-top:0; margin-bottom:10px;">The stats grid fills itself from the route and from Look Up Trail Facts. If a GPX has no elevation data, or a figure is wrong, type the correct value here and it wins. Leave blank to use the automatic value.</div>
+        <div class="field"><label>Distance</label><input type="text" id="ovrDistance" placeholder="e.g. 96 MILES / 154 KM" /></div>
+        <div class="field"><label>Highest point</label><input type="text" id="ovrHighest" placeholder="e.g. 1,770 FT / 539 M" /></div>
+        <div class="field"><label>Total ascent</label><input type="text" id="ovrAscent" placeholder="e.g. 12,795 FT / 3,900 M" /></div>
+        <div class="field"><label>Typical duration</label><input type="text" id="ovrDuration" placeholder="e.g. 6-8 DAYS" /></div>
+        <div class="note">Anything you type here is printed exactly as written — check it against a reliable source before you list the poster.</div>
+      </div>
+    </details>
+
+    <details class="collapsible">
       <summary>🌊 Terrain edition (premium style)</summary>
       <div class="inner">
         <div class="note" style="margin-top:0; margin-bottom:10px;">The richer poster style: real lochs, woodland, moorland, glaciers, rivers and streams drawn from live map data behind the route, plus named peaks and villages and a stats panel. All from real map data — fetch once per trail, saved with the project.</div>
@@ -526,6 +554,14 @@ Cotswold Way | England"></textarea>
         <div class="field" style="margin-top:8px;">
           <label>Max waypoints — <span id="maxWpVal">14</span></label>
           <input type="range" id="optMaxWaypoints" min="4" max="24" step="2" value="14" />
+        </div>
+        <div class="field">
+          <label>Water style</label>
+          <select id="optWaterStyle">
+            <option value="solid">Solid fill</option>
+            <option value="hatch">Hatched (technical / vintage chart)</option>
+            <option value="lines">Horizontal lines (architectural)</option>
+          </select>
         </div>
         <div class="field">
           <label>Bottom panel layout</label>
@@ -542,11 +578,22 @@ Cotswold Way | England"></textarea>
       <summary>📍 Custom markers (your own points)</summary>
       <div class="inner">
         <div class="note" style="margin-top:0; margin-bottom:10px;">Add your own named points — a summit, a campsite, "where we met".</div>
+        <div class="field">
+          <label>Icon for new markers</label>
+          <select id="optMarkerIcon">
+            <option value="pin">📍 Pin (default)</option>
+            <option value="tent">⛺ Tent — campsite</option>
+            <option value="peak">▲ Peak — summit</option>
+            <option value="heart">♥ Heart — sentimental spot</option>
+            <option value="star">★ Star — highlight</option>
+            <option value="dot">• Dot — understated</option>
+          </select>
+        </div>
         <button class="primary block" id="pickMarkerBtn">📍 Click on the map to place a marker</button>
         <div class="note" style="margin-top:6px; margin-bottom:10px;">Turn this on, then click any spot on the poster. If you click near a named peak or village, its name fills in automatically — otherwise it's added as a new point you can rename below.</div>
         <div class="field">
-          <label>Markers (edit or delete lines here)</label>
-          <textarea id="customMarkersInput" rows="4" placeholder="Click the map above, or type: Label | place or lat,lon"></textarea>
+          <label>Markers (edit or delete lines here) — third field is the icon: pin, tent, peak, heart, star, dot</label>
+          <textarea id="customMarkersInput" rows="4" placeholder="Click the map above, or type: Label | place or lat,lon | icon"></textarea>
         </div>
         <div class="note" style="margin-top:0; margin-bottom:8px;"><b>Coordinates always work offline.</b> Place names work instantly too if they're a peak or village already on the map (fetch terrain first). Only unrecognised names need the online lookup below.</div>
         <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
@@ -724,7 +771,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -781,9 +828,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v8.0):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v8.0):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v8.0):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v8.1):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v8.1):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v8.1):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1182,8 +1229,9 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optContours','optGrain','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optMarkerIcon','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal' };
+const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
   const el = document.getElementById(id);
@@ -1193,6 +1241,7 @@ optionIds.forEach(id => {
     if (nudgeLabelMap[id]) document.getElementById(nudgeLabelMap[id]).textContent = el.value;
     if (id === 'optMaxWaypoints') document.getElementById('maxWpVal').textContent = el.value;
     if (id === 'optFramePad') document.getElementById('framePadVal').textContent = framePadLabel(el.value);
+    if (scaleLabelMap[id]) document.getElementById(scaleLabelMap[id]).textContent = parseFloat(el.value).toFixed(2);
     drawPoster();
   });
 });
@@ -1825,15 +1874,17 @@ function buildSvg(W, H){
   const titlePos = document.getElementById('optTitlePos').value;
   const titleY = titlePos === 'bottom' ? H - legendAreaH - 6*scaleFactor : titleAreaH*0.55;
   const titleStyle = document.getElementById('optTitleStyle').value;
+  const tScale = parseFloat(document.getElementById('optTitleScale').value) || 1;
+  const sScale = parseFloat(document.getElementById('optSubScale').value) || 1;
   if (titleStyle === 'arc') {
     const arcId = 'titlearc' + Math.random().toString(36).slice(2,7);
     const arcRise = 26 * scaleFactor;
     parts.push(`<defs><path id="${arcId}" d="M ${W*0.12},${titleY + arcRise*0.4} Q ${W/2},${titleY - arcRise} ${W*0.88},${titleY + arcRise*0.4}" fill="none"/></defs>`);
-    parts.push(`<text font-family="${_F.title}" font-weight="600" font-size="${fs(30)}" fill="${s.text}" letter-spacing="${scaleFactor}"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">${escapeXml(title.toUpperCase())}</textPath></text>`);
+    parts.push(`<text font-family="${_F.title}" font-weight="600" font-size="${fs(30*tScale)}" fill="${s.text}" letter-spacing="${scaleFactor}"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">${escapeXml(title.toUpperCase())}</textPath></text>`);
   } else {
-    parts.push(`<text x="${W/2}" y="${titleY}" text-anchor="middle" font-family="${_F.title}" font-weight="600" font-size="${fs(30)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(title.toUpperCase())}</text>`);
+    parts.push(`<text x="${W/2}" y="${titleY}" text-anchor="middle" font-family="${_F.title}" font-weight="600" font-size="${fs(30*tScale)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(title.toUpperCase())}</text>`);
   }
-  if (subtitle) parts.push(`<text x="${W/2}" y="${titleY + 28*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(12)}" fill="${s.accent}" letter-spacing="${3*scaleFactor}">${escapeXml(subtitle.toUpperCase())}</text>`);
+  if (subtitle) parts.push(`<text x="${W/2}" y="${titleY + 28*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(12*sScale)}" fill="${s.accent}" letter-spacing="${3*scaleFactor}">${escapeXml(subtitle.toUpperCase())}</text>`);
 
   if (isCity) {
     parts = parts.concat(buildCitySvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH));
@@ -1867,11 +1918,15 @@ function buildSvg(W, H){
     const durVal = (facts.typical_duration || '').toUpperCase();
     const estVal = facts.established ? 'EST. ' + facts.established : '';
 
+    // Manual overrides always win — the safety net when GPX elevation is missing or wrong.
+    const ovr = (id) => (document.getElementById(id).value || '').trim().toUpperCase();
+    const oD = ovr('ovrDistance'), oH = ovr('ovrHighest'), oA = ovr('ovrAscent'), oT = ovr('ovrDuration');
+
     const cells = [
-      ['DISTANCE', distVal],
-      ['HIGHEST POINT', highVal || estVal],
-      ['TOTAL ASCENT', ascentVal || (legend ? legend.toUpperCase() : '')],
-      ['TYPICAL DURATION', durVal || estVal],
+      ['DISTANCE', oD || distVal],
+      ['HIGHEST POINT', oH || highVal || estVal],
+      ['TOTAL ASCENT', oA || ascentVal || (legend ? legend.toUpperCase() : '')],
+      ['TYPICAL DURATION', oT || durVal || estVal],
     ].filter(c => c[1]);
 
     const positions = [[colL, gridTop], [colR, gridTop], [colL, gridTop + rowGap], [colR, gridTop + rowGap]];
@@ -1901,7 +1956,7 @@ function buildSvg(W, H){
     if (mode === 'full') {
       // Print-compliant: must also state the data is available under the ODbL.
       // Centred on the very bottom edge, auto-shrunk so it always fits the width.
-      const txt = 'Contains information from OpenStreetMap, made available at openstreetmap.org under the Open Database License (ODbL).';
+      const txt = 'Map data \u00a9 OpenStreetMap contributors \u2014 available under the ODbL at www.openstreetmap.org/copyright';
       const avail = W - 80*scaleFactor;
       let size = 6 * scaleFactor;
       const estW = () => txt.length * size * 0.5;
@@ -1922,6 +1977,27 @@ function buildSvg(W, H){
   const meta = `<metadata>© Wild Grid Studio — wildgridstudio.com — All rights reserved. Personal use only; resale or redistribution prohibited. Map data © OpenStreetMap contributors, licensed under the Open Database License (ODbL).</metadata>`;
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">${meta}${parts.join('\n')}</svg>`;
+}
+
+// Marker icon shapes. Flat 2D, single colour — no gradients, in keeping with the brand.
+function markerIconSvg(icon, x, y, k, s){
+  const t = (d, fill) => `<path transform="translate(${x},${y}) scale(${k})" d="${d}" fill="${fill}"/>`;
+  switch (icon) {
+    case 'tent':
+      return t('M0,-11 L9,3 L-9,3 Z', s.accent) + `<path transform="translate(${x},${y}) scale(${k})" d="M0,-11 L0,3" stroke="${s.bg}" stroke-width="1.4" fill="none"/>`;
+    case 'peak':
+      return t('M0,-11 L8,3 L-8,3 Z', s.accent) + t('M0,-11 L3.2,-5.4 L0,-3.4 L-3.2,-5.4 Z', s.bg);
+    case 'heart':
+      return t('M0,3 C-7,-3 -8,-6 -6,-8.6 C-4,-11 -1,-10 0,-7.6 C1,-10 4,-11 6,-8.6 C8,-6 7,-3 0,3 Z', s.accent);
+    case 'star':
+      return t('M0,-11 L2.6,-3.8 L10,-3.4 L4.2,1.2 L6.2,8.4 L0,4.2 L-6.2,8.4 L-4.2,1.2 L-10,-3.4 L-2.6,-3.8 Z', s.accent);
+    case 'dot':
+      return `<circle cx="${x}" cy="${y}" r="${3*k}" fill="${s.accent}"/>`;
+    case 'pin':
+    default:
+      return t('M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z', s.accent) +
+             `<circle cx="${x}" cy="${y - 9.5*k}" r="${2.4*k}" fill="${s.bg}"/>`;
+  }
 }
 
 function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAreaH, fs){
@@ -1974,8 +2050,21 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       const toPath = (poly) => poly.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
 
       if (seas.length) {
+        // sea takes the same fill treatment as lakes, so hatching is consistent
+        const wStyle = document.getElementById('optWaterStyle').value;
+        let seaFill = s.water;
+        if (wStyle !== 'solid') {
+          const sPat = 'spat' + Math.random().toString(36).slice(2,7);
+          const step = 3.2 * scaleFactor, strokeW = 0.45 * scaleFactor;
+          const inner = wStyle === 'hatch'
+            ? `<path d="M0,${step} L${step},0" stroke="${s.river}" stroke-width="${strokeW}"/>`
+            : `<line x1="0" y1="${(step/2).toFixed(2)}" x2="${step}" y2="${(step/2).toFixed(2)}" stroke="${s.river}" stroke-width="${strokeW}"/>`;
+          landWater += `<defs><pattern id="${sPat}" width="${step}" height="${step}" patternUnits="userSpaceOnUse">
+            <rect width="${step}" height="${step}" fill="${s.water}"/>${inner}</pattern></defs>`;
+          seaFill = `url(#${sPat})`;
+        }
         seas.forEach(poly => {
-          landWater += `<path d="${toPath(poly)}" fill="${s.water}" stroke="none"/>`;
+          landWater += `<path d="${toPath(poly)}" fill="${seaFill}" stroke="none"/>`;
         });
         // islands sit on top of the sea as land again
         islands.forEach(poly => {
@@ -2048,8 +2137,22 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       });
     }
 
+    // Water fill style: solid, hatched, or horizontal lines (chart/blueprint feel).
+    const waterStyle = document.getElementById('optWaterStyle').value;
+    let waterFill = s.water;
+    if (waterStyle !== 'solid') {
+      const patId = 'wpat' + Math.random().toString(36).slice(2,7);
+      const step = 3.2 * scaleFactor;
+      const strokeW = 0.45 * scaleFactor;
+      const inner = waterStyle === 'hatch'
+        ? `<path d="M0,${step} L${step},0" stroke="${s.river}" stroke-width="${strokeW}"/>`
+        : `<line x1="0" y1="${(step/2).toFixed(2)}" x2="${step}" y2="${(step/2).toFixed(2)}" stroke="${s.river}" stroke-width="${strokeW}"/>`;
+      landWater += `<defs><pattern id="${patId}" width="${step}" height="${step}" patternUnits="userSpaceOnUse">
+        <rect width="${step}" height="${step}" fill="${s.water}"/>${inner}</pattern></defs>`;
+      waterFill = `url(#${patId})`;
+    }
     layers.water.forEach(d => {
-      landWater += `<path d="${d}" fill="${s.water}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
+      landWater += `<path d="${d}" fill="${waterFill}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
     });
 
     parts.push(`<g clip-path="url(#${clipId})">${landWater}</g>`);
@@ -2061,6 +2164,12 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   const dashAttr = lineStyle === 'dashed' ? `stroke-dasharray="${lineWidth*3},${lineWidth*2}"` :
                    lineStyle === 'dotted' ? `stroke-dasharray="0.1,${lineWidth*2.5}" stroke-linecap="round"` : '';
 
+  // Casing: a wider stroke in the page colour laid down first, so the route stays
+  // readable wherever it crosses woodland, water or dense terrain.
+  if (document.getElementById('optCasing').checked) {
+    parts.push(`<path d="${pathD}" fill="none" stroke="${s.bg}" stroke-width="${(lineWidth + 2.2)*scaleFactor}" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`);
+    parts.push(`<path d="${pathD}" fill="none" stroke="${s.text}" stroke-width="${(lineWidth + 1.1)*scaleFactor}" stroke-linejoin="round" stroke-linecap="round" opacity="0.35"/>`);
+  }
   parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
 
   // --- LABEL COLLISION SYSTEM -------------------------------------------------
@@ -2122,7 +2231,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       labelBoxes.push(boxFor(mx, my - 6*scaleFactor, 16*scaleFactor, 20*scaleFactor));
       customPinZones.push({ x: mx, y: my });
 
-      parts.push(`<path transform="translate(${mx},${my}) scale(${scaleFactor})" d="M0,2 C-5,-5 -6,-7 -6,-10 A6,6 0 1 1 6,-10 C6,-7 5,-5 0,2 Z" fill="${s.accent}"/><circle cx="${mx}" cy="${my - 9.5*scaleFactor}" r="${2.4*scaleFactor}" fill="${s.bg}"/>`);
+      parts.push(markerIconSvg(cm.icon || 'pin', mx, my, scaleFactor, s));
       parts.push(`<text x="${chosen.x}" y="${chosen.y}" text-anchor="${chosen.anchor}" font-family="${_F.mono}" font-size="${fs(7)}" font-weight="600" fill="${s.text}" letter-spacing="${0.5*scaleFactor}">${escapeXml(text)}</text>`);
     }
   }
@@ -2249,7 +2358,8 @@ function parseMarkerLines(){
     const parts = line.split('|').map(p => p.trim());
     const label = parts[0] || 'Marker';
     const loc = (parts.length > 1 ? parts[1] : parts[0]) || '';
-    return { label, loc };
+    const icon = (parts[2] || 'pin').toLowerCase();
+    return { label, loc, icon };
   });
 }
 
@@ -2282,7 +2392,7 @@ function refreshMarkersLive(){
   let unresolved = 0;
   for (const e of entries) {
     const pos = resolveMarkerOffline(e.loc);
-    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label });
+    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label, icon: e.icon });
     else if (e.loc) unresolved++;
   }
   customMarkers = resolved;
@@ -2343,9 +2453,8 @@ svgHolder.addEventListener('click', (ev) => {
   const snapped = label && best < span * 0.02;
 
   const name = snapped ? label : 'Marker ' + (parseMarkerLines().length + 1);
-  const line = snapped
-    ? `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)}`
-    : `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  const icon = document.getElementById('optMarkerIcon').value;
+  const line = `${name} | ${lat.toFixed(4)}, ${lon.toFixed(4)} | ${icon}`;
 
   const ta = document.getElementById('customMarkersInput');
   ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + line;
@@ -2363,7 +2472,7 @@ document.getElementById('addMarkersBtn').onclick = async () => {
   const toGeocode = [];
   for (const e of entries) {
     const pos = resolveMarkerOffline(e.loc);
-    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label });
+    if (pos) resolved.push({ lat: pos.lat, lon: pos.lon, label: e.label, icon: e.icon });
     else if (e.loc) toGeocode.push(e);
   }
 
@@ -2382,7 +2491,7 @@ document.getElementById('addMarkersBtn').onclick = async () => {
       const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
-      if (data.length) resolved.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label });
+      if (data.length) resolved.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label, icon: g.icon });
       else failed.push(g.loc);
       await new Promise(r => setTimeout(r, 900)); // Nominatim asks for max 1 request/sec
     } catch (e) {
@@ -2731,7 +2840,7 @@ function blobToImage(blob){
 // ---------------------------------------------------------------
 // MY DEFAULTS (persisted settings preset) + RECENT TRAILS
 // ---------------------------------------------------------------
-const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optFramePanX','optFramePanY','optCMDX','optCMDY']);
+const DEFAULTS_EXCLUDE = new Set(['posterTitle','posterSubtitle','legendText','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optFramePanX','optFramePanY','optCMDX','optCMDY','ovrDistance','ovrHighest','ovrAscent','ovrDuration']);
 
 function collectDefaults(){
   const d = { style: currentStyle, fields: {} };
