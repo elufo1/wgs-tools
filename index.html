@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.9</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.0</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -490,6 +490,16 @@ Cotswold Way | England"></textarea>
           </select>
         </div>
         <div class="toggle-row"><span>Mountain ridgeline footer</span><label class="toggle"><input type="checkbox" id="optRidgeline"><span class="slider"></span></label></div>
+        <div class="field">
+          <label>Day-stage route segments</label>
+          <select id="optSegments">
+            <option value="none">None — one continuous line</option>
+            <option value="alternate">Alternating solid / dashed (shows each day)</option>
+            <option value="tint">Alternating solid / faded</option>
+          </select>
+        </div>
+        <div class="note" style="margin-bottom:8px;">Uses the same stage count as the day-camp markers. A broken line here means "this is day two" — which is the one time a dashed route is right.</div>
+        <div class="toggle-row"><span>Filled elevation profile (mountain silhouette)</span><label class="toggle"><input type="checkbox" id="optEleFill" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Route outline (halo, keeps the line readable over terrain)</span><label class="toggle"><input type="checkbox" id="optCasing" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Contour-line background</span><label class="toggle"><input type="checkbox" id="optContours"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Paper grain texture</span><label class="toggle"><input type="checkbox" id="optGrain"><span class="slider"></span></label></div>
@@ -824,7 +834,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.9 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -888,9 +898,9 @@ Cotswold Way | England"></textarea>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v8.9):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v8.9):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v8.9):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.0):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.0):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.0):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1289,7 +1299,7 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal', optOsmDX:'osmDXVal', optOsmDY:'osmDYVal', optStages:'stageVal' };
 const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
@@ -2058,6 +2068,7 @@ function buildSvg(W, H){
   }
 
   // title
+  parts.push('<g id="Typography">');
   const titlePos = document.getElementById('optTitlePos').value;
   const titleY = titlePos === 'bottom' ? H - legendAreaH - 6*scaleFactor : titleAreaH*0.55;
   const titleStyle = document.getElementById('optTitleStyle').value;
@@ -2072,6 +2083,7 @@ function buildSvg(W, H){
     parts.push(`<text x="${W/2}" y="${titleY}" text-anchor="middle" font-family="${_F.title}" font-weight="600" font-size="${fs(30*tScale)}" fill="${s.text}" letter-spacing="${scaleFactor}">${escapeXml(title.toUpperCase())}</text>`);
   }
   if (subtitle) parts.push(`<text x="${W/2}" y="${titleY + 28*scaleFactor}" text-anchor="middle" font-family="${_F.mono}" font-size="${fs(12*sScale)}" fill="${s.accent}" letter-spacing="${3*scaleFactor}">${escapeXml(subtitle.toUpperCase())}</text>`);
+  parts.push('</g>');
 
   if (isCity) {
     parts = parts.concat(buildCitySvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH));
@@ -2348,7 +2360,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       landWater += `<path d="${d}" fill="${waterFill}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
     });
 
-    parts.push(`<g clip-path="url(#${clipId})">${landWater}</g>`);
+    parts.push(`<g id="Terrain" clip-path="url(#${clipId})">${landWater}</g>`);
   }
 
   const pathD = 'M ' + projected.map(p => `${p.x.toFixed(1)},${(p.y + mapOffsetY).toFixed(1)}`).join(' L ');
@@ -2359,11 +2371,46 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   // Casing: a wider stroke in the page colour laid down first, so the route stays
   // readable wherever it crosses woodland, water or dense terrain.
+  parts.push('<g id="Route-Line">');
   if (document.getElementById('optCasing').checked) {
     parts.push(`<path d="${pathD}" fill="none" stroke="${s.bg}" stroke-width="${(lineWidth + 2.2)*scaleFactor}" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>`);
     parts.push(`<path d="${pathD}" fill="none" stroke="${s.text}" stroke-width="${(lineWidth + 1.1)*scaleFactor}" stroke-linejoin="round" stroke-linecap="round" opacity="0.35"/>`);
   }
-  parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
+
+  // SEGMENTED ROUTE: split the line into equal-distance day stages and alternate the
+  // stroke, so the poster shows the journey's progression. Here a broken line MEANS
+  // something (this is day two), rather than implying an unconfirmed route.
+  const segMode = document.getElementById('optSegments').value;
+  if (segMode !== 'none' && projected.length > 10) {
+    const nStages = parseInt(document.getElementById('optStages').value) || 7;
+    // walk the real distance so stages are equal on the ground, not equal in point-count
+    const cuts = [0];
+    const total = routeDistanceKm(pointsToUse);
+    const legKm = total / nStages;
+    let acc = 0, next = legKm;
+    for (let i = 1; i < pointsToUse.length; i++) {
+      const seg = kmBetween(pointsToUse[i-1], pointsToUse[i]);
+      if (seg > 50) continue;
+      acc += seg;
+      if (acc >= next && cuts.length < nStages) { cuts.push(i); next += legKm; }
+    }
+    cuts.push(pointsToUse.length - 1);
+
+    for (let k = 0; k < cuts.length - 1; k++) {
+      const slice = projected.slice(cuts[k], cuts[k+1] + 1);
+      if (slice.length < 2) continue;
+      const d = 'M ' + slice.map(p => `${p.x.toFixed(1)},${(p.y + mapOffsetY).toFixed(1)}`).join(' L ');
+      const odd = k % 2 === 1;
+      let segDash = '';
+      if (segMode === 'alternate' && odd) segDash = `stroke-dasharray="${lineWidth*3},${lineWidth*2}"`;
+      if (segMode === 'tint' && odd) { /* handled by opacity below */ }
+      const op = (segMode === 'tint' && odd) ? 0.55 : 1;
+      parts.push(`<path d="${d}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" opacity="${op}" ${segDash}/>`);
+    }
+  } else {
+    parts.push(`<path d="${pathD}" fill="none" stroke="${s.line}" stroke-width="${lineWidth*scaleFactor}" stroke-linejoin="round" ${dashAttr}/>`);
+  }
+  parts.push('</g>');
 
   // --- LABEL COLLISION SYSTEM -------------------------------------------------
   // Everything that prints text on the map registers a box here. Custom markers
@@ -2397,6 +2444,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   const customPinZones = [];
   window._markersOffFrame = 0;
   let _markersOffFrame = 0;
+  parts.push('<g id="Custom-Markers">');
   if (document.getElementById('optCustomMarkers').checked && customMarkers.length) {
     const cmdx = (parseFloat(document.getElementById('optCMDX').value) || 0) * scaleFactor;
     const cmdy = (parseFloat(document.getElementById('optCMDY').value) || 0) * scaleFactor;
@@ -2431,8 +2479,10 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
     }
     window._markersOffFrame = _markersOffFrame;
   }
+  parts.push('</g>');
 
   // WAYPOINTS: named peaks and villages — yield to custom markers and to each other
+  parts.push('<g id="Waypoint-Labels">');
   if (document.getElementById('optWaypoints').checked && waypointPts.length) {
     const maxWp = parseInt(document.getElementById('optMaxWaypoints').value);
     const clearR = 34 * scaleFactor;
@@ -2466,6 +2516,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       parts.push(`<text x="${wx + 5*scaleFactor}" y="${wy + 2*scaleFactor}" font-family="${_F.mono}" font-size="${fs(6.8)}" font-weight="600" fill="${s.text}" opacity="0.92">${escapeXml(label)}</text>`);
     }
   }
+  parts.push('</g>');
 
   if (document.getElementById('optMarkers').checked) {
     const p0 = projected[0], pN = projected[projected.length-1];
@@ -2524,6 +2575,14 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       const y = chartY + chartH - ((e - minE) / (maxE - minE || 1)) * chartH;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' L ');
+    // Filled silhouette (a solid mountain profile reads far better in print than a floating line),
+    // with the crisp stroke kept along the ridge.
+    if (document.getElementById('optEleFill').checked) {
+      const baseY = chartY + chartH;
+      const fillPath = elePath + ` L ${(chartX + (eles.length-1)*step).toFixed(1)},${baseY.toFixed(1)}`
+                              + ` L ${chartX.toFixed(1)},${baseY.toFixed(1)} Z`;
+      parts.push(`<path d="${fillPath}" fill="${s.accent}" opacity="0.20" stroke="none"/>`);
+    }
     parts.push(`<path d="${elePath}" fill="none" stroke="${s.accent}" stroke-width="${1.5*scaleFactor}" opacity="0.8"/>`);
   }
   return parts;
