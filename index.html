@@ -208,7 +208,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.0</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v7.1</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -649,8 +649,8 @@ Cotswold Way | England"></textarea>
   <div class="modal">
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
-    <div class="modal-sub">From real trail to Etsy-ready product · version 7.0</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.0 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <div class="modal-sub">From real trail to Etsy-ready product · version 7.1</div>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v7.1 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -1572,18 +1572,33 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   // TERRAIN: land panel + real water polygons, clipped to the map area
   if (document.getElementById('optTerrain').checked && terrainPolys.length) {
     const clipId = 'terrclip' + Math.random().toString(36).slice(2,7);
-    const tm = 30 * scaleFactor; // sit inside the frame
+    const tm = 30 * scaleFactor;
     parts.push(`<clipPath id="${clipId}"><rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}"/></clipPath>`);
     let landWater = `<rect x="${tm}" y="${mapOffsetY*0.55}" width="${W-tm*2}" height="${mapAreaH + mapOffsetY*0.4}" fill="${s.land}"/>`;
-    const step = Math.max(1, Math.floor(terrainPolys.length / 4000));
+
+    // Build each water shape, then drop tiny/degenerate slivers (stray river fragments etc.)
+    // so only real, bold, readable lakes and lochs remain — matching a proper printed map look.
+    const shapes = [];
     terrainPolys.forEach(poly => {
-      const ptStep = Math.max(1, Math.floor(poly.pts.length / 300));
-      let d = '';
+      const ptStep = Math.max(1, Math.floor(poly.pts.length / 500));
+      const coords = [];
       for (let i = 0; i < poly.pts.length; i += ptStep) {
         const c = proj.toXY(poly.pts[i]);
-        d += (d ? ' L ' : 'M ') + c.x.toFixed(1) + ',' + (c.y + mapOffsetY).toFixed(1);
+        coords.push([c.x, c.y + mapOffsetY]);
       }
-      landWater += `<path d="${d} Z" fill="${s.water}"/>`;
+      if (coords.length < 4) return; // too few points to be a real lake shape
+      let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+      coords.forEach(([x,y]) => { if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; });
+      const bboxArea = (maxX-minX) * (maxY-minY);
+      const minSize = 6 * scaleFactor; // ignore shapes smaller than ~6px in either dimension — river slivers, not lakes
+      if ((maxX-minX) < minSize && (maxY-minY) < minSize) return;
+      if (bboxArea < (minSize*minSize*0.3)) return;
+      const d = coords.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
+      shapes.push(d);
+    });
+
+    shapes.forEach(d => {
+      landWater += `<path d="${d}" fill="${s.water}" stroke="${s.line}" stroke-width="${0.4*scaleFactor}" stroke-opacity="0.35"/>`;
     });
     parts.push(`<g clip-path="url(#${clipId})">${landWater}</g>`);
   }
