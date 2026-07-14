@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.5</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.6</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -844,7 +844,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.5 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.6 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -912,9 +912,9 @@ Cotswold Way | England"></textarea>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.5):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.5):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.5):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.6):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.6):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.6):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1483,11 +1483,29 @@ async function loadOsmFeature(type, id, displayName){
   startTicker('searchStatus', `Downloading "${displayName}"…`);
   document.getElementById('searchResults').style.display = 'none';
   try {
-    const q = `[out:json][timeout:60];\n${type}(id:${id});\nout geom;`;
+    // For a relation, explicitly recurse into its member ways/nodes before asking for
+    // geometry — don't rely on a given Overpass mirror resolving "out geom" on a bare
+    // relation reference the same way every other mirror does. Some mirrors return
+    // partial/near-empty geometry for a large multi-hundred-segment relation without
+    // this, silently truncating a long trail down to a handful of points.
+    const q = type === 'relation'
+      ? `[out:json][timeout:75];\nrelation(id:${id});\n(._;>;);\nout geom;`
+      : `[out:json][timeout:75];\n${type}(id:${id});\nout geom;`;
     const data = await fetchOverpass(q);
     const points = extractPointsFromOverpass(data);
     if (points.length < 2) {
       setStatus('searchStatus','error', `"${displayName}" has no usable route geometry in OpenStreetMap. Try another match, or upload a GPX.`);
+      return;
+    }
+    // SANITY CHECK: catch a silently-truncated route instead of loading it as if
+    // it were correct. A route under 300m almost never IS the actual trail — it's
+    // this exact failure mode (partial geometry from an overloaded/incomplete
+    // mirror response). Offer an immediate retry against a different mirror.
+    const gotKm = routeDistanceKm(points);
+    if (gotKm < 0.5 || points.length < 5) {
+      setStatus('searchStatus','error',
+        `"${displayName}" loaded but measured only ${(gotKm*1000).toFixed(0)}m across ${points.length} points — that's almost certainly incomplete data from this map server, not the real trail length. `+
+        `Click "Find Real Route" again to retry (it may hit a different, more complete mirror), or use a GPX upload instead.`);
       return;
     }
     currentPoints = dedupePoints(points);
