@@ -212,7 +212,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.3</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v8.5</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -604,6 +604,8 @@ Cotswold Way | England"></textarea>
         <button class="primary block" id="addMarkersBtn">Look up place names (online)</button>
         <div id="markersStatus" class="status"></div>
         <div class="toggle-row" style="margin-top:10px;"><span>Show custom markers</span><label class="toggle"><input type="checkbox" id="optCustomMarkers" checked><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Fit all markers inside the frame</span><label class="toggle"><input type="checkbox" id="optFitMarkers"><span class="slider"></span></label></div>
+        <div class="note" style="margin-top:6px;">Off: the poster is framed on the route, so a marker far from the trail can fall outside the picture. On: the view zooms out so every marker fits — which also shrinks the route.</div>
         <div class="note" style="margin-top:8px;">Labels auto-place to a free side and auto-hide any duplicate peak label underneath. If a pin still sits awkwardly, nudge it clear:</div>
         <div class="row" style="margin-top:8px;">
           <div class="field">
@@ -776,7 +778,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.3 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v8.5 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -833,9 +835,9 @@ Cotswold Way | England"></textarea>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
       <li><b>Decorations:</b> compass rose, corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile.</li>
-      <li><b>📍 Custom markers (new in v8.3):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v8.3):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v8.3):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v8.5):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v8.5):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v8.5):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1234,7 +1236,7 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optMarkerIcon','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optContours','optGrain','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optMarkerIcon','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal' };
 const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
@@ -1329,18 +1331,71 @@ document.getElementById('diagBtn').onclick = async () => {
 // ---------------------------------------------------------------
 // OVERPASS SEARCH
 // ---------------------------------------------------------------
+// A route relation is a bag of way segments in arbitrary order, and some are drawn
+// backwards. Concatenating them raw produces a zig-zagging, self-crossing mess.
+// assembleRoute() chains the segments end-to-end, flipping the reversed ones, so the
+// result is a single continuous path in true walking order.
+function assembleRoute(segments){
+  const segs = segments.filter(s => s.length > 1).map(s => s.slice());
+  if (!segs.length) return [];
+
+  const d2 = (a, b) => {
+    const dLat = a.lat - b.lat;
+    const dLon = (a.lon - b.lon) * Math.cos(a.lat * Math.PI / 180);
+    return dLat*dLat + dLon*dLon;
+  };
+
+  // start from the longest segment — most likely the trail's spine
+  segs.sort((a, b) => b.length - a.length);
+  let route = segs.shift();
+
+  let joined = true;
+  while (joined && segs.length) {
+    joined = false;
+    let best = { i: -1, dist: Infinity, flip: false, toHead: false };
+    const head = route[0], tail = route[route.length - 1];
+
+    segs.forEach((seg, i) => {
+      const a = seg[0], b = seg[seg.length - 1];
+      const cands = [
+        { dist: d2(tail, a), flip: false, toHead: false }, // tail -> seg start
+        { dist: d2(tail, b), flip: true,  toHead: false }, // tail -> seg end (reversed)
+        { dist: d2(head, b), flip: false, toHead: true  }, // seg end -> head
+        { dist: d2(head, a), flip: true,  toHead: true  }, // seg start -> head (reversed)
+      ];
+      cands.forEach(c => {
+        if (c.dist < best.dist) best = { i, dist: c.dist, flip: c.flip, toHead: c.toHead };
+      });
+    });
+
+    // ~0.05 degrees ≈ 5 km: a bigger gap than that isn't a real join, it's a different branch
+    const MAX_JOIN = 0.05 * 0.05;
+    if (best.i >= 0 && best.dist <= MAX_JOIN) {
+      let seg = segs.splice(best.i, 1)[0];
+      if (best.flip) seg.reverse();
+      route = best.toHead ? seg.concat(route) : route.concat(seg);
+      joined = true;
+    }
+  }
+  return route;
+}
+
 function extractPointsFromOverpass(data){
-  const pts = [];
+  const segments = [];
   (data.elements || []).forEach(el => {
     if (el.type === 'way' && el.geometry) {
-      el.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
+      segments.push(el.geometry.map(g => ({ lat: g.lat, lon: g.lon })));
     } else if (el.type === 'relation' && el.members) {
       el.members.forEach(m => {
-        if (m.geometry) m.geometry.forEach(g => pts.push({ lat: g.lat, lon: g.lon }));
+        // only line members; skip stops/markers that carry no geometry
+        if (m.geometry && m.geometry.length > 1) {
+          segments.push(m.geometry.map(g => ({ lat: g.lat, lon: g.lon })));
+        }
       });
     }
   });
-  return pts;
+  if (segments.length <= 1) return segments[0] || [];
+  return assembleRoute(segments);
 }
 
 // Load one specific OSM feature (chosen from the results list) and build the poster from it.
@@ -1581,10 +1636,13 @@ function smoothPoints(points, level){
 function safeMin(arr){ let m = Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] < m) m = arr[i]; } return m; }
 function safeMax(arr){ let m = -Infinity; for (let i=0;i<arr.length;i++){ if (arr[i] > m) m = arr[i]; } return m; }
 
-function projectPoints(points, width, height, padding, panX, panY){
+function projectPoints(points, width, height, padding, panX, panY, extraPoints){
   panX = panX || 0; panY = panY || 0;
-  const lats = points.map(p => p.lat);
-  const lons = points.map(p => p.lon);
+  // extraPoints (e.g. custom markers) can be folded into the bounds so they're
+  // guaranteed to land inside the frame instead of being silently cropped.
+  const all = (extraPoints && extraPoints.length) ? points.concat(extraPoints) : points;
+  const lats = all.map(p => p.lat);
+  const lons = all.map(p => p.lon);
   const minLat = safeMin(lats), maxLat = safeMax(lats);
   const minLon = safeMin(lons), maxLon = safeMax(lons);
   const avgLat = (minLat + maxLat) / 2;
@@ -2081,7 +2139,9 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
   const framePad = (parseFloat(document.getElementById('optFramePad').value) || 10) / 100; // 0.04–0.30
   const panX = (parseFloat(document.getElementById('optFramePanX').value) || 0) / 100;
   const panY = (parseFloat(document.getElementById('optFramePanY').value) || 0) / 100;
-  const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * framePad, panX, panY);
+  const fitMarkers = document.getElementById('optFitMarkers').checked && customMarkers.length;
+  const proj = projectPoints(pointsToUse, W, mapAreaH, Math.min(W,H) * framePad, panX, panY,
+                             fitMarkers ? customMarkers : null);
   // remember the projection so a click on the preview can be turned back into lat/lon
   window._clickProj = { toLatLon: proj.toLatLon, mapOffsetY, W, H };
   const projected = proj.pts;
@@ -2277,13 +2337,15 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
 
   // CUSTOM MARKERS: user's own named points — drawn first, highest priority
   const customPinZones = [];
+  window._markersOffFrame = 0;
+  let _markersOffFrame = 0;
   if (document.getElementById('optCustomMarkers').checked && customMarkers.length) {
     const cmdx = (parseFloat(document.getElementById('optCMDX').value) || 0) * scaleFactor;
     const cmdy = (parseFloat(document.getElementById('optCMDY').value) || 0) * scaleFactor;
     for (const cm of customMarkers) {
       const c = proj.toXY(cm);
       const mx = c.x + cmdx, my = c.y + mapOffsetY + cmdy;
-      if (!inMap(mx, my)) continue;
+      if (!inMap(mx, my)) { _markersOffFrame++; continue; }
 
       const text = (cm.label || 'Marker').toUpperCase();
       const fSize = 7 * scaleFactor;
@@ -2309,6 +2371,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       parts.push(markerIconSvg(cm.icon || 'pin', mx, my, scaleFactor, s));
       parts.push(`<text x="${chosen.x}" y="${chosen.y}" text-anchor="${chosen.anchor}" font-family="${_F.mono}" font-size="${fs(7)}" font-weight="600" fill="${s.text}" letter-spacing="${0.5*scaleFactor}">${escapeXml(text)}</text>`);
     }
+    window._markersOffFrame = _markersOffFrame;
   }
 
   // WAYPOINTS: named peaks and villages — yield to custom markers and to each other
@@ -2480,6 +2543,16 @@ function refreshMarkersLive(){
     setStatus('markersStatus','ok',`${resolved.length} marker${resolved.length===1?'':'s'} plotted.`);
   }
   drawPoster();
+  warnOffFrameMarkers();
+}
+
+// A marker outside the framed area used to just disappear. Now we say so, and say how to fix it.
+function warnOffFrameMarkers(){
+  const n = window._markersOffFrame || 0;
+  if (!n) return;
+  setStatus('markersStatus','error',
+    `${n} marker${n===1?' is':'s are'} outside the framed area and ${n===1?'is':'are'} not shown. ` +
+    `Turn on "Fit all markers inside the frame", or widen the view with the Map framing padding slider.`);
 }
 
 document.getElementById('customMarkersInput').addEventListener('input', refreshMarkersLive);
