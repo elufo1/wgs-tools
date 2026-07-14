@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.6</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.7</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -844,7 +844,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 7.3</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.6 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.7 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -912,9 +912,9 @@ Cotswold Way | England"></textarea>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.6):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.6):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.6):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
+      <li><b>📍 Custom markers (new in v9.7):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.7):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.7):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1461,18 +1461,28 @@ function assembleRoute(segments){
 
 function extractPointsFromOverpass(data){
   const segments = [];
-  (data.elements || []).forEach(el => {
-    if (el.type === 'way' && el.geometry) {
-      segments.push(el.geometry.map(g => ({ lat: g.lat, lon: g.lon })));
-    } else if (el.type === 'relation' && el.members) {
-      el.members.forEach(m => {
-        // only line members; skip stops/markers that carry no geometry
-        if (m.geometry && m.geometry.length > 1) {
-          segments.push(m.geometry.map(g => ({ lat: g.lat, lon: g.lon })));
-        }
-      });
-    }
-  });
+  const elements = data.elements || [];
+  // With recursion, every way — however deeply nested inside relations-of-relations
+  // (e.g. a superroute -> stage relations -> ways) — ends up as its OWN top-level
+  // element in this flattened array, each carrying its own geometry. Reading every
+  // 'way' element directly is correct regardless of nesting depth, and far more
+  // robust than trying to walk the relation membership tree ourselves.
+  const wayEls = elements.filter(el => el.type === 'way' && el.geometry && el.geometry.length > 1);
+  if (wayEls.length) {
+    wayEls.forEach(el => segments.push(el.geometry.map(g => ({ lat: g.lat, lon: g.lon }))));
+  } else {
+    // Fallback for a mirror that didn't flatten ways to top level: walk relation
+    // members directly, one level deep (covers a plain, non-nested route relation).
+    elements.forEach(el => {
+      if (el.type === 'relation' && el.members) {
+        el.members.forEach(m => {
+          if (m.geometry && m.geometry.length > 1) {
+            segments.push(m.geometry.map(g => ({ lat: g.lat, lon: g.lon })));
+          }
+        });
+      }
+    });
+  }
   if (segments.length <= 1) return segments[0] || [];
   return assembleRoute(segments);
 }
@@ -1483,14 +1493,15 @@ async function loadOsmFeature(type, id, displayName){
   startTicker('searchStatus', `Downloading "${displayName}"…`);
   document.getElementById('searchResults').style.display = 'none';
   try {
-    // For a relation, explicitly recurse into its member ways/nodes before asking for
-    // geometry — don't rely on a given Overpass mirror resolving "out geom" on a bare
-    // relation reference the same way every other mirror does. Some mirrors return
-    // partial/near-empty geometry for a large multi-hundred-segment relation without
-    // this, silently truncating a long trail down to a handful of points.
+    // For a relation, recurse TWICE: a plain route relation only needs one level down
+    // to its ways, but a "superroute" (a relation whose members are OTHER relations —
+    // the day-stage segments, as seen for trails like the West Highland Way) needs a
+    // second pass to reach the actual path geometry inside those stage relations.
+    // Applying (._;>;) twice is a safe, standard way to resolve up to two levels of
+    // relation-of-relations without assuming unlimited nesting depth.
     const q = type === 'relation'
-      ? `[out:json][timeout:75];\nrelation(id:${id});\n(._;>;);\nout geom;`
-      : `[out:json][timeout:75];\n${type}(id:${id});\nout geom;`;
+      ? `[out:json][timeout:90];\nrelation(id:${id});\n(._;>;);\n(._;>;);\nout geom;`
+      : `[out:json][timeout:90];\n${type}(id:${id});\nout geom;`;
     const data = await fetchOverpass(q);
     const points = extractPointsFromOverpass(data);
     if (points.length < 2) {
@@ -1535,14 +1546,16 @@ function showSearchResults(list, term){
   const head = document.createElement('div');
   head.className = 'note';
   head.style.marginBottom = '8px';
-  head.innerHTML = `<b>${list.length} match${list.length===1?'':'es'}</b> for "${escapeXml(term)}" — pick the right one:`;
+  head.innerHTML = `<b>${list.length} match${list.length===1?'':'es'}</b> for "${escapeXml(term)}" — pick the right one. Long trails are often split into day-stage segments in OpenStreetMap; look for a <b>★ whole-trail</b> entry if one exists — it covers the entire route in one piece.`;
   holder.appendChild(head);
 
   list.forEach(r => {
     const btn = document.createElement('button');
     btn.className = 'result-row';
-    const kind = r.type === 'relation' ? 'route relation' : 'path/way';
+    const isSuperroute = r.tags.type === 'superroute';
+    const kind = isSuperroute ? '★ whole-trail relation' : r.type === 'relation' ? 'route relation (may be one stage)' : 'path/way';
     const where = [r.tags.ref, r.tags.operator, r.tags.network].filter(Boolean).join(' · ');
+    if (isSuperroute) btn.style.borderColor = 'var(--brass)';
     btn.innerHTML = `<b>${escapeXml(r.tags.name)}</b><span class="rmeta">${kind}${where ? ' · ' + escapeXml(where) : ''} · osm ${r.type}/${r.id}</span>`;
     btn.onclick = () => loadOsmFeature(r.type, r.id, r.tags.name);
     holder.appendChild(btn);
@@ -1570,16 +1583,20 @@ document.getElementById('searchBtn').onclick = async () => {
   const attempts = [];
   if (region) {
     const safeRegion = region.replace(/["']/g, '');
-    // named routes + paths inside the region
+    // named routes + superroutes + paths inside the region. Long-distance trails are
+    // very often modelled as a "superroute" relation (type=superroute) whose members
+    // are the individual stage relations, rather than one relation with route=hiking —
+    // without matching on type=superroute too, the single "whole trail" entry never
+    // shows up and only the individual day-stage segments do.
     attempts.push({
       label: 'in ' + region,
-      q: `[out:json][timeout:60];\narea["name"~"^${safeRegion}$",i]->.a;\n(\n  relation["name"~"${rx}",i]["route"](area.a);\n  way["name"~"${rx}",i]["highway"](area.a);\n);\nout tags;`
+      q: `[out:json][timeout:60];\narea["name"~"^${safeRegion}$",i]->.a;\n(\n  relation["name"~"${rx}",i]["route"](area.a);\n  relation["name"~"${rx}",i]["type"="superroute"](area.a);\n  way["name"~"${rx}",i]["highway"](area.a);\n);\nout tags;`
     });
   }
-  // worldwide named routes
+  // worldwide named routes + superroutes
   attempts.push({
     label: 'worldwide routes',
-    q: `[out:json][timeout:60];\n(\n  relation["name"~"${rx}",i]["route"];\n);\nout tags;`
+    q: `[out:json][timeout:60];\n(\n  relation["name"~"${rx}",i]["route"];\n  relation["name"~"${rx}",i]["type"="superroute"];\n);\nout tags;`
   });
   // worldwide named paths/trails (catches trails mapped as ways, not relations)
   attempts.push({
@@ -1595,15 +1612,17 @@ document.getElementById('searchBtn').onclick = async () => {
       try { data = await fetchOverpass(a.q); } catch (e) { continue; }
       const els = (data.elements || []).filter(e => e.tags && e.tags.name);
       if (els.length) {
-        // collapse duplicates: keep the biggest feature per unique name
+        // collapse duplicates: keep the best feature per unique name
+        const rank = (e) => e.tags.type === 'superroute' ? 3 : e.type === 'relation' ? 2 : 1;
         const byName = new Map();
         els.forEach(e => {
           const k = e.tags.name.toLowerCase();
           const prev = byName.get(k);
-          // prefer relations (whole routes) over individual ways (fragments)
-          if (!prev || (prev.type === 'way' && e.type === 'relation')) byName.set(k, e);
+          if (!prev || rank(e) > rank(prev)) byName.set(k, e);
         });
-        found = [...byName.values()].slice(0, 12);
+        // sort BEFORE capping to 12, so a superroute (the whole-trail entry) can never
+        // get pushed out by a long list of individual day-stage segments
+        found = [...byName.values()].sort((a,b) => rank(b) - rank(a)).slice(0, 12);
         break;
       }
     }
