@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.8</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.10</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -745,6 +745,7 @@ Cotswold Way | England"></textarea>
 
     <div class="row" style="max-width:560px; width:100%;">
       <button class="block small" id="verifyBtn" disabled>🔍 Verify route against real map</button>
+      <button class="block small" id="qaCheckBtn" disabled>🛡 Run Accuracy Check</button>
       <button class="block small" id="mockupBtn" disabled>🖼 Wall mockup PNG</button>
     </div>
     <div class="toggle-row" style="max-width:560px; width:100%; border:none;"><span style="font-size:11.5px;">Mockup: transparent background (frame + poster only, for layering in Photoshop)</span><label class="toggle"><input type="checkbox" id="optMockupTransparent"><span class="slider"></span></label></div>
@@ -846,6 +847,17 @@ Cotswold Way | England"></textarea>
     <p style="font-size:12px;">If the gold line follows the mapped trail/terrain sensibly, the geometry is good. Small gaps between OSM segments show as straight jumps — cosmetic on long trails.</p>
     <div id="verifyMapHolder" style="position:relative; width:100%; overflow:hidden; border-radius:6px; background:#0a0f14;"></div>
   </div>
+</div>
+
+<!-- QA CHECK MODAL -->
+<div class="modal-overlay" id="qaModal">
+  <div class="modal" style="max-width:640px;">
+    <button class="close-x" onclick="document.getElementById('qaModal').classList.remove('show')">✕</button>
+    <h3>Accuracy check report</h3>
+    <div class="modal-sub">Automated checks — a machine-readable pass over the same things Layer 2 QA asks you to eyeball. Doesn't replace the manual gates, catches the mistakes those miss.</div>
+    <div id="qaReportSummary" style="font-size:13px; font-weight:700; margin:10px 0 4px;"></div>
+    <div id="qaReportBody"></div>
+  </div>
 </div></div>
 
 <!-- HELP MODAL -->
@@ -854,7 +866,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.8 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.10 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -894,6 +906,7 @@ Cotswold Way | England"></textarea>
       <p style="margin:10px 0 8px;"><b>Layer 2 — Product QA</b> (every poster, before it is listed anywhere):</p>
       <ol style="margin:4px 0;">
         <li><b>🔍 Verify route</b> against the real map — the drawn line must follow the actual trail sensibly.</li>
+        <li><b>🛡 Run Accuracy Check</b> — the automated report catches what a quick eyeball can miss: mislabelled peaks/towns, duplicate labels, legend text that doesn't match the measured route, missing licence attribution.</li>
         <li><b>Facts check:</b> legend distance and established year confirmed against one official source (trail authority or Wikipedia).</li>
         <li><b>Start / Finish:</b> geographically correct ends, labels not overlapping the route (use the nudge sliders).</li>
         <li><b>Export check:</b> open the exported PNGs themselves — not just the on-screen preview — at full zoom.</li>
@@ -926,6 +939,8 @@ Cotswold Way | England"></textarea>
       <li><b>🔲 Map framing (new in v9.7):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
       <li><b>Two new monochrome styles (new in v9.7):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Search external GPX sources (new in v9.8):</b> when OpenStreetMap has no usable route for a trail, one-click buttons open a pre-filled search on Wikiloc, AllTrails, or Komoot — download the GPX there, then drop it in the upload zone above.</li>
+      <li><b>Accurate peak/village labels (fixed in v9.9):</b> labelled peaks and towns are now checked against real distance to the route line, not just whether they fall inside the wide terrain bounding box. Peaks within 10km and villages within 6km are kept (falling back to nearest available on remote routes) — so a poster no longer labels a town or summit that's actually many miles from the trail as if it sits right beside it.</li>
+      <li><b>🛡 Run Accuracy Check (new in v9.10):</b> an automated report next to "Verify route" — re-checks every loaded peak/village label's real distance to the route, flags custom markers placed far off-route, catches duplicate labels, cross-checks the legend distance text against the measured route, and confirms the OSM credit line is on. Catches mistakes a quick eyeball can miss, and also re-audits <b>old saved projects</b> that were built before the v9.9 label fix — those still have the old, less accurate labels baked in until you re-run "Fetch terrain &amp; waypoints" or open Accuracy Check to see what's off. Doesn't replace Layer 2 QA — it's a machine pass alongside it, not instead of it.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -3220,9 +3235,30 @@ out geom;`;
       }
     });
 
-    // prioritise: tallest peaks first, then places; final cap applied at render time via the slider
-    peaks.sort((a,b) => (b.ele||0) - (a.ele||0));
-    waypointPts = peaks.slice(0, 24).concat(places.slice(0, 24));
+    // Real distance from a candidate label to the nearest point actually ON
+    // the route — not just "inside the wide terrain bounding box". Without
+    // this, a tall peak or town well outside walking distance of the trail
+    // can end up labelled as if it sits right beside it.
+    peaks.forEach(p => p.distKm = distToRouteKm(p.lat, p.lon, currentPoints));
+    places.forEach(p => p.distKm = distToRouteKm(p.lat, p.lon, currentPoints));
+
+    // Peaks get a generous radius — a distant summit is still a recognisable
+    // backdrop from the trail. Towns get a tighter one — a labelled village
+    // should be somewhere you actually pass near, not a random town 20 miles off.
+    const PEAK_MAX_KM = 10;
+    const PLACE_MAX_KM = 6;
+    let nearPeaks = peaks.filter(p => p.distKm <= PEAK_MAX_KM);
+    let nearPlaces = places.filter(p => p.distKm <= PLACE_MAX_KM);
+
+    // Remote routes (e.g. high mountain treks) may have nothing that close —
+    // better to show the nearest available than leave the poster with no context.
+    if (nearPeaks.length < 4) nearPeaks = [...peaks].sort((a,b) => a.distKm - b.distKm).slice(0, 8);
+    if (nearPlaces.length < 3) nearPlaces = [...places].sort((a,b) => a.distKm - b.distKm).slice(0, 6);
+
+    // Within the near set: tallest peaks first (as before), closest towns first.
+    nearPeaks.sort((a,b) => (b.ele||0) - (a.ele||0));
+    nearPlaces.sort((a,b) => a.distKm - b.distKm);
+    waypointPts = nearPeaks.slice(0, 24).concat(nearPlaces.slice(0, 24));
 
     const nWater = terrainPolys.filter(p => p.kind === 'water').length;
     const nWood  = terrainPolys.filter(p => p.kind === 'wood').length;
@@ -3231,7 +3267,7 @@ out geom;`;
     document.getElementById('optTerrain').checked = terrainPolys.length > 0 || terrainLines.length > 0 || coastWays.length > 0;
     document.getElementById('optWaypoints').checked = waypointPts.length > 0;
     stopTicker();
-    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${coastWays.length.toLocaleString()} coastline${coastWays.length ? ' (sea will be filled)' : ''} · ${peaks.length} peaks · ${places.length} villages. Saved with your project.`);
+    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${coastWays.length.toLocaleString()} coastline${coastWays.length ? ' (sea will be filled)' : ''} · ${nearPeaks.length} nearby peaks · ${nearPlaces.length} nearby villages. Saved with your project.`);
     drawPoster();
   } catch (err) {
     stopTicker();
@@ -3392,6 +3428,128 @@ document.getElementById('verifyBtn').onclick = () => {
 };
 document.getElementById('verifyModal').onclick = (e) => {
   if (e.target === document.getElementById('verifyModal')) document.getElementById('verifyModal').classList.remove('show');
+};
+
+// ---------------------------------------------------------------
+// ACCURACY CHECK — automated pass over the same things Layer 2 QA
+// asks a human to eyeball. Re-checks real distance-to-route for every
+// label currently loaded (catches both fresh mistakes AND stale data in
+// projects saved before the v9.9 distance fix), plus a few other
+// export-blocking sanity checks. Doesn't touch anything — read-only report.
+// ---------------------------------------------------------------
+function qaRow(status, title, detail){
+  const colors = {
+    pass: { bg: 'rgba(122,155,110,0.12)', fg: '#A9C9A0', icon: '✓' },
+    warn: { bg: 'rgba(176,141,87,0.15)',  fg: '#D2AC72', icon: '⚠' },
+    fail: { bg: 'rgba(162,62,50,0.15)',   fg: '#E39A8E', icon: '✕' }
+  }[status];
+  return `<div style="background:${colors.bg}; color:${colors.fg}; border-radius:4px; padding:9px 12px; margin-bottom:7px; font-size:12.5px; line-height:1.5;">
+    <b>${colors.icon} ${title}</b>${detail ? `<div style="margin-top:3px; opacity:0.9;">${detail}</div>` : ''}
+  </div>`;
+}
+
+function runAccuracyCheck(){
+  if (currentPoints.length < 2) return;
+  const rows = [];
+  let pass = 0, warn = 0, fail = 0;
+  const tally = (status) => { if (status === 'pass') pass++; else if (status === 'warn') warn++; else fail++; };
+
+  // 1. Route integrity
+  const measuredKm = routeDistanceKm(currentPoints);
+  if (currentPoints.length < 5 || measuredKm < 0.3) {
+    rows.push(qaRow('fail', 'Route geometry', `Only ${currentPoints.length} points / ${measuredKm.toFixed(2)}km measured — this is almost certainly incomplete data, not a real trail. Re-search (may hit a different mirror) or upload a GPX.`));
+    tally('fail');
+  } else {
+    rows.push(qaRow('pass', 'Route geometry', `${currentPoints.length.toLocaleString()} points, ${measuredKm.toFixed(1)}km measured.`));
+    tally('pass');
+  }
+
+  // 2. Waypoint labels vs real distance to the route (re-checks live, regardless
+  // of when terrain/waypoints were fetched — catches stale pre-v9.9 project files too)
+  if (waypointPts.length) {
+    const PEAK_MAX_KM = 10, PLACE_MAX_KM = 6;
+    const flagged = [];
+    waypointPts.forEach(w => {
+      const d = distToRouteKm(w.lat, w.lon, currentPoints);
+      const limit = w.kind === 'peak' ? PEAK_MAX_KM : PLACE_MAX_KM;
+      if (d > limit) flagged.push(`${w.name} (${d.toFixed(1)}km from route, limit ${limit}km)`);
+    });
+    if (flagged.length) {
+      rows.push(qaRow('warn', `${flagged.length} label(s) unusually far from the route`, flagged.slice(0, 8).join('<br>') + (flagged.length > 8 ? `<br>…and ${flagged.length - 8} more` : '') + `<br><br>Re-run "Fetch terrain &amp; waypoints" to refresh with the current accuracy filter, or remove these labels manually.`));
+      tally('warn');
+    } else {
+      rows.push(qaRow('pass', `${waypointPts.length} peak/village labels`, `All within the accepted distance of the route.`));
+      tally('pass');
+    }
+  } else {
+    rows.push(qaRow('pass', 'No peak/village labels loaded', `Nothing to check — Terrain edition not in use, or "Fetch terrain & waypoints" hasn't been run.`));
+    tally('pass');
+  }
+
+  // 3. Custom markers — flag anything placed far off-route with snap disabled
+  // (deliberate ones like "hometown" are fine; this just surfaces them for a second look)
+  if (typeof customMarkers !== 'undefined' && customMarkers.length) {
+    const farMarkers = customMarkers
+      .map(m => ({ ...m, d: distToRouteKm(m.lat, m.lon, currentPoints) }))
+      .filter(m => m.d > 15);
+    if (farMarkers.length) {
+      rows.push(qaRow('warn', `${farMarkers.length} custom marker(s) over 15km from the route`, farMarkers.map(m => `${m.label || 'Unnamed'} (${m.d.toFixed(1)}km)`).join('<br>') + `<br><br>Fine if intentional (a hometown, a dedication point) — just confirm it wasn't a misplaced click.`));
+      tally('warn');
+    } else {
+      rows.push(qaRow('pass', `${customMarkers.length} custom marker(s)`, `All reasonably close to the route.`));
+      tally('pass');
+    }
+  }
+
+  // 4. Duplicate label names — same name printed twice reads as a mistake
+  const allNames = waypointPts.map(w => w.name.toLowerCase());
+  const dupes = [...new Set(allNames.filter((n,i) => allNames.indexOf(n) !== i))];
+  if (dupes.length) {
+    rows.push(qaRow('warn', 'Duplicate labels', `"${dupes.join('", "')}" appear more than once — check they're not printing on top of each other.`));
+    tally('warn');
+  }
+
+  // 5. Legend text vs measured distance — catches a manual override that
+  // wasn't updated after re-searching or re-uploading a different route
+  const legendVal = (document.getElementById('legendText').value || '').toLowerCase();
+  const numMatch = legendVal.match(/([\d,]+(?:\.\d+)?)\s*(mi|mile|miles|km|kilometre|kilometres|kilometer|kilometers)/);
+  if (numMatch) {
+    let n = parseFloat(numMatch[1].replace(/,/g,''));
+    const unit = numMatch[2];
+    const legendKm = unit.startsWith('mi') ? n * 1.60934 : n;
+    const diffPct = Math.abs(legendKm - measuredKm) / measuredKm * 100;
+    if (diffPct > 15) {
+      rows.push(qaRow('warn', 'Legend distance vs measured route', `Legend says ~${n} ${unit} (${legendKm.toFixed(1)}km) but the loaded route measures ${measuredKm.toFixed(1)}km — ${diffPct.toFixed(0)}% off. Likely a manual override left over from a different route.`));
+      tally('warn');
+    } else {
+      rows.push(qaRow('pass', 'Legend distance vs measured route', `${n} ${unit} in the legend is consistent with the ${measuredKm.toFixed(1)}km measured route.`));
+      tally('pass');
+    }
+  }
+
+  // 6. Licensing — OSM attribution required on anything sold
+  if (!document.getElementById('optOsmCredit').checked) {
+    rows.push(qaRow('fail', 'OpenStreetMap credit line is OFF', `Required by the ODbL licence on anything you sell. Turn it back on in Design Options → Licensing before export.`));
+    tally('fail');
+  } else {
+    rows.push(qaRow('pass', 'OpenStreetMap credit line', `On — licence compliant.`));
+    tally('pass');
+  }
+
+  const summaryEl = document.getElementById('qaReportSummary');
+  const summaryColor = fail ? '#E39A8E' : (warn ? '#D2AC72' : '#A9C9A0');
+  summaryEl.style.color = summaryColor;
+  summaryEl.textContent = fail
+    ? `${fail} check(s) failed, ${warn} warning(s) — fix before listing.`
+    : warn
+      ? `${warn} warning(s) to review — passes basic checks.`
+      : `All checks passed.`;
+  document.getElementById('qaReportBody').innerHTML = rows.join('');
+  document.getElementById('qaModal').classList.add('show');
+}
+document.getElementById('qaCheckBtn').onclick = runAccuracyCheck;
+document.getElementById('qaModal').onclick = (e) => {
+  if (e.target === document.getElementById('qaModal')) document.getElementById('qaModal').classList.remove('show');
 };
 
 // ---------------------------------------------------------------
@@ -3591,6 +3749,7 @@ function drawPoster(){
   document.getElementById('posterSvgHolder').innerHTML = svg;
   ['exportSvgBtn','exportPngBtn','exportBundleBtn','listingBtn','mockupBtn'].forEach(id => document.getElementById(id).disabled = false);
   document.getElementById('verifyBtn').disabled = isCity; // verification is for trail routes
+  document.getElementById('qaCheckBtn').disabled = isCity;
   document.getElementById('saveGpxBtn').disabled = !(currentPoints.length > 1);
 
   if (isCity) {
@@ -3624,6 +3783,28 @@ function routeDistanceKm(points){
     if (seg < 50) d += seg; // skip jumps between disconnected OSM segments
   }
   return d;
+}
+
+// Straight-line distance between two lat/lon points in km.
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Real distance from a point to the nearest vertex actually on the route —
+// used both to filter label candidates when fetching terrain, and again by
+// the Accuracy Check report to re-verify whatever is currently loaded.
+function distToRouteKm(lat, lon, routePts){
+  let best = Infinity;
+  const step = Math.max(1, Math.floor(routePts.length / 2000)); // keep it fast on long routes
+  for (let i = 0; i < routePts.length; i += step) {
+    const d = haversineKm(lat, lon, routePts[i].lat, routePts[i].lon);
+    if (d < best) best = d;
+  }
+  return best;
 }
 
 // Save fetched/loaded route as a standard GPX file (builds a permanent local library)
