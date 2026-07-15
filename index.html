@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.15</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.16</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -866,7 +866,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.15 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.16 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -947,6 +947,7 @@ Cotswold Way | England"></textarea>
       <li><b>Memory &amp; resilience fixes (v9.13):</b> exported bundle/ZIP downloads no longer pin their full file contents in tab memory for the whole session (real leak on Firefox/Safari fallback downloads — repeated big exports could exhaust the tab); the Claude facts/listing/research parsers now isolate the JSON object before parsing, so a stray conversational preamble from the model no longer fails the request; curved titles now deepen their arc in step with the title-size slider instead of crowding a fixed curve; and Nominatim geocoding calls can carry an optional contact email (NOMINATIM_CONTACT constant near the top of the script) per OSM's usage policy — blank by default, fill it in with a real address you control.</li>
       <li><b>Superroute loading fixed (v9.14):</b> trails recently restructured in OpenStreetMap into a "superroute" (a whole-trail relation whose members are day-stage <i>relations</i> rather than ways — the West Highland Way became one) failed to load with "no usable route geometry". The recursion query used Overpass's '&gt;' operator, which never follows relation members; it now uses '&gt;&gt;', which recurses through sub-relations to any depth. Batch mode got the same fix. If a whole-trail ★ entry failed for you before, it should load now.</li>
       <li><b>Terrain coverage on squat print ratios (fixed in v9.15):</b> on 4:5, 5x7, and A2 exports of tall narrow trails, the sea and terrain could stop in a hard straight line partway across the map — looking like an unintended "floating panel". Cause: terrain was fetched for a box padded around the route's own (elongated) bounding box, and squat ratios need a map window <i>wider in real km</i> than that box covered. The fetch now pads the route's narrow axis up to the long axis's scale, so every portrait ratio and near-square framing stays inside fetched data (~20% larger query area). <b>Re-run "Fetch terrain &amp; waypoints" on existing trails</b> to get the wider coverage — saved projects keep their old narrower terrain until you do. Known limit: landscape orientation on a very tall trail can still exceed coverage; use a tighter crop there.</li>
+      <li><b>Sea flood on loch/fjord coastlines (fixed in v9.16):</b> the wider v9.15 terrain fetch could paint the ENTIRE map sea-blue on trails near narrow sea lochs (e.g. the West Highland Way once Argyll's lochs entered the fetch box). Cause: sea-vs-land was decided by a single probe point offset to one side of the coastline — on a loch narrower than the probe distance at poster scale, the probe landed on the opposite shore and the land side got filled as sea. Now: several probes along each coastline vote, and any candidate sea polygon that would swallow the trail itself is rejected outright (the route is, by definition, on land). No re-fetch needed — this is a drawing fix; just redraw/re-export.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -2019,9 +2020,19 @@ function pointInPoly(pt, poly){
 }
 
 // Returns { seas:[poly], islands:[poly], openChains:[chain] }
-function buildSeaGeometry(coastXY, r){
+// routeXY (optional): projected route points — the trail is by definition on
+// LAND, so any candidate "sea" polygon containing much of it is provably wrong.
+function buildSeaGeometry(coastXY, r, routeXY){
   const chains = stitchChains(coastXY);
   const seas = [], islands = [], openChains = [];
+  const fracInside = (pts, poly) => {
+    if (!pts || !pts.length) return 0;
+    let n = 0;
+    const step = Math.max(1, Math.floor(pts.length / 120));
+    let total = 0;
+    for (let i = 0; i < pts.length; i += step){ total++; if (pointInPoly(pts[i], poly)) n++; }
+    return total ? n / total : 0;
+  };
   for (const ch of chains){
     if (chainClosed(ch)) {
       // a closed ring is an island (land) — only useful if it's actually on screen
@@ -2033,17 +2044,42 @@ function buildSeaGeometry(coastXY, r){
       openChains.push(piece);
       const t0 = perimT(piece[0], r), t1 = perimT(piece[piece.length-1], r);
       if (t0 == null || t1 == null) continue; // doesn't span the frame; can't close it reliably
-      const m = Math.floor(piece.length/2);
-      const a = piece[Math.max(0, m-1)], b = piece[Math.min(piece.length-1, m+1)];
-      let dx = b[0]-a[0], dy = b[1]-a[1];
-      const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
-      // probe just to the SEA side (right of travel)
-      const probe = [ (a[0]+b[0])/2 + (-dy)*3, (a[1]+b[1])/2 + dx*3 ];
       const ringFwd = piece.concat(perimWalk(t1, t0, +1, r)).concat([piece[0]]);
       const ringBwd = piece.concat(perimWalk(t1, t0, -1, r)).concat([piece[0]]);
-      const pick = pointInPoly(probe, ringFwd) ? ringFwd
-                 : pointInPoly(probe, ringBwd) ? ringBwd : null;
-      if (pick) seas.push(pick);
+      // SEA-SIDE VOTE: a single probe offset to the right of travel fails on
+      // narrow sea lochs/fjords — at poster scale the opposite shore can be
+      // closer than the probe distance, so the probe lands on the wrong side
+      // and the LAND ring gets filled as sea (this flooded a whole West
+      // Highland Way map blue once the fetch box widened to include Argyll's
+      // lochs). Instead, probe at several points spread along the chain and
+      // take the majority.
+      let votesFwd = 0, votesTotal = 0;
+      const nProbes = Math.min(9, Math.max(3, Math.floor(piece.length / 8)));
+      for (let k = 1; k <= nProbes; k++){
+        const idx = Math.max(1, Math.min(piece.length - 2, Math.round(piece.length * k / (nProbes + 1))));
+        const a = piece[idx - 1], b = piece[idx + 1];
+        let dx = b[0]-a[0], dy = b[1]-a[1];
+        const len = Math.hypot(dx, dy); if (len < 0.05) continue;
+        dx /= len; dy /= len;
+        const probe = [ piece[idx][0] + (-dy)*3, piece[idx][1] + dx*3 ];
+        votesTotal++;
+        if (pointInPoly(probe, ringFwd)) votesFwd++;
+      }
+      if (!votesTotal) continue;
+      let pick = (votesFwd * 2 >= votesTotal) ? ringFwd : ringBwd;
+      let other = pick === ringFwd ? ringBwd : ringFwd;
+      // ROUTE-ON-LAND CHECK: the trail cannot be in the sea. If the chosen
+      // "sea" contains a meaningful share of the route, the vote was still
+      // fooled — flip to the other ring if that one is clean; if both would
+      // drown the route, don't fill a sea from this piece at all (the
+      // shoreline-stroke fallback below still draws the coast itself).
+      if (routeXY && routeXY.length){
+        if (fracInside(routeXY, pick) > 0.15){
+          if (fracInside(routeXY, other) <= 0.15) pick = other;
+          else continue;
+        }
+      }
+      seas.push(pick);
     }
   }
   // ENCLOSED ISLAND CASE (e.g. Malta): the whole coastline sits inside the frame as
@@ -2478,7 +2514,16 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
         const c = proj.toXY(p);
         return [c.x, c.y + mapOffsetY];
       }));
-      const { seas, islands, openChains } = buildSeaGeometry(coastXY, rect);
+      const { seas, islands, openChains } = (() => {
+        // sample the route in projected space — the land-truth for the sea check
+        const routeXY = [];
+        const rStep = Math.max(1, Math.floor(currentPoints.length / 150));
+        for (let i = 0; i < currentPoints.length; i += rStep){
+          const c = proj.toXY(currentPoints[i]);
+          routeXY.push([c.x, c.y + mapOffsetY]);
+        }
+        return buildSeaGeometry(coastXY, rect, routeXY);
+      })();
 
       const toPath = (poly) => poly.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
 
