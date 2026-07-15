@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.18</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.19</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -837,6 +837,7 @@ Cotswold Way | England"></textarea>
 
     <h2 style="margin-top:20px;"><span class="step-badge">📈</span> Market research</h2>
     <p class="step-hint">Live search: which locations and styles are selling on Etsy now.</p>
+    <button class="block" id="researchBtnSidebar">🔎 Research What's Selling</button>
     <div id="researchStatus" class="status"></div>
     <div id="researchOutput" class="research-output"></div>
   </div>
@@ -870,7 +871,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product — version number is in the header, top-left</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.18 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.19 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -954,6 +955,7 @@ Cotswold Way | England"></textarea>
       <li><b>Sea flood on loch/fjord coastlines (fixed in v9.16):</b> the wider v9.15 terrain fetch could paint the ENTIRE map sea-blue on trails near narrow sea lochs (e.g. the West Highland Way once Argyll's lochs entered the fetch box). Cause: sea-vs-land was decided by a single probe point offset to one side of the coastline — on a loch narrower than the probe distance at poster scale, the probe landed on the opposite shore and the land side got filled as sea. Now: several probes along each coastline vote, and any candidate sea polygon that would swallow the trail itself is rejected outright (the route is, by definition, on land). No re-fetch needed — this is a drawing fix; just redraw/re-export.</li>
       <li><b>Grid intensity slider (new in v9.17):</b> the background grid's darkness was hardcoded and could be nearly invisible on some palettes/prints. There's now a slider under the Background grid toggle (0.03–0.35; 0.08 is the old default look) — the line weight firms up slightly as intensity rises so darker grids stay crisp rather than smudgy. Saved with defaults and projects like every other option.</li>
       <li><b>Documentation refresh (v9.18):</b> guide text brought fully up to date — style count corrected to fifteen (it still said nine), the stale "version 9.7" subtitle removed from this guide, and the Decorations summary now mentions the grid intensity slider. No functional changes.</li>
+      <li><b>Market Research button was orphaned (fixed in v9.19):</b> its heading, description, and results panel lived in the sidebar like Trail Facts and Etsy Listing above it — but its actual button was only in the top-right header, far from that section. Scrolling to Market Research showed no way to run it. There's now a matching button right in the sidebar section too; both it and the header button run the same search.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -4587,9 +4589,10 @@ function renderFacts(facts){
 }
 
 // RESEARCH
-document.getElementById('researchBtn').onclick = async () => {
+async function runMarketResearch(){
+  const btns = [document.getElementById('researchBtn'), document.getElementById('researchBtnSidebar')].filter(Boolean);
   setStatus('researchStatus','loading','Researching current Etsy trends… (20–40 seconds)');
-  document.getElementById('researchBtn').disabled = true;
+  btns.forEach(b => b.disabled = true);
   document.getElementById('researchOutput').classList.remove('show');
 
   try {
@@ -4622,9 +4625,12 @@ document.getElementById('researchBtn').onclick = async () => {
   } catch (err) {
     setStatus('researchStatus','error','Research failed: ' + err.message + ' — add your API key in the panel above if using standalone.');
   } finally {
-    document.getElementById('researchBtn').disabled = false;
+    btns.forEach(b => b.disabled = false);
   }
-};
+}
+document.getElementById('researchBtn').onclick = runMarketResearch;
+document.getElementById('researchBtnSidebar').onclick = runMarketResearch;
+
 </script>
 </body>
 </html>
