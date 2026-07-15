@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.14</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.15</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -866,7 +866,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.14 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.15 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -946,6 +946,7 @@ Cotswold Way | England"></textarea>
       <li><b>Self-review fixes (v9.12):</b> Cancel Search now also works during the automatic 3-second retry after a busy map server (previously that window ignored the button); Accuracy Check no longer flags the nearest-available labels it deliberately kept on remote routes — it reports them separately as intentional; and the legend-distance comparison can no longer print a nonsense percentage when route geometry is broken.</li>
       <li><b>Memory &amp; resilience fixes (v9.13):</b> exported bundle/ZIP downloads no longer pin their full file contents in tab memory for the whole session (real leak on Firefox/Safari fallback downloads — repeated big exports could exhaust the tab); the Claude facts/listing/research parsers now isolate the JSON object before parsing, so a stray conversational preamble from the model no longer fails the request; curved titles now deepen their arc in step with the title-size slider instead of crowding a fixed curve; and Nominatim geocoding calls can carry an optional contact email (NOMINATIM_CONTACT constant near the top of the script) per OSM's usage policy — blank by default, fill it in with a real address you control.</li>
       <li><b>Superroute loading fixed (v9.14):</b> trails recently restructured in OpenStreetMap into a "superroute" (a whole-trail relation whose members are day-stage <i>relations</i> rather than ways — the West Highland Way became one) failed to load with "no usable route geometry". The recursion query used Overpass's '&gt;' operator, which never follows relation members; it now uses '&gt;&gt;', which recurses through sub-relations to any depth. Batch mode got the same fix. If a whole-trail ★ entry failed for you before, it should load now.</li>
+      <li><b>Terrain coverage on squat print ratios (fixed in v9.15):</b> on 4:5, 5x7, and A2 exports of tall narrow trails, the sea and terrain could stop in a hard straight line partway across the map — looking like an unintended "floating panel". Cause: terrain was fetched for a box padded around the route's own (elongated) bounding box, and squat ratios need a map window <i>wider in real km</i> than that box covered. The fetch now pads the route's narrow axis up to the long axis's scale, so every portrait ratio and near-square framing stays inside fetched data (~20% larger query area). <b>Re-run "Fetch terrain &amp; waypoints" on existing trails</b> to get the wider coverage — saved projects keep their old narrower terrain until you do. Known limit: landscape orientation on a very tall trail can still exceed coverage; use a tighter crop there.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -3212,9 +3213,23 @@ document.getElementById('fetchTerrainBtn').onclick = async () => {
   const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
   const minLat = safeMin(lats), maxLat = safeMax(lats);
   const minLon = safeMin(lons), maxLon = safeMax(lons);
-  // pad generously so terrain fills the whole map area, not just the route's bounding box
-  const padLat = Math.max((maxLat - minLat) * 0.45, 0.02);
-  const padLon = Math.max((maxLon - minLon) * 0.45, 0.02);
+  // Pad so terrain covers the map window on EVERY export ratio, not just the
+  // tall 2:3 one. The route's own bounding box can be very elongated (the
+  // West Highland Way is ~2:1 tall in real km); squat ratios like 4:5, 5x7,
+  // and A2 make the visible window WIDER in km than the old route-box + 45%
+  // pad, so the sea/terrain stopped at the fetched boundary in a hard
+  // straight line — reading as a "floating panel" on those sizes only.
+  // Fix: work in latitude-corrected km-equivalent units and pad the narrow
+  // axis up to at least 1.15x the long axis, so every portrait ratio (and
+  // near-square framing) stays inside fetched data. The long axis keeps the
+  // original 45% margin.
+  const cosLat = Math.max(0.2, Math.cos(((minLat + maxLat) / 2) * Math.PI / 180));
+  const latSpan = Math.max(maxLat - minLat, 0.01), lonSpan = Math.max(maxLon - minLon, 0.01);
+  const kmH = latSpan, kmW = lonSpan * cosLat;            // spans in comparable units
+  const outH = Math.max(kmH * 1.9, kmW * 1.15);           // fetched height (km-equivalent)
+  const outW = Math.max(kmW * 1.9, kmH * 1.15);           // fetched width  (km-equivalent)
+  const padLat = Math.max((outH - latSpan) / 2, 0.02);
+  const padLon = Math.max((outW / cosLat - lonSpan) / 2, 0.02);
   const bbox = `${(minLat-padLat).toFixed(4)},${(minLon-padLon).toFixed(4)},${(maxLat+padLat).toFixed(4)},${(maxLon+padLon).toFixed(4)}`;
 
   const btn = document.getElementById('fetchTerrainBtn');
