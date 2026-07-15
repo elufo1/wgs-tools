@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.19</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.8</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -372,16 +372,6 @@
       <input id="gpxInput" type="file" accept=".gpx" style="display:none" />
     </div>
 
-    <div class="field" id="gpxSourceField" style="margin-top:8px;">
-      <label>No GPX yet? Search for one</label>
-      <div class="row3">
-        <button class="block small" id="wikilocBtn" type="button">Wikiloc</button>
-        <button class="block small" id="alltrailsBtn" type="button">AllTrails</button>
-        <button class="block small" id="komootBtn" type="button">Komoot</button>
-      </div>
-      <div class="note">Opens a search on that site using the trail name above (type it in first if it's empty). Download the GPX there, then drop it in the upload zone above.</div>
-    </div>
-
     <div id="searchStatus" class="status"></div>
     <button class="block small" id="cancelBtn" style="display:none; border-color:#A23E32; color:#E39A8E;">✕ Cancel Search</button>
 
@@ -481,10 +471,6 @@ Cotswold Way | England"></textarea>
         <div class="toggle-row"><span>Start / End markers</span><label class="toggle"><input type="checkbox" id="optMarkers" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Start / End labels</span><label class="toggle"><input type="checkbox" id="optMarkerLabels"><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Background grid</span><label class="toggle"><input type="checkbox" id="optGrid"><span class="slider"></span></label></div>
-        <div class="field" style="margin-top:2px;">
-          <label>Grid intensity — <span id="gridIntVal">0.08</span> <span style="text-transform:none; font-weight:400;">(higher = darker; 0.08 is the classic subtle look)</span></label>
-          <input type="range" id="optGridIntensity" min="0.03" max="0.35" step="0.01" value="0.08" />
-        </div>
         <div class="toggle-row"><span>Double border frame</span><label class="toggle"><input type="checkbox" id="optFrame" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><span>Elevation profile (GPX only)</span><label class="toggle"><input type="checkbox" id="optElevation" checked><span class="slider"></span></label></div>
         <div class="row" style="margin-top:10px;">
@@ -749,7 +735,6 @@ Cotswold Way | England"></textarea>
 
     <div class="row" style="max-width:560px; width:100%;">
       <button class="block small" id="verifyBtn" disabled>🔍 Verify route against real map</button>
-      <button class="block small" id="qaCheckBtn" disabled>🛡 Run Accuracy Check</button>
       <button class="block small" id="mockupBtn" disabled>🖼 Wall mockup PNG</button>
     </div>
     <div class="toggle-row" style="max-width:560px; width:100%; border:none;"><span style="font-size:11.5px;">Mockup: transparent background (frame + poster only, for layering in Photoshop)</span><label class="toggle"><input type="checkbox" id="optMockupTransparent"><span class="slider"></span></label></div>
@@ -837,7 +822,6 @@ Cotswold Way | England"></textarea>
 
     <h2 style="margin-top:20px;"><span class="step-badge">📈</span> Market research</h2>
     <p class="step-hint">Live search: which locations and styles are selling on Etsy now.</p>
-    <button class="block" id="researchBtnSidebar">🔎 Research What's Selling</button>
     <div id="researchStatus" class="status"></div>
     <div id="researchOutput" class="research-output"></div>
   </div>
@@ -852,17 +836,6 @@ Cotswold Way | England"></textarea>
     <p style="font-size:12px;">If the gold line follows the mapped trail/terrain sensibly, the geometry is good. Small gaps between OSM segments show as straight jumps — cosmetic on long trails.</p>
     <div id="verifyMapHolder" style="position:relative; width:100%; overflow:hidden; border-radius:6px; background:#0a0f14;"></div>
   </div>
-</div>
-
-<!-- QA CHECK MODAL -->
-<div class="modal-overlay" id="qaModal">
-  <div class="modal" style="max-width:640px;">
-    <button class="close-x" onclick="document.getElementById('qaModal').classList.remove('show')">✕</button>
-    <h3>Accuracy check report</h3>
-    <div class="modal-sub">Automated checks — a machine-readable pass over the same things Layer 2 QA asks you to eyeball. Doesn't replace the manual gates, catches the mistakes those miss.</div>
-    <div id="qaReportSummary" style="font-size:13px; font-weight:700; margin:10px 0 4px;"></div>
-    <div id="qaReportBody"></div>
-  </div>
 </div></div>
 
 <!-- HELP MODAL -->
@@ -870,8 +843,8 @@ Cotswold Way | England"></textarea>
   <div class="modal">
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
-    <div class="modal-sub">From real trail to Etsy-ready product — version number is in the header, top-left</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.19 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.8 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -911,7 +884,6 @@ Cotswold Way | England"></textarea>
       <p style="margin:10px 0 8px;"><b>Layer 2 — Product QA</b> (every poster, before it is listed anywhere):</p>
       <ol style="margin:4px 0;">
         <li><b>🔍 Verify route</b> against the real map — the drawn line must follow the actual trail sensibly.</li>
-        <li><b>🛡 Run Accuracy Check</b> — the automated report catches what a quick eyeball can miss: mislabelled peaks/towns, duplicate labels, legend text that doesn't match the measured route, missing licence attribution.</li>
         <li><b>Facts check:</b> legend distance and established year confirmed against one official source (trail authority or Wikipedia).</li>
         <li><b>Start / Finish:</b> geographically correct ends, labels not overlapping the route (use the nudge sliders).</li>
         <li><b>Export check:</b> open the exported PNGs themselves — not just the on-screen preview — at full zoom.</li>
@@ -928,7 +900,7 @@ Cotswold Way | England"></textarea>
     <h4>Design options (left panel)</h4>
     <ul>
       <li><b>Layout &amp; line:</b> portrait/landscape/square, line thickness, solid/dashed/dotted route, smoothing for very detailed routes.</li>
-      <li><b>Decorations:</b> compass rose (ornate 8-point by default), corner coordinates, start/end markers with custom labels, background grid (with its own intensity slider), frame, elevation profile, and a <b>route outline</b> so the line stays readable over terrain.</li>
+      <li><b>Decorations:</b> compass rose (ornate 8-point by default), corner coordinates, start/end markers with custom labels, background grid, frame, elevation profile, and a <b>route outline</b> so the line stays readable over terrain.</li>
       <li><b>🌊 Terrain edition:</b> real water, woodland, moorland, glaciers, rivers and streams from live OSM data — plus <b>the sea</b>, reconstructed from coastline data so coastal routes no longer render the ocean as dry land. Water can be solid, hatched, or ruled lines.</li>
       <li><b>📍 Custom markers:</b> click <b>"Click on the map to place a marker"</b>, then click any spot on the poster. Click near a named peak or village and its name fills in automatically. Choose an icon first (pin, tent, peak, heart, star, dot). You can also type them: <b>Label | place or lat,lon | icon</b>. Labels auto-place to a free side and suppress any duplicate peak label beneath them. If a marker sits outside the picture, turn on <b>Fit all markers inside the frame</b>.</li>
       <li><b>🔲 Map framing:</b> padding slider crops tight or leaves a wide margin; the shift sliders move the view when you're zoomed in.</li>
@@ -940,27 +912,14 @@ Cotswold Way | England"></textarea>
       <li><b>Typography size:</b> title and subtitle scale sliders, for very long or very short trail names.</li>
       <li><b>Licensing:</b> the <b>OpenStreetMap credit line is required</b> on anything you sell (ODbL). Keep it on <b>Full</b> wording for listings; position it with the X/Y sliders. Turning it off is possible but not licence-compliant.</li>
       <li><b>Search:</b> "Find Real Route" searches your region, then worldwide routes, then worldwide paths, and offers a <b>pick-list</b> when several trails match. Route segments are automatically stitched into true walking order, so distances are accurate. If search fails, use <b>Test map-data connection</b> to see which servers are blocked.</li>
-      <li><b>📍 Custom markers (new in v9.7):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
-      <li><b>🔲 Map framing (new in v9.7):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
-      <li><b>Two new monochrome styles (new in v9.7):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
-      <li><b>Search external GPX sources (new in v9.8):</b> when OpenStreetMap has no usable route for a trail, one-click buttons open a pre-filled search on Wikiloc, AllTrails, or Komoot — download the GPX there, then drop it in the upload zone above.</li>
-      <li><b>Accurate peak/village labels (fixed in v9.9):</b> labelled peaks and towns are now checked against real distance to the route line, not just whether they fall inside the wide terrain bounding box. Peaks within 10km and villages within 6km are kept (falling back to nearest available on remote routes) — so a poster no longer labels a town or summit that's actually many miles from the trail as if it sits right beside it.</li>
-      <li><b>🛡 Run Accuracy Check (new in v9.10):</b> an automated report next to "Verify route" — re-checks every loaded peak/village label's real distance to the route, flags custom markers placed far off-route, catches duplicate labels, cross-checks the legend distance text against the measured route, and confirms the OSM credit line is on. Catches mistakes a quick eyeball can miss, and also re-audits <b>old saved projects</b> that were built before the v9.9 label fix — those still have the old, less accurate labels baked in until you re-run "Fetch terrain &amp; waypoints" or open Accuracy Check to see what's off. Doesn't replace Layer 2 QA — it's a machine pass alongside it, not instead of it.</li>
-      <li><b>Cancel Search now actually works (fixed in v9.11):</b> the button existed but had no click handler wired up — clicking it did nothing. It now aborts the in-flight request properly.</li>
-      <li><b>Smoother sliders and typing (fixed in v9.11):</b> every slider and text field was rebuilding the full poster SVG on every single tick/keystroke with no debounce — noticeable lag on detailed or terrain-heavy routes. Redraws are now debounced to 120ms, so dragging a slider or typing a title feels smooth instead of rebuilding thousands of SVG nodes per event.</li>
-      <li><b>Self-review fixes (v9.12):</b> Cancel Search now also works during the automatic 3-second retry after a busy map server (previously that window ignored the button); Accuracy Check no longer flags the nearest-available labels it deliberately kept on remote routes — it reports them separately as intentional; and the legend-distance comparison can no longer print a nonsense percentage when route geometry is broken.</li>
-      <li><b>Memory &amp; resilience fixes (v9.13):</b> exported bundle/ZIP downloads no longer pin their full file contents in tab memory for the whole session (real leak on Firefox/Safari fallback downloads — repeated big exports could exhaust the tab); the Claude facts/listing/research parsers now isolate the JSON object before parsing, so a stray conversational preamble from the model no longer fails the request; curved titles now deepen their arc in step with the title-size slider instead of crowding a fixed curve; and Nominatim geocoding calls can carry an optional contact email (NOMINATIM_CONTACT constant near the top of the script) per OSM's usage policy — blank by default, fill it in with a real address you control.</li>
-      <li><b>Superroute loading fixed (v9.14):</b> trails recently restructured in OpenStreetMap into a "superroute" (a whole-trail relation whose members are day-stage <i>relations</i> rather than ways — the West Highland Way became one) failed to load with "no usable route geometry". The recursion query used Overpass's '&gt;' operator, which never follows relation members; it now uses '&gt;&gt;', which recurses through sub-relations to any depth. Batch mode got the same fix. If a whole-trail ★ entry failed for you before, it should load now.</li>
-      <li><b>Terrain coverage on squat print ratios (fixed in v9.15):</b> on 4:5, 5x7, and A2 exports of tall narrow trails, the sea and terrain could stop in a hard straight line partway across the map — looking like an unintended "floating panel". Cause: terrain was fetched for a box padded around the route's own (elongated) bounding box, and squat ratios need a map window <i>wider in real km</i> than that box covered. The fetch now pads the route's narrow axis up to the long axis's scale, so every portrait ratio and near-square framing stays inside fetched data (~20% larger query area). <b>Re-run "Fetch terrain &amp; waypoints" on existing trails</b> to get the wider coverage — saved projects keep their old narrower terrain until you do. Known limit: landscape orientation on a very tall trail can still exceed coverage; use a tighter crop there.</li>
-      <li><b>Sea flood on loch/fjord coastlines (fixed in v9.16):</b> the wider v9.15 terrain fetch could paint the ENTIRE map sea-blue on trails near narrow sea lochs (e.g. the West Highland Way once Argyll's lochs entered the fetch box). Cause: sea-vs-land was decided by a single probe point offset to one side of the coastline — on a loch narrower than the probe distance at poster scale, the probe landed on the opposite shore and the land side got filled as sea. Now: several probes along each coastline vote, and any candidate sea polygon that would swallow the trail itself is rejected outright (the route is, by definition, on land). No re-fetch needed — this is a drawing fix; just redraw/re-export.</li>
-      <li><b>Grid intensity slider (new in v9.17):</b> the background grid's darkness was hardcoded and could be nearly invisible on some palettes/prints. There's now a slider under the Background grid toggle (0.03–0.35; 0.08 is the old default look) — the line weight firms up slightly as intensity rises so darker grids stay crisp rather than smudgy. Saved with defaults and projects like every other option.</li>
-      <li><b>Documentation refresh (v9.18):</b> guide text brought fully up to date — style count corrected to fifteen (it still said nine), the stale "version 9.7" subtitle removed from this guide, and the Decorations summary now mentions the grid intensity slider. No functional changes.</li>
-      <li><b>Market Research button was orphaned (fixed in v9.19):</b> its heading, description, and results panel lived in the sidebar like Trail Facts and Etsy Listing above it — but its actual button was only in the top-right header, far from that section. Scrolling to Market Research showed no way to run it. There's now a matching button right in the sidebar section too; both it and the header button run the same search.</li>
+      <li><b>📍 Custom markers (new in v9.8):</b> add your own named points — a summit, a campsite, "where we met". Type one per line as <b>Label | place or lat,lon</b>. Place names are looked up automatically; coordinates plot instantly. Great for personalised gift posters. Saved with the project.</li>
+      <li><b>🔲 Map framing (new in v9.8):</b> the padding/zoom slider controls how tightly the poster crops the route — Tight crop fills the poster with the route, Wide margin shows more surrounding area. The two shift sliders move the view to reveal a different part of the surroundings when zoomed in. Reset by setting padding to Balanced and both shifts to 0.</li>
+      <li><b>Two new monochrome styles (new in v9.8):</b> <b>Noir</b> (white on black) and <b>Ink on White</b> (black on white) — strict high-contrast looks that sell well as minimalist decor.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
     <h4>Step 2 — Style it</h4>
-    <p>Fifteen style swatches: Vintage, Minimal, Bold, Dark, Pastel, Blueprint, Forest, Desert, Mono, Midnight, Ocean, Rose, Alpine, Noir, and Ink on White. Titles and subtitles have built-in suggestions; the legend has one-click templates.</p>
+    <p>Nine style swatches: Vintage, Minimal, Bold, Dark, Pastel, Blueprint, Forest, Desert, and Mono. Titles and subtitles have built-in suggestions; the legend has one-click templates.</p>
 
     <h4>Step 3 — Export</h4>
     <p><b>Quick PNG</b> gives a single preview image. <b>SVG</b> is the editable master for Recraft/Illustrator. <b>📦 Full Etsy Bundle</b> is the real product: tick the print sizes you want to sell, and it generates every one at true 300 DPI, plus the SVG and a ready-written "How to Print" guide for buyers, zipped into one file — upload that ZIP straight to your Etsy digital listing.</p>
@@ -1025,13 +984,6 @@ const ROAD_CLASSES = {
 };
 
 // Overpass with automatic mirror fallback
-// Optional contact for Nominatim geocoding requests — their usage policy asks
-// heavier users to be identifiable. Fill in a real email you control to be a
-// good citizen; leave blank and requests still work (fine at this tool's
-// one-person volume). Never invent an address here.
-const NOMINATIM_CONTACT = '';
-const nominatimContactParam = () => NOMINATIM_CONTACT ? '&email=' + encodeURIComponent(NOMINATIM_CONTACT) : '';
-
 const OVERPASS_MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
@@ -1060,26 +1012,14 @@ async function fetchOverpass(query){
           // server overloaded/rate-limited — wait briefly and retry once before giving up on this mirror
           lastErr = new Error('map server busy (status ' + resp.status + ')');
           await new Promise(r => setTimeout(r, 3000));
-          // user may have clicked Cancel during the 3s backoff — honour it before retrying
-          if (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'cancelled') {
-            throw new Error('Search cancelled.');
-          }
-          // reuse activeFetchController for the retry so the Cancel button can
-          // abort it too — a detached controller here would make Cancel a no-op
-          // during the retry request
-          activeFetchController = new AbortController();
-          const retryTimeout = setTimeout(() => activeFetchController.abort('timeout'), 45000);
+          const retryController = new AbortController();
+          const retryTimeout = setTimeout(() => retryController.abort('timeout'), 45000);
           try {
-            const retryResp = await fetch(target, { ...opts, signal: activeFetchController.signal });
+            const retryResp = await fetch(target, { ...opts, signal: retryController.signal });
             clearTimeout(retryTimeout);
             if (retryResp.ok) return retryResp.json();
             lastErr = new Error('map server still busy (status ' + retryResp.status + ') — try again in a few minutes, or use a GPX file');
-          } catch (e2) {
-            clearTimeout(retryTimeout);
-            if (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'cancelled') {
-              throw new Error('Search cancelled.');
-            }
-          }
+          } catch (e2) { clearTimeout(retryTimeout); }
           break;
         }
         lastErr = new Error('map server returned ' + resp.status);
@@ -1096,16 +1036,6 @@ async function fetchOverpass(query){
   throw new Error((lastErr && lastErr.message || 'all map servers unreachable') +
     '. If you are previewing inside the Claude chat, download this file and open it directly in your browser — map data cannot load inside the chat preview.');
 }
-
-// Cancel Search — previously had no click handler at all, so the button did
-// nothing when clicked. Aborting the currently in-flight controller makes
-// the active fetchOverpass() attempt reject with a 'cancelled' reason, which
-// the catch block already checks for and throws out of the whole function
-// (not just the current mirror) — that part of the logic was already correct,
-// it just never had anything to trigger it.
-document.getElementById('cancelBtn').onclick = () => {
-  if (activeFetchController) activeFetchController.abort('cancelled');
-};
 
 // elapsed-seconds ticker for long fetches
 let fetchTicker = null;
@@ -1131,7 +1061,7 @@ document.getElementById('cityBtn').onclick = async () => {
 
   try {
     // 1. Geocode
-    const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1${nominatimContactParam()}`, {
+    const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
       headers: { 'Accept': 'application/json' }
     });
     const geo = await geoResp.json();
@@ -1382,23 +1312,9 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
-// drawPoster() rebuilds the entire SVG — on detailed/terrain routes that's
-// thousands of DOM nodes. The 'input' event fires on every slider tick and
-// every keystroke (including posterTitle/subtitle/legendText, which are in
-// optionIds below), so without debouncing this can visibly lag while
-// dragging a slider or typing a title. Debounced to 120ms — imperceptible
-// as a delay, but collapses a slider drag or a burst of keystrokes into one
-// redraw instead of dozens. Only used here; every other drawPoster() call
-// elsewhere in the file stays synchronous as before.
-function debounce(fn, wait){
-  let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
-}
-const debouncedDrawPoster = debounce(() => drawPoster(), 120);
-
-const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optGridIntensity','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optStars','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optFloatingPanel','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
+const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optStars','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optFloatingPanel','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal', optOsmDX:'osmDXVal', optOsmDY:'osmDYVal', optStages:'stageVal' };
-const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal', optGridIntensity:'gridIntVal' };
+const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
 const framePadLabel = (v) => { v = parseFloat(v); return v <= 6 ? 'Tight crop' : v <= 12 ? 'Balanced' : v <= 20 ? 'Roomy' : 'Wide margin'; };
 optionIds.forEach(id => {
   const el = document.getElementById(id);
@@ -1411,7 +1327,7 @@ optionIds.forEach(id => {
     if (id === 'optOnRouteKm') document.getElementById('onRouteVal').textContent = parseFloat(el.value).toFixed(1);
     if (id === 'optLegendLayout') document.getElementById('keepsakeNote').style.display = (el.value === 'keepsake') ? 'block' : 'none';
     if (scaleLabelMap[id]) document.getElementById(scaleLabelMap[id]).textContent = parseFloat(el.value).toFixed(2);
-    debouncedDrawPoster();
+    drawPoster();
   });
 });
 
@@ -1435,18 +1351,6 @@ function setStatus(elId, type, msg){
   const el = document.getElementById(elId);
   el.className = 'status show ' + type;
   el.textContent = msg;
-}
-
-// Nudges attention toward the Wikiloc/AllTrails/Komoot buttons when OSM has
-// nothing usable — a brief brass outline flash, not a popup, so it doesn't
-// interrupt whatever else is happening on the page.
-function nudgeGpxSourceField(){
-  const el = document.getElementById('gpxSourceField');
-  if (!el) return;
-  el.style.transition = 'box-shadow .2s ease';
-  el.style.boxShadow = '0 0 0 2px var(--brass)';
-  el.style.borderRadius = '5px';
-  setTimeout(() => { el.style.boxShadow = 'none'; }, 1600);
 }
 
 // ---------------------------------------------------------------
@@ -1588,24 +1492,19 @@ async function loadOsmFeature(type, id, displayName){
   startTicker('searchStatus', `Downloading "${displayName}"…`);
   document.getElementById('searchResults').style.display = 'none';
   try {
-    // For a relation, recurse with '>>' (recurse down relations, complete):
-    // it follows sub-relations to ANY depth and collects every way and node
-    // beneath them. This matters because trails get restructured in OSM into
-    // "superroutes" — a relation whose members are OTHER relations (the
-    // day-stage segments). The previous query used '(._;>;)' twice, but '>'
-    // only returns a relation's *way and node* members — it never follows
-    // relation members at all, so applying it twice to a superroute of
-    // relations yielded no geometry twice. That bug was invisible while
-    // routes like the West Highland Way were flat relations of ways, and
-    // surfaced the day OSM mappers restructured them into stage superroutes.
+    // For a relation, recurse TWICE: a plain route relation only needs one level down
+    // to its ways, but a "superroute" (a relation whose members are OTHER relations —
+    // the day-stage segments, as seen for trails like the West Highland Way) needs a
+    // second pass to reach the actual path geometry inside those stage relations.
+    // Applying (._;>;) twice is a safe, standard way to resolve up to two levels of
+    // relation-of-relations without assuming unlimited nesting depth.
     const q = type === 'relation'
-      ? `[out:json][timeout:90];\nrelation(id:${id});\n(._;>>;);\nout geom;`
+      ? `[out:json][timeout:90];\nrelation(id:${id});\n(._;>;);\n(._;>;);\nout geom;`
       : `[out:json][timeout:90];\n${type}(id:${id});\nout geom;`;
     const data = await fetchOverpass(q);
     const points = extractPointsFromOverpass(data);
     if (points.length < 2) {
-      setStatus('searchStatus','error', `"${displayName}" has no usable route geometry in OpenStreetMap. Try another match, or search Wikiloc/AllTrails/Komoot below.`);
-      nudgeGpxSourceField();
+      setStatus('searchStatus','error', `"${displayName}" has no usable route geometry in OpenStreetMap. Try another match, or upload a GPX.`);
       return;
     }
     // SANITY CHECK: catch a silently-truncated route instead of loading it as if
@@ -1654,7 +1553,8 @@ function showSearchResults(list, term){
     btn.className = 'result-row';
     const isSuperroute = r.tags.type === 'superroute';
     const kind = isSuperroute ? '★ whole-trail relation' : r.type === 'relation' ? 'route relation (may be one stage)' : 'path/way';
-    const where = [r.tags.ref, r.tags.operator, r.tags.network].filter(Boolean).join(' · ');
+    const memberCount = r.type === 'relation' && Array.isArray(r.members) ? `${r.members.length} members` : '';
+    const where = [r.tags.ref, r.tags.operator, r.tags.network, memberCount].filter(Boolean).join(' · ');
     if (isSuperroute) btn.style.borderColor = 'var(--brass)';
     btn.innerHTML = `<b>${escapeXml(r.tags.name)}</b><span class="rmeta">${kind}${where ? ' · ' + escapeXml(where) : ''} · osm ${r.type}/${r.id}</span>`;
     btn.onclick = () => loadOsmFeature(r.type, r.id, r.tags.name);
@@ -1712,25 +1612,28 @@ document.getElementById('searchBtn').onclick = async () => {
       try { data = await fetchOverpass(a.q); } catch (e) { continue; }
       const els = (data.elements || []).filter(e => e.tags && e.tags.name);
       if (els.length) {
-        // collapse duplicates: keep the best feature per unique name
+        // Collapse near-duplicates, but NOT same-named relations with different OSM
+        // ids — long US trails (Appalachian Trail, PCT, CDT) commonly have several
+        // relations sharing the identical name, including old/broken ones alongside
+        // the current one. Silently picking "whichever came back last" could choose
+        // the broken one invisibly. Key on id when it's a relation, not just name.
         const rank = (e) => e.tags.type === 'superroute' ? 3 : e.type === 'relation' ? 2 : 1;
-        const byName = new Map();
+        const byKey = new Map();
         els.forEach(e => {
-          const k = e.tags.name.toLowerCase();
-          const prev = byName.get(k);
-          if (!prev || rank(e) > rank(prev)) byName.set(k, e);
+          const k = e.type === 'relation' ? `rel:${e.id}` : e.tags.name.toLowerCase();
+          const prev = byKey.get(k);
+          if (!prev || rank(e) > rank(prev)) byKey.set(k, e);
         });
         // sort BEFORE capping to 12, so a superroute (the whole-trail entry) can never
         // get pushed out by a long list of individual day-stage segments
-        found = [...byName.values()].sort((a,b) => rank(b) - rank(a)).slice(0, 12);
+        found = [...byKey.values()].sort((a,b) => rank(b) - rank(a)).slice(0, 12);
         break;
       }
     }
 
     if (!found.length) {
       setStatus('searchStatus','error',
-        `No match for "${name}" on OpenStreetMap.\n\nThings to try:\n• Use the trail's official OSM name (e.g. "John Muir Trail", not "Half Dome hike").\n• Drop the region box and search worldwide.\n• Try a shorter fragment of the name.\n• Or search Wikiloc/AllTrails/Komoot below — that always works.`);
-      nudgeGpxSourceField();
+        `No match for "${name}" on OpenStreetMap.\n\nThings to try:\n• Use the trail's official OSM name (e.g. "John Muir Trail", not "Half Dome hike").\n• Drop the region box and search worldwide.\n• Try a shorter fragment of the name.\n• Or upload a GPX below — that always works.`);
       return;
     }
 
@@ -1764,34 +1667,6 @@ uploadZone.ondrop = (e) => {
   if (e.dataTransfer.files.length) handleGpxFile(e.dataTransfer.files[0]);
 };
 gpxInput.onchange = (e) => { if (e.target.files.length) handleGpxFile(e.target.files[0]); };
-
-// ---------------------------------------------------------------
-// EXTERNAL GPX SOURCE SEARCH
-// OSM sometimes has no usable geometry for a named trail (long treks like
-// Everest Base Camp are often not mapped as one continuous relation). These
-// buttons skip the manual "open a new tab and search" step by building a
-// pre-filled search URL on the three sites people actually get GPX files
-// from. Downloads still happen on-site (login walls / anti-scraping mean
-// this can't be automated further) — the file then comes back in via the
-// upload zone above, same as any other GPX.
-function currentTrailQuery(){
-  const name = document.getElementById('trailName').value.trim();
-  const region = document.getElementById('trailRegion').value.trim();
-  if (!name) { setStatus('searchStatus','error','Type a trail name above first, then search a source.'); return null; }
-  return region ? `${name} ${region}` : name;
-}
-document.getElementById('wikilocBtn').onclick = () => {
-  const q = currentTrailQuery(); if (!q) return;
-  window.open(`https://www.wikiloc.com/wikiloc/find.do?q=${encodeURIComponent(q)}`, '_blank', 'noopener');
-};
-document.getElementById('alltrailsBtn').onclick = () => {
-  const q = currentTrailQuery(); if (!q) return;
-  window.open(`https://www.alltrails.com/search?q=${encodeURIComponent(q)}`, '_blank', 'noopener');
-};
-document.getElementById('komootBtn').onclick = () => {
-  const q = currentTrailQuery(); if (!q) return;
-  window.open(`https://www.komoot.com/discover?query=${encodeURIComponent(q)}`, '_blank', 'noopener');
-};
 
 // Match a messy GPX filename against the known preset trails (e.g. "WHW2026" → West Highland Way)
 function matchKnownTrail(guess){
@@ -2028,19 +1903,9 @@ function pointInPoly(pt, poly){
 }
 
 // Returns { seas:[poly], islands:[poly], openChains:[chain] }
-// routeXY (optional): projected route points — the trail is by definition on
-// LAND, so any candidate "sea" polygon containing much of it is provably wrong.
-function buildSeaGeometry(coastXY, r, routeXY){
+function buildSeaGeometry(coastXY, r){
   const chains = stitchChains(coastXY);
   const seas = [], islands = [], openChains = [];
-  const fracInside = (pts, poly) => {
-    if (!pts || !pts.length) return 0;
-    let n = 0;
-    const step = Math.max(1, Math.floor(pts.length / 120));
-    let total = 0;
-    for (let i = 0; i < pts.length; i += step){ total++; if (pointInPoly(pts[i], poly)) n++; }
-    return total ? n / total : 0;
-  };
   for (const ch of chains){
     if (chainClosed(ch)) {
       // a closed ring is an island (land) — only useful if it's actually on screen
@@ -2052,42 +1917,17 @@ function buildSeaGeometry(coastXY, r, routeXY){
       openChains.push(piece);
       const t0 = perimT(piece[0], r), t1 = perimT(piece[piece.length-1], r);
       if (t0 == null || t1 == null) continue; // doesn't span the frame; can't close it reliably
+      const m = Math.floor(piece.length/2);
+      const a = piece[Math.max(0, m-1)], b = piece[Math.min(piece.length-1, m+1)];
+      let dx = b[0]-a[0], dy = b[1]-a[1];
+      const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+      // probe just to the SEA side (right of travel)
+      const probe = [ (a[0]+b[0])/2 + (-dy)*3, (a[1]+b[1])/2 + dx*3 ];
       const ringFwd = piece.concat(perimWalk(t1, t0, +1, r)).concat([piece[0]]);
       const ringBwd = piece.concat(perimWalk(t1, t0, -1, r)).concat([piece[0]]);
-      // SEA-SIDE VOTE: a single probe offset to the right of travel fails on
-      // narrow sea lochs/fjords — at poster scale the opposite shore can be
-      // closer than the probe distance, so the probe lands on the wrong side
-      // and the LAND ring gets filled as sea (this flooded a whole West
-      // Highland Way map blue once the fetch box widened to include Argyll's
-      // lochs). Instead, probe at several points spread along the chain and
-      // take the majority.
-      let votesFwd = 0, votesTotal = 0;
-      const nProbes = Math.min(9, Math.max(3, Math.floor(piece.length / 8)));
-      for (let k = 1; k <= nProbes; k++){
-        const idx = Math.max(1, Math.min(piece.length - 2, Math.round(piece.length * k / (nProbes + 1))));
-        const a = piece[idx - 1], b = piece[idx + 1];
-        let dx = b[0]-a[0], dy = b[1]-a[1];
-        const len = Math.hypot(dx, dy); if (len < 0.05) continue;
-        dx /= len; dy /= len;
-        const probe = [ piece[idx][0] + (-dy)*3, piece[idx][1] + dx*3 ];
-        votesTotal++;
-        if (pointInPoly(probe, ringFwd)) votesFwd++;
-      }
-      if (!votesTotal) continue;
-      let pick = (votesFwd * 2 >= votesTotal) ? ringFwd : ringBwd;
-      let other = pick === ringFwd ? ringBwd : ringFwd;
-      // ROUTE-ON-LAND CHECK: the trail cannot be in the sea. If the chosen
-      // "sea" contains a meaningful share of the route, the vote was still
-      // fooled — flip to the other ring if that one is clean; if both would
-      // drown the route, don't fill a sea from this piece at all (the
-      // shoreline-stroke fallback below still draws the coast itself).
-      if (routeXY && routeXY.length){
-        if (fracInside(routeXY, pick) > 0.15){
-          if (fracInside(routeXY, other) <= 0.15) pick = other;
-          else continue;
-        }
-      }
-      seas.push(pick);
+      const pick = pointInPoly(probe, ringFwd) ? ringFwd
+                 : pointInPoly(probe, ringBwd) ? ringBwd : null;
+      if (pick) seas.push(pick);
     }
   }
   // ENCLOSED ISLAND CASE (e.g. Malta): the whole coastline sits inside the frame as
@@ -2252,8 +2092,7 @@ function buildSvg(W, H){
     let gridLines = '';
     for (let x = gridStep; x < W; x += gridStep) gridLines += `<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
     for (let y = gridStep; y < H; y += gridStep) gridLines += `<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
-    const gridOp = parseFloat(document.getElementById('optGridIntensity').value) || 0.08;
-    parts.push(`<g stroke="${s.text}" stroke-width="${(0.4 + gridOp).toFixed(2)}" opacity="${gridOp.toFixed(2)}">${gridLines}</g>`);
+    parts.push(`<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`);
   }
 
   // frame
@@ -2325,9 +2164,7 @@ function buildSvg(W, H){
   const sScale = parseFloat(document.getElementById('optSubScale').value) || 1;
   if (titleStyle === 'arc') {
     const arcId = 'titlearc' + Math.random().toString(36).slice(2,7);
-    // Arc depth follows the title scale (bounded) — a 1.4× title on a fixed
-    // arc crowds the curve; at the default scale of 1.0 this is unchanged.
-    const arcRise = 26 * scaleFactor * Math.max(0.75, Math.min(1.4, tScale));
+    const arcRise = 26 * scaleFactor;
     parts.push(`<defs><path id="${arcId}" d="M ${W*0.12},${titleY + arcRise*0.4} Q ${W/2},${titleY - arcRise} ${W*0.88},${titleY + arcRise*0.4}" fill="none"/></defs>`);
     parts.push(`<text font-family="${_F.title}" font-weight="600" font-size="${fs(30*tScale)}" fill="${s.text}" letter-spacing="${scaleFactor}"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">${escapeXml(title.toUpperCase())}</textPath></text>`);
   } else {
@@ -2510,8 +2347,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
       let gridLines = '';
       for (let x = gridStep; x < W; x += gridStep) gridLines += `<line x1="${x}" y1="${panelTop}" x2="${x}" y2="${panelBottom}"/>`;
       for (let y = gridStep; y < H; y += gridStep) if (y > panelTop && y < panelBottom) gridLines += `<line x1="${tm}" y1="${y}" x2="${W-tm}" y2="${y}"/>`;
-      const gridOp2 = parseFloat(document.getElementById('optGridIntensity').value) || 0.08;
-      landWater += `<g stroke="${s.text}" stroke-width="${(0.4 + gridOp2).toFixed(2)}" opacity="${gridOp2.toFixed(2)}">${gridLines}</g>`;
+      landWater += `<g stroke="${s.text}" stroke-width="0.4" opacity="0.08">${gridLines}</g>`;
     }
 
 
@@ -2524,16 +2360,7 @@ function buildTrailSvgParts(W, H, s, scaleFactor, mapOffsetY, mapAreaH, legendAr
         const c = proj.toXY(p);
         return [c.x, c.y + mapOffsetY];
       }));
-      const { seas, islands, openChains } = (() => {
-        // sample the route in projected space — the land-truth for the sea check
-        const routeXY = [];
-        const rStep = Math.max(1, Math.floor(currentPoints.length / 150));
-        for (let i = 0; i < currentPoints.length; i += rStep){
-          const c = proj.toXY(currentPoints[i]);
-          routeXY.push([c.x, c.y + mapOffsetY]);
-        }
-        return buildSeaGeometry(coastXY, rect, routeXY);
-      })();
+      const { seas, islands, openChains } = buildSeaGeometry(coastXY, rect);
 
       const toPath = (poly) => poly.map((p,i) => (i===0?'M ':'L ') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + ' Z';
 
@@ -3241,7 +3068,7 @@ document.getElementById('addMarkersBtn').onclick = async () => {
   const failed = [];
   for (const g of toGeocode) {
     try {
-      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1${nominatimContactParam()}`, { headers: { 'Accept':'application/json' } });
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
       if (data.length) resolved.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label, icon: g.icon });
@@ -3268,23 +3095,9 @@ document.getElementById('fetchTerrainBtn').onclick = async () => {
   const lats = currentPoints.map(p=>p.lat), lons = currentPoints.map(p=>p.lon);
   const minLat = safeMin(lats), maxLat = safeMax(lats);
   const minLon = safeMin(lons), maxLon = safeMax(lons);
-  // Pad so terrain covers the map window on EVERY export ratio, not just the
-  // tall 2:3 one. The route's own bounding box can be very elongated (the
-  // West Highland Way is ~2:1 tall in real km); squat ratios like 4:5, 5x7,
-  // and A2 make the visible window WIDER in km than the old route-box + 45%
-  // pad, so the sea/terrain stopped at the fetched boundary in a hard
-  // straight line — reading as a "floating panel" on those sizes only.
-  // Fix: work in latitude-corrected km-equivalent units and pad the narrow
-  // axis up to at least 1.15x the long axis, so every portrait ratio (and
-  // near-square framing) stays inside fetched data. The long axis keeps the
-  // original 45% margin.
-  const cosLat = Math.max(0.2, Math.cos(((minLat + maxLat) / 2) * Math.PI / 180));
-  const latSpan = Math.max(maxLat - minLat, 0.01), lonSpan = Math.max(maxLon - minLon, 0.01);
-  const kmH = latSpan, kmW = lonSpan * cosLat;            // spans in comparable units
-  const outH = Math.max(kmH * 1.9, kmW * 1.15);           // fetched height (km-equivalent)
-  const outW = Math.max(kmW * 1.9, kmH * 1.15);           // fetched width  (km-equivalent)
-  const padLat = Math.max((outH - latSpan) / 2, 0.02);
-  const padLon = Math.max((outW / cosLat - lonSpan) / 2, 0.02);
+  // pad generously so terrain fills the whole map area, not just the route's bounding box
+  const padLat = Math.max((maxLat - minLat) * 0.45, 0.02);
+  const padLon = Math.max((maxLon - minLon) * 0.45, 0.02);
   const bbox = `${(minLat-padLat).toFixed(4)},${(minLon-padLon).toFixed(4)},${(maxLat+padLat).toFixed(4)},${(maxLon+padLon).toFixed(4)}`;
 
   const btn = document.getElementById('fetchTerrainBtn');
@@ -3359,32 +3172,9 @@ out geom;`;
       }
     });
 
-    // Real distance from a candidate label to the nearest point actually ON
-    // the route — not just "inside the wide terrain bounding box". Without
-    // this, a tall peak or town well outside walking distance of the trail
-    // can end up labelled as if it sits right beside it.
-    peaks.forEach(p => p.distKm = distToRouteKm(p.lat, p.lon, currentPoints));
-    places.forEach(p => p.distKm = distToRouteKm(p.lat, p.lon, currentPoints));
-
-    // Peaks get a generous radius — a distant summit is still a recognisable
-    // backdrop from the trail. Towns get a tighter one — a labelled village
-    // should be somewhere you actually pass near, not a random town 20 miles off.
-    const PEAK_MAX_KM = 10;
-    const PLACE_MAX_KM = 6;
-    let nearPeaks = peaks.filter(p => p.distKm <= PEAK_MAX_KM);
-    let nearPlaces = places.filter(p => p.distKm <= PLACE_MAX_KM);
-
-    // Remote routes (e.g. high mountain treks) may have nothing that close —
-    // better to show the nearest available than leave the poster with no context.
-    // Tag these so the Accuracy Check reports them as a deliberate fallback
-    // rather than flagging labels the tool itself chose.
-    if (nearPeaks.length < 4) nearPeaks = [...peaks].sort((a,b) => a.distKm - b.distKm).slice(0, 8).map(p => ({ ...p, fallback: p.distKm > PEAK_MAX_KM }));
-    if (nearPlaces.length < 3) nearPlaces = [...places].sort((a,b) => a.distKm - b.distKm).slice(0, 6).map(p => ({ ...p, fallback: p.distKm > PLACE_MAX_KM }));
-
-    // Within the near set: tallest peaks first (as before), closest towns first.
-    nearPeaks.sort((a,b) => (b.ele||0) - (a.ele||0));
-    nearPlaces.sort((a,b) => a.distKm - b.distKm);
-    waypointPts = nearPeaks.slice(0, 24).concat(nearPlaces.slice(0, 24));
+    // prioritise: tallest peaks first, then places; final cap applied at render time via the slider
+    peaks.sort((a,b) => (b.ele||0) - (a.ele||0));
+    waypointPts = peaks.slice(0, 24).concat(places.slice(0, 24));
 
     const nWater = terrainPolys.filter(p => p.kind === 'water').length;
     const nWood  = terrainPolys.filter(p => p.kind === 'wood').length;
@@ -3393,7 +3183,7 @@ out geom;`;
     document.getElementById('optTerrain').checked = terrainPolys.length > 0 || terrainLines.length > 0 || coastWays.length > 0;
     document.getElementById('optWaypoints').checked = waypointPts.length > 0;
     stopTicker();
-    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${coastWays.length.toLocaleString()} coastline${coastWays.length ? ' (sea will be filled)' : ''} · ${nearPeaks.length} nearby peaks · ${nearPlaces.length} nearby villages. Saved with your project.`);
+    setStatus('terrainStatus','success', `✓ ${nWater.toLocaleString()} water · ${nWood.toLocaleString()} woodland · ${nMoor.toLocaleString()} moor/ice · ${terrainLines.length.toLocaleString()} rivers · ${coastWays.length.toLocaleString()} coastline${coastWays.length ? ' (sea will be filled)' : ''} · ${peaks.length} peaks · ${places.length} villages. Saved with your project.`);
     drawPoster();
   } catch (err) {
     stopTicker();
@@ -3408,15 +3198,11 @@ out geom;`;
 // ---------------------------------------------------------------
 function buildTrailQuery(name, region){
   const safeName = name.replace(/"/g, '\\"');
-  // '(._;>>;)' recurses through relations-of-relations (superroutes) to reach
-  // the actual ways — same fix as the pick-list loader. Overpass output is a
-  // set, so a way matched via both the superroute and its stage relations
-  // still appears only once.
   if (region) {
     const safeRegion = region.replace(/"/g, '\\"');
-    return `[out:json][timeout:30];\narea["name"="${safeRegion}"]->.searchArea;\n(\n  way["name"~"${safeName}",i](area.searchArea);\n  relation["name"~"${safeName}",i](area.searchArea);\n);\n(._;>>;);\nout geom;`;
+    return `[out:json][timeout:30];\narea["name"="${safeRegion}"]->.searchArea;\n(\n  way["name"~"${safeName}",i](area.searchArea);\n  relation["name"~"${safeName}",i](area.searchArea);\n);\nout geom;`;
   }
-  return `[out:json][timeout:30];\n(\n  way["name"~"${safeName}",i]["highway"];\n  way["name"~"${safeName}",i]["route"];\n  relation["name"~"${safeName}",i]["route"];\n);\n(._;>>;);\nout geom;`;
+  return `[out:json][timeout:30];\n(\n  way["name"~"${safeName}",i]["highway"];\n  way["name"~"${safeName}",i]["route"];\n  relation["name"~"${safeName}",i]["route"];\n);\nout geom;`;
 }
 
 document.getElementById('batchBtn').onclick = async () => {
@@ -3558,136 +3344,6 @@ document.getElementById('verifyBtn').onclick = () => {
 };
 document.getElementById('verifyModal').onclick = (e) => {
   if (e.target === document.getElementById('verifyModal')) document.getElementById('verifyModal').classList.remove('show');
-};
-
-// ---------------------------------------------------------------
-// ACCURACY CHECK — automated pass over the same things Layer 2 QA
-// asks a human to eyeball. Re-checks real distance-to-route for every
-// label currently loaded (catches both fresh mistakes AND stale data in
-// projects saved before the v9.9 distance fix), plus a few other
-// export-blocking sanity checks. Doesn't touch anything — read-only report.
-// ---------------------------------------------------------------
-function qaRow(status, title, detail){
-  const colors = {
-    pass: { bg: 'rgba(122,155,110,0.12)', fg: '#A9C9A0', icon: '✓' },
-    warn: { bg: 'rgba(176,141,87,0.15)',  fg: '#D2AC72', icon: '⚠' },
-    fail: { bg: 'rgba(162,62,50,0.15)',   fg: '#E39A8E', icon: '✕' }
-  }[status];
-  return `<div style="background:${colors.bg}; color:${colors.fg}; border-radius:4px; padding:9px 12px; margin-bottom:7px; font-size:12.5px; line-height:1.5;">
-    <b>${colors.icon} ${title}</b>${detail ? `<div style="margin-top:3px; opacity:0.9;">${detail}</div>` : ''}
-  </div>`;
-}
-
-function runAccuracyCheck(){
-  if (currentPoints.length < 2) return;
-  const rows = [];
-  let pass = 0, warn = 0, fail = 0;
-  const tally = (status) => { if (status === 'pass') pass++; else if (status === 'warn') warn++; else fail++; };
-
-  // 1. Route integrity
-  const measuredKm = routeDistanceKm(currentPoints);
-  if (currentPoints.length < 5 || measuredKm < 0.3) {
-    rows.push(qaRow('fail', 'Route geometry', `Only ${currentPoints.length} points / ${measuredKm.toFixed(2)}km measured — this is almost certainly incomplete data, not a real trail. Re-search (may hit a different mirror) or upload a GPX.`));
-    tally('fail');
-  } else {
-    rows.push(qaRow('pass', 'Route geometry', `${currentPoints.length.toLocaleString()} points, ${measuredKm.toFixed(1)}km measured.`));
-    tally('pass');
-  }
-
-  // 2. Waypoint labels vs real distance to the route (re-checks live, regardless
-  // of when terrain/waypoints were fetched — catches stale pre-v9.9 project files too)
-  if (waypointPts.length) {
-    const PEAK_MAX_KM = 10, PLACE_MAX_KM = 6;
-    const flagged = [], fallbacks = [];
-    waypointPts.forEach(w => {
-      const d = distToRouteKm(w.lat, w.lon, currentPoints);
-      const limit = w.kind === 'peak' ? PEAK_MAX_KM : PLACE_MAX_KM;
-      if (d > limit) {
-        if (w.fallback) fallbacks.push(`${w.name} (${d.toFixed(1)}km)`);
-        else flagged.push(`${w.name} (${d.toFixed(1)}km from route, limit ${limit}km)`);
-      }
-    });
-    if (flagged.length) {
-      rows.push(qaRow('warn', `${flagged.length} label(s) unusually far from the route`, flagged.slice(0, 8).join('<br>') + (flagged.length > 8 ? `<br>…and ${flagged.length - 8} more` : '') + `<br><br>Re-run "Fetch terrain &amp; waypoints" to refresh with the current accuracy filter, or remove these labels manually.`));
-      tally('warn');
-    } else {
-      const withinCount = waypointPts.length - fallbacks.length;
-      rows.push(qaRow('pass', `${withinCount} peak/village label(s)`, `All within the accepted distance of the route.`));
-      tally('pass');
-    }
-    if (fallbacks.length) {
-      rows.push(qaRow('pass', `${fallbacks.length} nearest-available label(s) on a remote route`, `${fallbacks.slice(0, 6).join('<br>')}${fallbacks.length > 6 ? `<br>…and ${fallbacks.length - 6} more` : ''}<br><br>The area had little within normal label range, so the tool kept the closest options — deliberate, not a mistake. Remove any you'd rather not print.`));
-      tally('pass');
-    }
-  } else {
-    rows.push(qaRow('pass', 'No peak/village labels loaded', `Nothing to check — Terrain edition not in use, or "Fetch terrain & waypoints" hasn't been run.`));
-    tally('pass');
-  }
-
-  // 3. Custom markers — flag anything placed far off-route with snap disabled
-  // (deliberate ones like "hometown" are fine; this just surfaces them for a second look)
-  if (typeof customMarkers !== 'undefined' && customMarkers.length) {
-    const farMarkers = customMarkers
-      .map(m => ({ ...m, d: distToRouteKm(m.lat, m.lon, currentPoints) }))
-      .filter(m => m.d > 15);
-    if (farMarkers.length) {
-      rows.push(qaRow('warn', `${farMarkers.length} custom marker(s) over 15km from the route`, farMarkers.map(m => `${m.label || 'Unnamed'} (${m.d.toFixed(1)}km)`).join('<br>') + `<br><br>Fine if intentional (a hometown, a dedication point) — just confirm it wasn't a misplaced click.`));
-      tally('warn');
-    } else {
-      rows.push(qaRow('pass', `${customMarkers.length} custom marker(s)`, `All reasonably close to the route.`));
-      tally('pass');
-    }
-  }
-
-  // 4. Duplicate label names — same name printed twice reads as a mistake
-  const allNames = waypointPts.map(w => w.name.toLowerCase());
-  const dupes = [...new Set(allNames.filter((n,i) => allNames.indexOf(n) !== i))];
-  if (dupes.length) {
-    rows.push(qaRow('warn', 'Duplicate labels', `"${dupes.join('", "')}" appear more than once — check they're not printing on top of each other.`));
-    tally('warn');
-  }
-
-  // 5. Legend text vs measured distance — catches a manual override that
-  // wasn't updated after re-searching or re-uploading a different route
-  const legendVal = (document.getElementById('legendText').value || '').toLowerCase();
-  const numMatch = legendVal.match(/([\d,]+(?:\.\d+)?)\s*(mi|mile|miles|km|kilometre|kilometres|kilometer|kilometers)/);
-  if (numMatch && measuredKm > 1) {
-    let n = parseFloat(numMatch[1].replace(/,/g,''));
-    const unit = numMatch[2];
-    const legendKm = unit.startsWith('mi') ? n * 1.60934 : n;
-    const diffPct = Math.abs(legendKm - measuredKm) / measuredKm * 100;
-    if (diffPct > 15) {
-      rows.push(qaRow('warn', 'Legend distance vs measured route', `Legend says ~${n} ${unit} (${legendKm.toFixed(1)}km) but the loaded route measures ${measuredKm.toFixed(1)}km — ${diffPct.toFixed(0)}% off. Likely a manual override left over from a different route.`));
-      tally('warn');
-    } else {
-      rows.push(qaRow('pass', 'Legend distance vs measured route', `${n} ${unit} in the legend is consistent with the ${measuredKm.toFixed(1)}km measured route.`));
-      tally('pass');
-    }
-  }
-
-  // 6. Licensing — OSM attribution required on anything sold
-  if (!document.getElementById('optOsmCredit').checked) {
-    rows.push(qaRow('fail', 'OpenStreetMap credit line is OFF', `Required by the ODbL licence on anything you sell. Turn it back on in Design Options → Licensing before export.`));
-    tally('fail');
-  } else {
-    rows.push(qaRow('pass', 'OpenStreetMap credit line', `On — licence compliant.`));
-    tally('pass');
-  }
-
-  const summaryEl = document.getElementById('qaReportSummary');
-  const summaryColor = fail ? '#E39A8E' : (warn ? '#D2AC72' : '#A9C9A0');
-  summaryEl.style.color = summaryColor;
-  summaryEl.textContent = fail
-    ? `${fail} check(s) failed, ${warn} warning(s) — fix before listing.`
-    : warn
-      ? `${warn} warning(s) to review — passes basic checks.`
-      : `All checks passed.`;
-  document.getElementById('qaReportBody').innerHTML = rows.join('');
-  document.getElementById('qaModal').classList.add('show');
-}
-document.getElementById('qaCheckBtn').onclick = runAccuracyCheck;
-document.getElementById('qaModal').onclick = (e) => {
-  if (e.target === document.getElementById('qaModal')) document.getElementById('qaModal').classList.remove('show');
 };
 
 // ---------------------------------------------------------------
@@ -3887,7 +3543,6 @@ function drawPoster(){
   document.getElementById('posterSvgHolder').innerHTML = svg;
   ['exportSvgBtn','exportPngBtn','exportBundleBtn','listingBtn','mockupBtn'].forEach(id => document.getElementById(id).disabled = false);
   document.getElementById('verifyBtn').disabled = isCity; // verification is for trail routes
-  document.getElementById('qaCheckBtn').disabled = isCity;
   document.getElementById('saveGpxBtn').disabled = !(currentPoints.length > 1);
 
   if (isCity) {
@@ -3921,28 +3576,6 @@ function routeDistanceKm(points){
     if (seg < 50) d += seg; // skip jumps between disconnected OSM segments
   }
   return d;
-}
-
-// Straight-line distance between two lat/lon points in km.
-function haversineKm(lat1, lon1, lat2, lon2){
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-// Real distance from a point to the nearest vertex actually on the route —
-// used both to filter label candidates when fetching terrain, and again by
-// the Accuracy Check report to re-verify whatever is currently loaded.
-function distToRouteKm(lat, lon, routePts){
-  let best = Infinity;
-  const step = Math.max(1, Math.floor(routePts.length / 2000)); // keep it fast on long routes
-  for (let i = 0; i < routePts.length; i += step) {
-    const d = haversineKm(lat, lon, routePts[i].lat, routePts[i].lon);
-    if (d < best) best = d;
-  }
-  return best;
 }
 
 // Save fetched/loaded route as a standard GPX file (builds a permanent local library)
@@ -4169,7 +3802,8 @@ document.getElementById('listingBtn').onclick = async () => {
       }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const listing = extractClaudeJson(textBlocks);
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const listing = JSON.parse(cleaned);
 
     const out = document.getElementById('listingOutput');
     out.innerHTML = `
@@ -4420,29 +4054,13 @@ function baseFilename(){
   return 'WGS_' + t.trim().replace(/\s+/g,'_').replace(/[^\w-]/g,'');
 }
 
-// Extract the JSON object from a Claude text response. The prompts ask for
-// bare JSON, but a model can still add a conversational preamble or wrap the
-// object in markdown fences — isolating the outermost {...} span before
-// parsing survives both. (Parse failures were already caught by each caller's
-// try/catch and shown as an error status — this just makes them far rarer.)
-function extractClaudeJson(textBlocks){
-  const match = textBlocks.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('No JSON object found in the response — try again.');
-  return JSON.parse(match[0]);
-}
-
 function downloadBlob(blob, filename){
   const a = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  // Without revoking, every download's blob (300 DPI bundles can be 50MB+)
-  // stays pinned in tab memory for the session. Delayed so the browser has
-  // comfortably started the download before the URL is released.
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 // "Save As" — lets you pick the folder/filename directly (Chrome/Edge). Falls back to a normal
@@ -4539,7 +4157,8 @@ document.getElementById('factsBtn').onclick = async () => {
       tools: [{ type: "web_search_20250305", name: "web_search" }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const facts = extractClaudeJson(textBlocks);
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const facts = JSON.parse(cleaned);
     renderFacts(facts);
     window._lastFacts = facts;
     // Auto-correct filename-ish titles and fill an empty subtitle with the researched suggestion
@@ -4589,10 +4208,9 @@ function renderFacts(facts){
 }
 
 // RESEARCH
-async function runMarketResearch(){
-  const btns = [document.getElementById('researchBtn'), document.getElementById('researchBtnSidebar')].filter(Boolean);
+document.getElementById('researchBtn').onclick = async () => {
   setStatus('researchStatus','loading','Researching current Etsy trends… (20–40 seconds)');
-  btns.forEach(b => b.disabled = true);
+  document.getElementById('researchBtn').disabled = true;
   document.getElementById('researchOutput').classList.remove('show');
 
   try {
@@ -4606,7 +4224,8 @@ async function runMarketResearch(){
       tools: [{ type: "web_search_20250305", name: "web_search" }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const r = extractClaudeJson(textBlocks);
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    const r = JSON.parse(cleaned);
 
     const out = document.getElementById('researchOutput');
     out.innerHTML = `
@@ -4625,12 +4244,9 @@ async function runMarketResearch(){
   } catch (err) {
     setStatus('researchStatus','error','Research failed: ' + err.message + ' — add your API key in the panel above if using standalone.');
   } finally {
-    btns.forEach(b => b.disabled = false);
+    document.getElementById('researchBtn').disabled = false;
   }
-}
-document.getElementById('researchBtn').onclick = runMarketResearch;
-document.getElementById('researchBtnSidebar').onclick = runMarketResearch;
-
+};
 </script>
 </body>
 </html>
