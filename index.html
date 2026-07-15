@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.13</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.14</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -866,7 +866,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.13 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.14 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -945,6 +945,7 @@ Cotswold Way | England"></textarea>
       <li><b>Smoother sliders and typing (fixed in v9.11):</b> every slider and text field was rebuilding the full poster SVG on every single tick/keystroke with no debounce — noticeable lag on detailed or terrain-heavy routes. Redraws are now debounced to 120ms, so dragging a slider or typing a title feels smooth instead of rebuilding thousands of SVG nodes per event.</li>
       <li><b>Self-review fixes (v9.12):</b> Cancel Search now also works during the automatic 3-second retry after a busy map server (previously that window ignored the button); Accuracy Check no longer flags the nearest-available labels it deliberately kept on remote routes — it reports them separately as intentional; and the legend-distance comparison can no longer print a nonsense percentage when route geometry is broken.</li>
       <li><b>Memory &amp; resilience fixes (v9.13):</b> exported bundle/ZIP downloads no longer pin their full file contents in tab memory for the whole session (real leak on Firefox/Safari fallback downloads — repeated big exports could exhaust the tab); the Claude facts/listing/research parsers now isolate the JSON object before parsing, so a stray conversational preamble from the model no longer fails the request; curved titles now deepen their arc in step with the title-size slider instead of crowding a fixed curve; and Nominatim geocoding calls can carry an optional contact email (NOMINATIM_CONTACT constant near the top of the script) per OSM's usage policy — blank by default, fill it in with a real address you control.</li>
+      <li><b>Superroute loading fixed (v9.14):</b> trails recently restructured in OpenStreetMap into a "superroute" (a whole-trail relation whose members are day-stage <i>relations</i> rather than ways — the West Highland Way became one) failed to load with "no usable route geometry". The recursion query used Overpass's '&gt;' operator, which never follows relation members; it now uses '&gt;&gt;', which recurses through sub-relations to any depth. Batch mode got the same fix. If a whole-trail ★ entry failed for you before, it should load now.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1577,14 +1578,18 @@ async function loadOsmFeature(type, id, displayName){
   startTicker('searchStatus', `Downloading "${displayName}"…`);
   document.getElementById('searchResults').style.display = 'none';
   try {
-    // For a relation, recurse TWICE: a plain route relation only needs one level down
-    // to its ways, but a "superroute" (a relation whose members are OTHER relations —
-    // the day-stage segments, as seen for trails like the West Highland Way) needs a
-    // second pass to reach the actual path geometry inside those stage relations.
-    // Applying (._;>;) twice is a safe, standard way to resolve up to two levels of
-    // relation-of-relations without assuming unlimited nesting depth.
+    // For a relation, recurse with '>>' (recurse down relations, complete):
+    // it follows sub-relations to ANY depth and collects every way and node
+    // beneath them. This matters because trails get restructured in OSM into
+    // "superroutes" — a relation whose members are OTHER relations (the
+    // day-stage segments). The previous query used '(._;>;)' twice, but '>'
+    // only returns a relation's *way and node* members — it never follows
+    // relation members at all, so applying it twice to a superroute of
+    // relations yielded no geometry twice. That bug was invisible while
+    // routes like the West Highland Way were flat relations of ways, and
+    // surfaced the day OSM mappers restructured them into stage superroutes.
     const q = type === 'relation'
-      ? `[out:json][timeout:90];\nrelation(id:${id});\n(._;>;);\n(._;>;);\nout geom;`
+      ? `[out:json][timeout:90];\nrelation(id:${id});\n(._;>>;);\nout geom;`
       : `[out:json][timeout:90];\n${type}(id:${id});\nout geom;`;
     const data = await fetchOverpass(q);
     const points = extractPointsFromOverpass(data);
@@ -3333,11 +3338,15 @@ out geom;`;
 // ---------------------------------------------------------------
 function buildTrailQuery(name, region){
   const safeName = name.replace(/"/g, '\\"');
+  // '(._;>>;)' recurses through relations-of-relations (superroutes) to reach
+  // the actual ways — same fix as the pick-list loader. Overpass output is a
+  // set, so a way matched via both the superroute and its stage relations
+  // still appears only once.
   if (region) {
     const safeRegion = region.replace(/"/g, '\\"');
-    return `[out:json][timeout:30];\narea["name"="${safeRegion}"]->.searchArea;\n(\n  way["name"~"${safeName}",i](area.searchArea);\n  relation["name"~"${safeName}",i](area.searchArea);\n);\nout geom;`;
+    return `[out:json][timeout:30];\narea["name"="${safeRegion}"]->.searchArea;\n(\n  way["name"~"${safeName}",i](area.searchArea);\n  relation["name"~"${safeName}",i](area.searchArea);\n);\n(._;>>;);\nout geom;`;
   }
-  return `[out:json][timeout:30];\n(\n  way["name"~"${safeName}",i]["highway"];\n  way["name"~"${safeName}",i]["route"];\n  relation["name"~"${safeName}",i]["route"];\n);\nout geom;`;
+  return `[out:json][timeout:30];\n(\n  way["name"~"${safeName}",i]["highway"];\n  way["name"~"${safeName}",i]["route"];\n  relation["name"~"${safeName}",i]["route"];\n);\n(._;>>;);\nout geom;`;
 }
 
 document.getElementById('batchBtn').onclick = async () => {
