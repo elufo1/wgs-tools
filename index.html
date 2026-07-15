@@ -220,7 +220,7 @@
   <div class="header">
     <div>
       <h1>Trail Map Poster Builder</h1>
-      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.10</span></div>
+      <div class="sub">Wild Grid Studio — Real Geography · Print-Ready Products · <span style="color:var(--parchment-pale);">v9.13</span></div>
     </div>
     <div class="header-right">
       <button class="small" id="researchBtn">🔎 Research What's Selling</button>
@@ -866,7 +866,7 @@ Cotswold Way | England"></textarea>
     <button class="close-x" onclick="document.getElementById('helpModal').classList.remove('show')">✕</button>
     <h3>How this tool works</h3>
     <div class="modal-sub">From real trail to Etsy-ready product · version 9.7</div>
-    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.10 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
+    <p style="font-size:12px; color:rgba(210,172,114,0.9);"><b>Version check:</b> the version number also shows in the header, top-left. If it doesn't say v9.13 (or higher), you're running an old copy — delete other copies of this file and use only the latest. Old versions may put stale text on posters.</p>
 
     <div style="border:1px solid var(--brass); border-radius:6px; padding:16px 18px; margin-bottom:8px; background:rgba(176,141,87,0.07);">
       <h4 style="margin-top:0;">⚡ Quick Start — the whole job in 4 clicks</h4>
@@ -941,6 +941,10 @@ Cotswold Way | England"></textarea>
       <li><b>Search external GPX sources (new in v9.8):</b> when OpenStreetMap has no usable route for a trail, one-click buttons open a pre-filled search on Wikiloc, AllTrails, or Komoot — download the GPX there, then drop it in the upload zone above.</li>
       <li><b>Accurate peak/village labels (fixed in v9.9):</b> labelled peaks and towns are now checked against real distance to the route line, not just whether they fall inside the wide terrain bounding box. Peaks within 10km and villages within 6km are kept (falling back to nearest available on remote routes) — so a poster no longer labels a town or summit that's actually many miles from the trail as if it sits right beside it.</li>
       <li><b>🛡 Run Accuracy Check (new in v9.10):</b> an automated report next to "Verify route" — re-checks every loaded peak/village label's real distance to the route, flags custom markers placed far off-route, catches duplicate labels, cross-checks the legend distance text against the measured route, and confirms the OSM credit line is on. Catches mistakes a quick eyeball can miss, and also re-audits <b>old saved projects</b> that were built before the v9.9 label fix — those still have the old, less accurate labels baked in until you re-run "Fetch terrain &amp; waypoints" or open Accuracy Check to see what's off. Doesn't replace Layer 2 QA — it's a machine pass alongside it, not instead of it.</li>
+      <li><b>Cancel Search now actually works (fixed in v9.11):</b> the button existed but had no click handler wired up — clicking it did nothing. It now aborts the in-flight request properly.</li>
+      <li><b>Smoother sliders and typing (fixed in v9.11):</b> every slider and text field was rebuilding the full poster SVG on every single tick/keystroke with no debounce — noticeable lag on detailed or terrain-heavy routes. Redraws are now debounced to 120ms, so dragging a slider or typing a title feels smooth instead of rebuilding thousands of SVG nodes per event.</li>
+      <li><b>Self-review fixes (v9.12):</b> Cancel Search now also works during the automatic 3-second retry after a busy map server (previously that window ignored the button); Accuracy Check no longer flags the nearest-available labels it deliberately kept on remote routes — it reports them separately as intentional; and the legend-distance comparison can no longer print a nonsense percentage when route geometry is broken.</li>
+      <li><b>Memory &amp; resilience fixes (v9.13):</b> exported bundle/ZIP downloads no longer pin their full file contents in tab memory for the whole session (real leak on Firefox/Safari fallback downloads — repeated big exports could exhaust the tab); the Claude facts/listing/research parsers now isolate the JSON object before parsing, so a stray conversational preamble from the model no longer fails the request; curved titles now deepen their arc in step with the title-size slider instead of crowding a fixed curve; and Nominatim geocoding calls can carry an optional contact email (NOMINATIM_CONTACT constant near the top of the script) per OSM's usage policy — blank by default, fill it in with a real address you control.</li>
       <li><b>Custom colours:</b> override any style's palette entirely — background, line, text, accent, frame.</li>
     </ul>
 
@@ -1010,6 +1014,13 @@ const ROAD_CLASSES = {
 };
 
 // Overpass with automatic mirror fallback
+// Optional contact for Nominatim geocoding requests — their usage policy asks
+// heavier users to be identifiable. Fill in a real email you control to be a
+// good citizen; leave blank and requests still work (fine at this tool's
+// one-person volume). Never invent an address here.
+const NOMINATIM_CONTACT = '';
+const nominatimContactParam = () => NOMINATIM_CONTACT ? '&email=' + encodeURIComponent(NOMINATIM_CONTACT) : '';
+
 const OVERPASS_MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
@@ -1038,14 +1049,26 @@ async function fetchOverpass(query){
           // server overloaded/rate-limited — wait briefly and retry once before giving up on this mirror
           lastErr = new Error('map server busy (status ' + resp.status + ')');
           await new Promise(r => setTimeout(r, 3000));
-          const retryController = new AbortController();
-          const retryTimeout = setTimeout(() => retryController.abort('timeout'), 45000);
+          // user may have clicked Cancel during the 3s backoff — honour it before retrying
+          if (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'cancelled') {
+            throw new Error('Search cancelled.');
+          }
+          // reuse activeFetchController for the retry so the Cancel button can
+          // abort it too — a detached controller here would make Cancel a no-op
+          // during the retry request
+          activeFetchController = new AbortController();
+          const retryTimeout = setTimeout(() => activeFetchController.abort('timeout'), 45000);
           try {
-            const retryResp = await fetch(target, { ...opts, signal: retryController.signal });
+            const retryResp = await fetch(target, { ...opts, signal: activeFetchController.signal });
             clearTimeout(retryTimeout);
             if (retryResp.ok) return retryResp.json();
             lastErr = new Error('map server still busy (status ' + retryResp.status + ') — try again in a few minutes, or use a GPX file');
-          } catch (e2) { clearTimeout(retryTimeout); }
+          } catch (e2) {
+            clearTimeout(retryTimeout);
+            if (activeFetchController.signal.aborted && activeFetchController.signal.reason === 'cancelled') {
+              throw new Error('Search cancelled.');
+            }
+          }
           break;
         }
         lastErr = new Error('map server returned ' + resp.status);
@@ -1062,6 +1085,16 @@ async function fetchOverpass(query){
   throw new Error((lastErr && lastErr.message || 'all map servers unreachable') +
     '. If you are previewing inside the Claude chat, download this file and open it directly in your browser — map data cannot load inside the chat preview.');
 }
+
+// Cancel Search — previously had no click handler at all, so the button did
+// nothing when clicked. Aborting the currently in-flight controller makes
+// the active fetchOverpass() attempt reject with a 'cancelled' reason, which
+// the catch block already checks for and throws out of the whole function
+// (not just the current mirror) — that part of the logic was already correct,
+// it just never had anything to trigger it.
+document.getElementById('cancelBtn').onclick = () => {
+  if (activeFetchController) activeFetchController.abort('cancelled');
+};
 
 // elapsed-seconds ticker for long fetches
 let fetchTicker = null;
@@ -1087,7 +1120,7 @@ document.getElementById('cityBtn').onclick = async () => {
 
   try {
     // 1. Geocode
-    const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+    const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1${nominatimContactParam()}`, {
       headers: { 'Accept': 'application/json' }
     });
     const geo = await geoResp.json();
@@ -1338,6 +1371,20 @@ chipHolder.appendChild(measuredChip);
 // ---------------------------------------------------------------
 // OPTION LISTENERS
 // ---------------------------------------------------------------
+// drawPoster() rebuilds the entire SVG — on detailed/terrain routes that's
+// thousands of DOM nodes. The 'input' event fires on every slider tick and
+// every keystroke (including posterTitle/subtitle/legendText, which are in
+// optionIds below), so without debouncing this can visibly lag while
+// dragging a slider or typing a title. Debounced to 120ms — imperceptible
+// as a delay, but collapses a slider drag or a burst of keystrokes into one
+// redraw instead of dozens. Only used here; every other drawPoster() call
+// elsewhere in the file stays synchronous as before.
+function debounce(fn, wait){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+const debouncedDrawPoster = debounce(() => drawPoster(), 120);
+
 const optionIds = ['optOrientation','optTitlePos','optTitleStyle','optFontPair','optFrameStyle','optCompassStyle','optLineWidth','optLineStyle','optSmooth','optCompass','optCoords','optMarkers','optMarkerLabels','optGrid','optFrame','optElevation','optCorners','optRidgeline','optCasing','optSegments','optEleFill','optContours','optGrain','optStars','optTitleScale','optSubScale','optWaterStyle','ovrDistance','ovrHighest','ovrAscent','ovrDuration','optCopyright','optOsmCredit','optOsmCreditMode','optOsmDX','optOsmDY','optCopyrightPos','optTerrain','optRivers','optSea','optWaypoints','optMaxWaypoints','optFloatingPanel','optLegendLayout','optStartLabel','optEndLabel','optStartDX','optStartDY','optEndDX','optEndDY','optCustomColors','optCustomMarkers','optFitMarkers','optSnapRoute','optMarkerIcon','optOnRouteKm','optStages','optCMDX','optCMDY','optFramePad','optFramePanX','optFramePanY','colBg','colLine','colText','colAccent','colFrame','posterTitle','posterSubtitle','legendText'];
 const nudgeLabelMap = { optStartDX:'startDXVal', optStartDY:'startDYVal', optEndDX:'endDXVal', optEndDY:'endDYVal', optFramePanX:'framePanXVal', optFramePanY:'framePanYVal', optCMDX:'cmDXVal', optCMDY:'cmDYVal', optOsmDX:'osmDXVal', optOsmDY:'osmDYVal', optStages:'stageVal' };
 const scaleLabelMap = { optTitleScale:'titleScaleVal', optSubScale:'subScaleVal' };
@@ -1353,7 +1400,7 @@ optionIds.forEach(id => {
     if (id === 'optOnRouteKm') document.getElementById('onRouteVal').textContent = parseFloat(el.value).toFixed(1);
     if (id === 'optLegendLayout') document.getElementById('keepsakeNote').style.display = (el.value === 'keepsake') ? 'block' : 'none';
     if (scaleLabelMap[id]) document.getElementById(scaleLabelMap[id]).textContent = parseFloat(el.value).toFixed(2);
-    drawPoster();
+    debouncedDrawPoster();
   });
 });
 
@@ -2227,7 +2274,9 @@ function buildSvg(W, H){
   const sScale = parseFloat(document.getElementById('optSubScale').value) || 1;
   if (titleStyle === 'arc') {
     const arcId = 'titlearc' + Math.random().toString(36).slice(2,7);
-    const arcRise = 26 * scaleFactor;
+    // Arc depth follows the title scale (bounded) — a 1.4× title on a fixed
+    // arc crowds the curve; at the default scale of 1.0 this is unchanged.
+    const arcRise = 26 * scaleFactor * Math.max(0.75, Math.min(1.4, tScale));
     parts.push(`<defs><path id="${arcId}" d="M ${W*0.12},${titleY + arcRise*0.4} Q ${W/2},${titleY - arcRise} ${W*0.88},${titleY + arcRise*0.4}" fill="none"/></defs>`);
     parts.push(`<text font-family="${_F.title}" font-weight="600" font-size="${fs(30*tScale)}" fill="${s.text}" letter-spacing="${scaleFactor}"><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">${escapeXml(title.toUpperCase())}</textPath></text>`);
   } else {
@@ -3131,7 +3180,7 @@ document.getElementById('addMarkersBtn').onclick = async () => {
   const failed = [];
   for (const g of toGeocode) {
     try {
-      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1`, { headers: { 'Accept':'application/json' } });
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(g.loc)}&format=json&limit=1${nominatimContactParam()}`, { headers: { 'Accept':'application/json' } });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
       if (data.length) resolved.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: g.label, icon: g.icon });
@@ -3252,8 +3301,10 @@ out geom;`;
 
     // Remote routes (e.g. high mountain treks) may have nothing that close —
     // better to show the nearest available than leave the poster with no context.
-    if (nearPeaks.length < 4) nearPeaks = [...peaks].sort((a,b) => a.distKm - b.distKm).slice(0, 8);
-    if (nearPlaces.length < 3) nearPlaces = [...places].sort((a,b) => a.distKm - b.distKm).slice(0, 6);
+    // Tag these so the Accuracy Check reports them as a deliberate fallback
+    // rather than flagging labels the tool itself chose.
+    if (nearPeaks.length < 4) nearPeaks = [...peaks].sort((a,b) => a.distKm - b.distKm).slice(0, 8).map(p => ({ ...p, fallback: p.distKm > PEAK_MAX_KM }));
+    if (nearPlaces.length < 3) nearPlaces = [...places].sort((a,b) => a.distKm - b.distKm).slice(0, 6).map(p => ({ ...p, fallback: p.distKm > PLACE_MAX_KM }));
 
     // Within the near set: tallest peaks first (as before), closest towns first.
     nearPeaks.sort((a,b) => (b.ele||0) - (a.ele||0));
@@ -3468,17 +3519,25 @@ function runAccuracyCheck(){
   // of when terrain/waypoints were fetched — catches stale pre-v9.9 project files too)
   if (waypointPts.length) {
     const PEAK_MAX_KM = 10, PLACE_MAX_KM = 6;
-    const flagged = [];
+    const flagged = [], fallbacks = [];
     waypointPts.forEach(w => {
       const d = distToRouteKm(w.lat, w.lon, currentPoints);
       const limit = w.kind === 'peak' ? PEAK_MAX_KM : PLACE_MAX_KM;
-      if (d > limit) flagged.push(`${w.name} (${d.toFixed(1)}km from route, limit ${limit}km)`);
+      if (d > limit) {
+        if (w.fallback) fallbacks.push(`${w.name} (${d.toFixed(1)}km)`);
+        else flagged.push(`${w.name} (${d.toFixed(1)}km from route, limit ${limit}km)`);
+      }
     });
     if (flagged.length) {
       rows.push(qaRow('warn', `${flagged.length} label(s) unusually far from the route`, flagged.slice(0, 8).join('<br>') + (flagged.length > 8 ? `<br>…and ${flagged.length - 8} more` : '') + `<br><br>Re-run "Fetch terrain &amp; waypoints" to refresh with the current accuracy filter, or remove these labels manually.`));
       tally('warn');
     } else {
-      rows.push(qaRow('pass', `${waypointPts.length} peak/village labels`, `All within the accepted distance of the route.`));
+      const withinCount = waypointPts.length - fallbacks.length;
+      rows.push(qaRow('pass', `${withinCount} peak/village label(s)`, `All within the accepted distance of the route.`));
+      tally('pass');
+    }
+    if (fallbacks.length) {
+      rows.push(qaRow('pass', `${fallbacks.length} nearest-available label(s) on a remote route`, `${fallbacks.slice(0, 6).join('<br>')}${fallbacks.length > 6 ? `<br>…and ${fallbacks.length - 6} more` : ''}<br><br>The area had little within normal label range, so the tool kept the closest options — deliberate, not a mistake. Remove any you'd rather not print.`));
       tally('pass');
     }
   } else {
@@ -3513,7 +3572,7 @@ function runAccuracyCheck(){
   // wasn't updated after re-searching or re-uploading a different route
   const legendVal = (document.getElementById('legendText').value || '').toLowerCase();
   const numMatch = legendVal.match(/([\d,]+(?:\.\d+)?)\s*(mi|mile|miles|km|kilometre|kilometres|kilometer|kilometers)/);
-  if (numMatch) {
+  if (numMatch && measuredKm > 1) {
     let n = parseFloat(numMatch[1].replace(/,/g,''));
     const unit = numMatch[2];
     const legendKm = unit.startsWith('mi') ? n * 1.60934 : n;
@@ -4031,8 +4090,7 @@ document.getElementById('listingBtn').onclick = async () => {
       }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
-    const listing = JSON.parse(cleaned);
+    const listing = extractClaudeJson(textBlocks);
 
     const out = document.getElementById('listingOutput');
     out.innerHTML = `
@@ -4283,13 +4341,29 @@ function baseFilename(){
   return 'WGS_' + t.trim().replace(/\s+/g,'_').replace(/[^\w-]/g,'');
 }
 
+// Extract the JSON object from a Claude text response. The prompts ask for
+// bare JSON, but a model can still add a conversational preamble or wrap the
+// object in markdown fences — isolating the outermost {...} span before
+// parsing survives both. (Parse failures were already caught by each caller's
+// try/catch and shown as an error status — this just makes them far rarer.)
+function extractClaudeJson(textBlocks){
+  const match = textBlocks.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('No JSON object found in the response — try again.');
+  return JSON.parse(match[0]);
+}
+
 function downloadBlob(blob, filename){
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  // Without revoking, every download's blob (300 DPI bundles can be 50MB+)
+  // stays pinned in tab memory for the session. Delayed so the browser has
+  // comfortably started the download before the URL is released.
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 // "Save As" — lets you pick the folder/filename directly (Chrome/Edge). Falls back to a normal
@@ -4386,8 +4460,7 @@ document.getElementById('factsBtn').onclick = async () => {
       tools: [{ type: "web_search_20250305", name: "web_search" }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
-    const facts = JSON.parse(cleaned);
+    const facts = extractClaudeJson(textBlocks);
     renderFacts(facts);
     window._lastFacts = facts;
     // Auto-correct filename-ish titles and fill an empty subtitle with the researched suggestion
@@ -4453,8 +4526,7 @@ document.getElementById('researchBtn').onclick = async () => {
       tools: [{ type: "web_search_20250305", name: "web_search" }]
     });
     const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
-    const r = JSON.parse(cleaned);
+    const r = extractClaudeJson(textBlocks);
 
     const out = document.getElementById('researchOutput');
     out.innerHTML = `
